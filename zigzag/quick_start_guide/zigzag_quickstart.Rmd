@@ -1,5 +1,5 @@
 ---
-title: "zigzag quick start guide"
+title: "$z^i_gz^a_g$ quick start guide"
 author: "Ammon Thompson"
 date: "July 9, 2019"
 output: html_document
