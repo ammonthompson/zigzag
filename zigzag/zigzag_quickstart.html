@@ -196,20 +196,21 @@ $(document).ready(function () {
 </div>
 
 
-<div id="install-zigzag" class="section level2">
-<h2>Install zigzag</h2>
+<div id="install-zigzag" class="section level3">
+<h3>Install zigzag</h3>
 <p>Navigate to a directory where you would like to install the zigzag repository that contains the R package, zigzag.</p>
 <pre class="bash"><code>bash
-git clone xxxx.html</code></pre>
+git clone https://github.com/ammonthompson/zigzag.git</code></pre>
 <p>To install the R package, open an R terminal or in the console in Rstudio, type: (if your working directory is not where zigzag is, then include the relative or absolute path to zigzag)</p>
 <pre class="r"><code>R
 install.packages(&quot;zigzag&quot;, type = &quot;source&quot;, repos = NULL)
 require(zigzag)</code></pre>
 <p>Note, zigzag depends on R packages coda and matrixStates.</p>
+</div>
 <div id="load-expression-and-gene-length-data" class="section level3">
 <h3>Load Expression and Gene Length Data</h3>
-<p>After cloning the zigzag repository and instaling the zigzag R package, to use the example data in this tutorial, open R and set the quick_start_guide directory to your working directory. We have provided example data to be used in this tutorial. You can copy-and-paste the R code to run analyses. These are subsets of genes used in the zigzag publication (cation).</p>
-<p>The expression data is found in the quick_start_guide direcotry. These files contain the TPM levels of 5,000 genes estimated in 4 human lung RNA-seq libraries from the GTEx dataset. zigzag requires the data contain row names which are gene names and column names which are the RNA sample labels. Ensure the gene expression level rows corresond with gene length rows.</p>
+<p>After cloning the zigzag repository and instaling the zigzag R package, open R and set the quick_start_guide directory to your working directory. We have provided example data for this tutorial. These are subsets of genes used in the zigzag publication (cation). You can copy-and-paste the R code to run analyses.</p>
+<p>The expression data is found in the quick_start_guide directory. These files contain the TPM levels of 5,000 genes estimated in 4 human lung RNA-seq libraries from the GTEx dataset. zigzag requires the data contain row names which are gene names and column names which are the RNA sample labels. Ensure the row names correspond in the gene length and expression files.</p>
 <pre class="r"><code>expression_data = read.table(&quot;example_lung.tpm&quot;, header = T, row.names = 1)
 
 head(round(expression_data, digits = 1))</code></pre>
@@ -252,9 +253,9 @@ abline(v = c(1, 4), lwd = c(2, 1), col = c(&quot;blue&quot;, &quot;red&quot;))</
 </div>
 <div id="run-burnin-and-assess-convergence-with-log-files" class="section level3">
 <h3>Run Burnin and assess convergence with log files</h3>
-<p>Use the burnin function to run an initial burnin. Here we will run the analysis for 5000 generations sampling every 50 generations of the chain. If write_to_files == TRUE, the burnin sample will, by default, be written to files in a directory called example_zigzag_output/output_burnin…</p>
+<p>Use the burnin function to run an initial burnin. Here we will run the analysis for 5000 generations sampling every 50 generations of the chain. If write_to_files == TRUE, the burnin sample will, by default, be written to files in a directory called example_zigzag_output/output_burnin. Type ?burnin for more details.</p>
 <pre class="r"><code>my_zigzag$burnin(sample_frequency = 50, progress_plot = TRUE, write_to_files = TRUE, ngen=10000)</code></pre>
-<p>evaluate the burnin log files to determine if the chain has converged to the stationary distribution. If satisfied all parameter chains have converged, run the mcmc.</p>
+<p>evaluate the burnin log files to determine if the chain has converged to the stationary distribution. If satisfied all parameter chains have converged, run the mcmc. Type ?mcmc for more details.</p>
 <pre class="r"><code>burn = read.table(&quot;example_zigzag_output/output_burnin/output_model_parameters.log&quot;, header = T, row.names =1)</code></pre>
 <pre class="r"><code>for(i in seq(ncol(burn))) plot(burn[,i], type = &quot;l&quot;, main = colnames(burn)[i])</code></pre>
 <p>For example, the variable s0 appears to have converged on the stationary distribution around -2:</p>
@@ -288,7 +289,6 @@ head(round(Pr, digits = 2))</code></pre>
 ## ENSG00000237787        0.00
 ## ENSG00000051596        0.88</code></pre>
 <p>Finally, you will want to create at least 2 zigzag objects and run two independent MCMC’s and confirm they converge on the same stationary distribution for all parameters and produce the same estimates of the probability of active expression for all genes.</p>
-</div>
 </div>
 
 
