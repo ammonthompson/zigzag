@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "# read some data\n\nsetwd(\"./testing_dir\")\n\ndat <- read.table(\"quick_start_guide/example_lung.tpm\", header=TRUE, row.names=1)\n\ngene_length_df = read.table(\"quick_start_guide/example_gene_length.txt\", row.names = 1, header = TRUE)\n\n\nsq=rbind(c(1,2),c(3,4)); layout(sq)\n\nmm <- zigzag$new(data = dat, gene_length = gene_length_df, candidate_gene_list = \"random\",\n                    output_directory = \"quick_start_guide/example_zigzag_output\", num_active_components =2,\n                    threshold_a = c(1, 4), active_gene_set = NULL, shared_active_variances = T, beta = 1)\n\n\nmm$burnin(sample_frequency = 50, burnin_target_acceptance_rate=0.44, progress_plot = T,\n          write_to_files = T, ngen=10000, append = F)\n\n\nmm$mcmc(sample_frequency = 50, progress_plot = F, write_to_files = T, ngen=50000, append = F,\n        run_posterior_predictive = T, mcmcprefix = \"example_lung\")\n\n\n\n\n\n\n#######################\n## mcmc under prior ###\n#######################\n\npriordat = matrix(c(-Inf, -Inf), nrow = 1)\ngoi = \"gene1\"\nrow.names(priordat) = c(\"gene1\")\n\nsq=rbind(c(1,2),c(3,4)); layout(sq)\n\nmm <- zigzag(data = priordat, gene_length = NULL, candidate_gene_list = goi,\n                    output_directory = \"testing_2june2019\", num_active_components =2,\n                    threshold_i = 0, threshold_a = c(0,5), active_gene_set = NULL,\n                    shared_active_variances = T, beta = 0)\n\nmm$burnin(sample_frequency = 20, burnin_target_acceptance_rate=0.44, progress_plot = T,\n          write_to_files = T, ngen=4000, append = F)\n\n\nmm$mcmc(sample_frequency = 50, progress_plot = F, write_to_files = T, ngen=4000000, append = F,\n        run_posterior_predictive = F, mcmcprefix = \"prior1\")\n\n\n\n",
+    "created" : 1556756217885.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "4134988497",
+    "id" : "C8B9E0E6",
+    "lastKnownWriteTime" : 1562955870,
+    "last_content_update" : 1562955870143,
+    "path" : "C:/Users/ammon_work/Desktop/git_repos/normal_mixture/zigzag/test.R",
+    "project_path" : "test.R",
+    "properties" : {
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

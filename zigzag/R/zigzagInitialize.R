@@ -1,0 +1,445 @@
+zigzag$methods(
+
+  ###############
+  # Constructor #
+  ###############
+
+  initialize = function(data, gene_length = NULL, candidate_gene_list = "random",
+                        num_active_components = 1,
+                        weight_active_shape_1 = 2,
+                        weight_active_shape_2 = 2,
+                        inactive_means_prior_shape = 1,
+                        inactive_means_prior_rate = 1/3,
+                        inactive_variances_prior_min = 0.01,
+                        inactive_variances_prior_max = 5,
+                        spike_prior_shape_1 = 1,
+                        spike_prior_shape_2 = 1,
+                        active_means_dif_prior_shape = 1,
+                        active_means_dif_prior_rate = 1/3,
+                        active_variances_prior_min = 0.01,
+                        active_variances_prior_max = 5,
+                        shared_active_variances = TRUE,
+                        output_directory = "output",
+                        multi_ta = FALSE,
+                        threshold_a = 0,
+                        threshold_i = threshold_a[1],
+                        beta = 1,
+                        temperature = 1,
+                        tau_shape = 1,
+                        tau_rate = 1,
+                        s0_mu = -1,
+                        s0_sigma = 2,
+                        s1_shape = 1,
+                        s1_rate = 2,
+                        alpha_r_shape = 1,
+                        alpha_r_rate = 1/10,
+                        active_gene_set = NULL,
+
+                        ...) {
+
+    ##########################################
+    ## Set up data and general data params  ##
+    ##########################################
+
+    cat("Loading and log-transforming data...\n")
+
+    sqrt2pi         <<- sqrt(2*pi)
+    inf_tol         <<- -Inf
+    temperature     <<- temperature
+    beta            <<- beta
+    beta_oneLib     <<- 1
+    gen             <<- 0
+    gene_names      <<- rownames(data)
+    num_libraries   <<- ncol(data)
+    num_transcripts <<- nrow(data)
+
+    # Active sub-components
+    num_active_components <<- as.integer(num_active_components)
+    component_matrix      <<- matrix(rep(c(0,seq(num_active_components)), num_transcripts),
+                                ncol=num_active_components+1, byrow = T)
+
+
+    #Set up Xg
+    if(min(data) >= 0) Xg <<- log(as.matrix(data)) else Xg <<- as.matrix(data)
+    Xg[Xg == -Inf] <<- inf_tol
+
+
+    # Gene lengths, scaled to have mean = 1
+    if(! is.null(gene_length)){
+
+      if( is.vector(gene_length) ) gene_lengths <<- gene_length/mean(gene_length) else gene_lengths <<- gene_length[,1]/mean(gene_length[,1])
+
+    }else{
+
+      gene_lengths <<- rep(1, num_transcripts)
+
+    }
+
+    if(length(gene_lengths) != num_transcripts) cat("WARNING: genelengths size does not equal number of genes!!!\n")
+
+
+    # candidate genes to output posterior samples to files
+    if(candidate_gene_list[1] == "random"){
+
+      candidate_gene_list <<- c(gene_names[c(1:10,sample(num_transcripts, size = 100, replace = F))])
+
+    }else{
+
+      candidate_gene_list <<- candidate_gene_list
+
+      if(length(which(!( candidate_gene_list %in% gene_names))) > 0){
+        print("WARNING: one or more gene list names are not in the data")
+        print(candidate_gene_list[which(!( candidate_gene_list %in% gene_names))])
+      }
+
+    }
+
+    # Set up active genes: the genes user is certain are actively expressed. Default is NULL
+    if(!is.null(active_gene_set)){
+
+      active_gene_set     <<- active_gene_set
+      active_gene_set_idx <<- sapply(seq(active_gene_set), function(gene) which(gene_names == active_gene_set[gene]) )
+
+    }
+
+    # create output directory
+    output_directory <<- output_directory
+    dir.create(output_directory)
+
+
+    ##########################################################
+    ### initialize proposal tuning parameters "tuningParam" ##
+    ##########################################################
+
+    inactive_mean_tuningParam <<- 0.5
+    inactive_variance_tuningParam <<- 0.5
+    spike_probability_tuningParam <<- 1000
+    active_mean_tuningParam <<- rep(0.5, num_active_components)
+    active_variance_tuningParam <<- rep(0.5, num_active_components)
+    mixture_weight_tuningParam <<- 1000
+    tuningParam_s0     <<- 0.05
+    tuningParam_s1     <<- 0.05
+    tuningParam_tau    <<- 0.05
+    tuningParam_s0tau <<- 0.05
+    tuningParam_alpha_r <<- rep(0.5, num_libraries)
+    tuningParam_yg <<- rep(0.5, num_transcripts)
+    tuningParam_sigma_g <<- rep(0.5, num_transcripts)
+    tuningParam_multi_sigma <<- 0.5
+    tuningParam_sigma_mu <<- 0.5
+
+
+    ########################################################
+    ## Set thresholds for component mean priors ############
+    ########################################################
+    multi_thresh_a <<- multi_ta
+
+    if(length(threshold_a) == num_active_components){
+
+      multi_thresh_a <<- TRUE
+      threshold_a <<- threshold_a
+
+    }else{
+
+      threshold_a <<- threshold_a[1]
+
+    }
+
+    threshold_i <<- threshold_i
+
+    #############################################################
+    ## Set up parameter proposal relative probabilities #########
+    #############################################################
+    proposal_probs <<- c(10, 10, 10,                                    ### weights, alloc active_inactive, alloc within_active
+                          10, 10,                                         ### i_mean, i_var
+                          8 * num_active_components,                    ### a_mean
+                          8 + 8 * (num_active_components - 1) * (1 - shared_active_variances),            ### a_var
+                          5, 5,                                         ### spike prob, spike alloc
+                          c(1, 1) * 1,           ### Yg, sigm_g
+                          8, 8, 3,                                    ### tau, Sg, s0tau
+                          num_libraries * 0.75)                         ### p_x
+
+
+    ##########################
+    # Initialize the priors. #
+    # Level 2 (upper) priors #
+    ##########################
+
+    cat("Initializing upper level parameters...\n")
+
+    # active vs inactive
+    weight_active_shape_1 <<- weight_active_shape_1
+    weight_active_shape_2 <<- weight_active_shape_2
+    weight_active <<- rbeta(1, weight_active_shape_1 + 1, weight_active_shape_2 + 1)
+    weight_active_proposed <<- weight_active
+
+    weight_active_prob <<- .self$computeActiveWeightPriorProbability(weight_active)
+    weight_active_prob_proposed <<- .self$computeActiveWeightPriorProbability(weight_active_proposed)
+
+    # inactive means
+    inactive_means_prior_shape <<- inactive_means_prior_shape
+    inactive_means_prior_rate  <<- inactive_means_prior_rate
+    inactive_means <<- threshold_i - rgamma(1, shape = 1, rate = 1)
+
+    inactive_means_proposed <<- inactive_means
+    inactive_means_prob <<- .self$computeInactiveMeansPriorProbability(inactive_means)
+    inactive_means_prob_proposed <<- .self$computeInactiveMeansPriorProbability(inactive_means_proposed)
+    inactive_means_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
+
+    # inactive variances
+    inactive_variances_prior_min <<- inactive_variances_prior_min
+    inactive_variances_prior_max <<- inactive_variances_prior_max
+    inactive_variances_prior_log_min <<- log(inactive_variances_prior_min, 10)
+    inactive_variances_prior_log_max <<- log(inactive_variances_prior_max, 10)
+    inactive_variances <<- 10^(runif(1, inactive_variances_prior_log_min, inactive_variances_prior_log_max))
+    inactive_variances_proposed <<- inactive_variances
+    inactive_variances_prob <<- .self$computeInactiveVariancesPriorProbability(inactive_variances)
+    inactive_variances_prob_proposed <<- .self$computeInactiveVariancesPriorProbability(inactive_variances_proposed)
+    inactive_variances_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
+
+    # spike priors
+    spike_prior_shape_1 <<- spike_prior_shape_1
+    spike_prior_shape_2 <<- spike_prior_shape_2
+    spike_probability <<- rbeta(1, spike_prior_shape_1, spike_prior_shape_2)
+    spike_probability_proposed <<- spike_probability
+    spike_probability_prob <<- .self$computeSpikePriorProbability(spike_probability)
+    spike_probability_prob_proposed <<- .self$computeSpikePriorProbability(spike_probability_proposed)
+    spike_probability_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
+
+    # active means
+    active_means_dif_prior_shape <<- active_means_dif_prior_shape
+    active_means_dif_prior_rate  <<- active_means_dif_prior_rate
+    active_means_dif <<- rgamma(num_active_components, shape = active_means_dif_prior_rate, rate = active_means_dif_prior_rate)
+
+    active_means_dif_proposed <<- active_means_dif
+    active_means_dif_prob <<- .self$computeActiveMeansDifPriorProbability(active_means_dif)
+    active_means_dif_prob_proposed <<- .self$computeActiveMeansDifPriorProbability(active_means_dif_proposed)
+    active_means_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_active_components,function(y){return(c(rep(0,77),rep(1,23)))})))})
+    active_means <<- .self$calculate_active_means(active_means_dif, mt = multi_thresh_a)
+
+    # active variances
+    active_variances_prior_min <<- active_variances_prior_min
+    active_variances_prior_max <<- active_variances_prior_max
+    active_variances_prior_log_min <<- log(active_variances_prior_min, 10)
+    active_variances_prior_log_max <<- log(active_variances_prior_max, 10)
+
+    shared_active_variances <<- shared_active_variances
+    if(shared_active_variances){
+
+      active_variances <<- rep(10^(runif(1, active_variances_prior_log_min, active_variances_prior_log_max)), num_active_components)
+      active_variances_proposed <<- active_variances
+      active_variances_prob <<- .self$computeActiveVariancesPriorProbability(active_variances[1])
+      active_variances_prob_proposed <<- .self$computeActiveVariancesPriorProbability(active_variances_proposed)
+      active_variances_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_active_components,function(y){return(c(rep(0,77),rep(1,23)))})))})
+
+    }else{
+
+      active_variances <<- 10^(runif(num_active_components, active_variances_prior_log_min, active_variances_prior_log_max))
+      active_variances_proposed <<- active_variances
+      active_variances_prob <<- .self$computeActiveVariancesPriorProbability(active_variances)
+      active_variances_prob_proposed <<- .self$computeActiveVariancesPriorProbability(active_variances_proposed)
+      active_variances_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_active_components,function(y){return(c(rep(0,77),rep(1,23)))})))})
+
+    }
+
+    weight_within_active_alpha <<- rep(weight_active_shape_1/num_active_components, num_active_components)
+
+    weight_within_active <<- .self$r_dirichlet(.self$weight_within_active_alpha)
+    weight_within_active_proposed <<- weight_within_active
+    weight_within_active_prob <<- .self$computeWithinActiveWeightPriorProbability(weight_within_active)
+    weight_within_active_prob_proposed <<- .self$computeWithinActiveWeightPriorProbability(weight_within_active_proposed)
+    mixture_weight_trace[[1]] <<- list(c(rep(0,77),rep(1,23)))
+
+    # initialize the allocations
+    allocation_active_inactive <<- rbinom(num_transcripts, size=1, p=weight_active)
+    if(!is.null(active_gene_set)) allocation_active_inactive[active_gene_set_idx] <<- as.integer(1)
+    allocation_active_inactive_proposed <<- allocation_active_inactive
+
+    allocation_within_active[[1]] <<- sample.int(num_active_components, size=num_transcripts, replace=TRUE, prob=weight_within_active)
+    allocation_within_active_proposed <<- allocation_within_active
+
+    all_allocation = allocation_active_inactive * allocation_within_active[[1]]
+
+    allocation_trace <<- matrix(apply(component_matrix, 2, function(comp_matrix_col) 1 *
+                                           (comp_matrix_col == all_allocation)), nrow = num_transcripts)
+
+    # combined move parameters
+    multi_sigma_trace[[1]] <<- list(c(rep(0,77),rep(1,23)))
+    sigma_mu_trace[[1]] <<- list(c(rep(0,77),rep(1,23)))
+
+
+    ##########################
+    # level 1 (lower) priors #
+    ##########################
+
+    cat("Initializing lower level parameters...\n")
+
+    # gene detection prob
+    alpha_r_shape <<- alpha_r_shape
+    alpha_r_rate <<- alpha_r_rate
+    alpha_r <<- rgamma(num_libraries, 1, 1)
+    alpha_r_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_libraries,function(y){return(c(rep(0,77),rep(1,23)))})))})
+    alpha_r_max = max(alpha_r)
+
+    # gene-wise variance
+    s0_mu <<- s0_mu
+    s0_sigma <<- s0_sigma
+    s1_rate <<- s1_rate
+    s1_shape <<- s1_shape
+    tau_shape <<- tau_shape
+    tau_rate <<- tau_rate
+
+    s0 <<- rnorm(1, s0_mu, s0_sigma)
+    s1 <<- -rgamma(1, s1_shape, s1_rate)
+    tau <<- rgamma(1, tau_shape, tau_rate)
+
+    s0_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
+    s1_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
+    tau_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
+    s0tau_trace[[1]] <<- lapply(1, function(x){return(c(rep(0,77), rep(1,23)))})
+
+    ## Yg initialize
+    no_detect_spike <<- ((rowSums(as.matrix((Xg[seq(num_transcripts),, drop = F] ==
+                                                     rep(-Inf, num_libraries)) * 1)) == num_libraries) * 1)
+    inactive_spike_allocation <<- no_detect_spike
+    in_spike_idx <<- which(no_detect_spike == 1)
+    out_spike_idx <<- which(no_detect_spike == 0)
+    all_zero_idx <<- which(no_detect_spike == 1)
+    allocation_active_inactive[in_spike_idx] <<- as.integer(0)
+    active_idx <<- which(allocation_active_inactive == 1)
+    inactive_idx <<- which(allocation_active_inactive == 0)
+
+
+    # initialize Yg and sigma_g near observed values in data. If undetected, sample
+    if(num_libraries > 1 & max(Xg) > -Inf){
+
+      #Yg from Xg means
+      rwm <- sapply(seq(num_transcripts), function(x){
+        if(count(Xg[x,], value = -Inf) < num_libraries){
+          v = Xg[x,]
+          mean(v[v > -Inf])
+        }else{
+          rnorm(1, inactive_means, sqrt(inactive_variances))
+        }
+      })
+
+      #Yg from Xg variances
+      rwv <- sapply(seq(num_transcripts), function(x){
+        if(count(Xg[x,], value = -Inf) < (num_libraries - 1)){
+          v = Xg[x,]
+          var(v[v > -Inf])
+        }else{
+          rlnorm(1, log(mean(rowVars(Xg), na.rm = T)), sqrt(var(rowVars(Xg), na.rm = T)))
+        }
+      })
+
+      Yg <<- rnorm(num_transcripts, rwm, sqrt(rwv))
+
+    }else{
+
+      Yg <<- Xg[,1]
+
+      Yg[which(Yg == inf_tol)] <<- rnorm(length(which(Yg == inf_tol)), inactive_means, sqrt(inactive_variances))
+
+    }
+
+    Yg_proposed <<- Yg
+
+    Yg_trace <<- t(sapply(seq(num_transcripts), function(g){return(c(rep(0,77),rep(1,23)))}))
+
+
+    ## Initialize Sigma_x and Sigma_g gene variance and shrinkage prior parameters
+    Sg <<- exp(s0 + s1 * Yg)
+    sigma_g <<- rlnorm(num_transcripts, 2, 1/2)
+    sigma_g_trace <<- t(sapply(seq(num_transcripts), function(g){return(c(rep(0,77),rep(1,23)))}))
+
+    p_x <<- .self$get_px()
+
+    # Initialize XgLikelihood. resample Yg and downstream values if -Inf likelihood results
+    XgLikelihood <<- .self$computeXgLikelihood(Xg, Yg, sigma_g, p_x)
+
+    cat("Reinitialize genes with zero likelihood: ", which(XgLikelihood == -Inf), "\n")
+
+    # Occasionally there are combinations of intial values of Yg and alpha_r
+    # that can lead to 0 likelihood for some genes.
+    # For those genes, reinitialize until a combination that has > 0 likelihood is generated.
+    if(num_libraries > 1){
+
+      counter = 0
+
+      while(count(XgLikelihood, value = -Inf) > 0){
+
+        Yg[which(XgLikelihood == -Inf)] <<- rnorm(length(which(XgLikelihood == -Inf)), inactive_means, sqrt(inactive_variances))
+
+        Sg <<- exp(s0 + s1 * Yg)
+
+        p_x <<- .self$get_px()
+
+        sigma_g <<- rlnorm(num_transcripts, log(Sg) + tau/10, sqrt(tau/10))
+
+        XgLikelihood <<- .self$computeXgLikelihood(Xg, Yg, sigma_g, p_x)
+
+        counter  = counter + 1
+
+        if(counter > 1000){
+          cat("initialization failed. Try again\n")
+          break
+        }
+
+      }
+
+    }
+
+    sigma_g_probability <<- .self$computeSigmaGPriorProbability(sigma_g, Sg)
+
+    ## write user specified prior parameter values to file
+    write.table(data.frame(cbind(c("s0_mu", "s0_sigma", "s1_shape", "s1_rate", "tau_rate", "tau_shape", "alpha_r_shape", "alpha_r_rate",
+               "weight_active_shape_1", "weight_active_shape_2", "weight_within_active_alpha", "spike_prior_shape_1", "spike_prior_shape_2",
+               "active_means_dif_prior_shape", "active_meaans_dif_prior_rate", "active_variances_prior_min", "active_variances_prior_max",
+               "inactive_means_prior_shape", "inactive_means_prior_rate", "inactive_variances_prior_min", "inactive_variances_prior_max", "threshold_i", "threshold_a"),
+              c(s0_mu, s0_sigma, s1_shape, s1_rate, tau_rate, tau_shape,  alpha_r_shape, alpha_r_rate,
+               weight_active_shape_1, weight_active_shape_2, weight_within_active_alpha[1], spike_prior_shape_1, spike_prior_shape_2,
+               active_means_dif_prior_shape, active_means_dif_prior_rate , active_variances_prior_min, active_variances_prior_max,
+               inactive_means_prior_shape, inactive_means_prior_rate, inactive_variances_prior_min, inactive_variances_prior_max,threshold_i,
+               paste(threshold_a, collapse=", ")))),
+              file = paste0(output_directory, "/", "hyperparameter_settings.txt"), sep = "\t", row.names = F, quote = F, col.names = F)
+
+
+    ###### YgLikelihood is not used ???? delete?
+    YgLikelihood[inactive_idx] <<- .self$computeInactiveLikelihood(y = Yg[inactive_idx], spike_p = spike_probability, im = inactive_means, iv = inactive_variances, spike_allocation = inactive_spike_allocation[inactive_idx])
+    YgLikelihood[active_idx] <<- .self$computeActiveLikelihood(y = Yg[active_idx], active_component = allocation_within_active[[1]][active_idx], am = active_means, av = active_variances)
+
+
+    #######################
+    #####Book keeping######
+    #######################
+
+    field_list_values <<- list(allocation_active_inactive, allocation_within_active, inactive_spike_allocation,
+                        weight_active, weight_within_active,
+                        inactive_means, inactive_variances, active_means, active_means_dif, active_variances,
+                        Xg, Yg, s0, s1, Sg, sigma_g, alpha_r, p_x,
+                        active_idx, inactive_idx, in_spike_idx, out_spike_idx)
+
+    field_list_names <<- list("allocation_active_inactive", "allocation_within_active", "inactive_spike_allocation",
+                        "weight_active", "weight_within_active",
+                        "inactive_means", "inactive_variances", "active_means", "active_means_dif", "active_variances",
+                        "Xg", "Yg", "s0", "s1", "Sg", "sigma_g", "alpha_r", "p_x",
+                        "active_idx", "inactive_idx", "in_spike_idx", "out_spike_idx")
+
+
+    lnl_trace[[1]] <<- sum(XgLikelihood)
+
+
+  }
+
+)
+
+
+
+
+
+
+
+
+
+
+
