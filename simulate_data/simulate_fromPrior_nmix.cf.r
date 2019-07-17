@@ -8,6 +8,7 @@
 file_prefix = "sim"
 num_yg = 200
 df = read.table("../simulate_data/sim_control_file.template.cf",header = F, row.names = 1)
+
 simulated_gene_lengths  = rlnorm(df$V2[5], log(2000), 0.5)
 
 output_dir = "../simulate_data/simulated_data/"
@@ -149,7 +150,7 @@ for(i in seq(params[17])){
 	#
 	#   sim_xg[(runif(length(sim_yg)) < (1 - p_x)), lib] <<- -Inf  #because the in-spike genes will be place at the beginning of sim_xg/yg
 	#
-	#   sim_xg[sim_xg[,lib] < -3 & sim_rel_gl[(num_spike + 1):total] < 0.75, lib] <<- -Inf #cutoff
+	#   sim_xg[sim_xg[,lib] < 0 & sim_rel_gl[(num_spike + 1):total] < 2, lib] <<- -Inf #cutoff
 	# })
 
 
