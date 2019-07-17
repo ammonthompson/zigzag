@@ -245,5 +245,90 @@ zigzag$methods(
 
 
 
+  },
+
+
+
+  ########################
+  ## Depricated ##########
+  ########################
+
+  old_mhYg = function(recover_x = FALSE, tune = FALSE){
+
+    Yg_proposed <<- Yg + rnorm(num_transcripts, 0, tuningParam_yg) * (1 - inactive_spike_allocation) #only change out of spike genes
+
+    Sg_proposed <- .self$get_sigmax(yy = Yg_proposed)
+
+    p_x_proposed <- .self$get_px(yy = Yg_proposed)
+
+    ## proposed Yg likelihoods
+    proposed_XgLikelihood = .self$computeXgLikelihood(Xg, Yg_proposed, sigma_g, p_x_proposed)
+
+    proposed_sigmaGProbability = .self$computeSigmaGPriorProbability(sigma_g, Sg_proposed)
+
+    Lp_pp = proposed_XgLikelihood
+
+    Lp_pp[inactive_idx] = Lp_pp[inactive_idx] +
+      .self$computeInactiveLikelihood(Yg_proposed[inactive_idx], spike_probability, inactive_means,
+                                      inactive_variances, inactive_spike_allocation[inactive_idx])
+
+    Lp_pp[active_idx] = Lp_pp[active_idx] +
+      .self$computeActiveLikelihood(Yg_proposed[active_idx],  allocation_within_active[[1]][active_idx],
+                                    active_means, active_variances)
+
+    Lp_pp = Lp_pp + proposed_sigmaGProbability
+
+
+    ## current Yg likelihoods
+    Lc_pc = XgLikelihood
+
+    Lc_pc[inactive_idx] = Lc_pc[inactive_idx] +
+      .self$computeInactiveLikelihood(Yg[inactive_idx], spike_probability, inactive_means,
+                                      inactive_variances, inactive_spike_allocation[inactive_idx])
+
+    Lc_pc[active_idx] = Lc_pc[active_idx] +
+      .self$computeActiveLikelihood(Yg[active_idx],  allocation_within_active[[1]][active_idx],
+                                    active_means, active_variances)
+
+    Lc_pc = Lc_pc + sigma_g_probability
+
+    R = temperature * (Lp_pp - Lc_pc)
+
+    current_and_proposed <- cbind(Yg, Yg_proposed)
+
+    current_and_proposed_likelihood <- cbind(XgLikelihood, proposed_XgLikelihood)
+
+    if(recover_x) recover()
+
+    choice_idx <- 1 + (log(runif(num_transcripts)) < R)
+
+    choice_matrix <- cbind(seq(num_transcripts), choice_idx)
+
+    Yg <<- current_and_proposed[cbind(seq(num_transcripts), choice_idx)]
+
+    if(tune){
+
+      if(length(out_spike_idx) < 2){
+
+        Yg_trace[out_spike_idx,] <<- cbind(matrix(Yg_trace[out_spike_idx,-1], nrow = length(out_spike_idx)), choice_idx[out_spike_idx] - 1)
+
+      }else{
+
+        Yg_trace[out_spike_idx,] <<- cbind(Yg_trace[out_spike_idx,-1], choice_idx[out_spike_idx] - 1)
+      }
+    }
+
+    ## update XgLikelihood, Sg and p_x
+
+    XgLikelihood <<- current_and_proposed_likelihood[choice_matrix]
+
+    .self$set_sigmaX_pX()
+
+    current_and_proposed_sigmaGProbability <- cbind(sigma_g_probability, proposed_sigmaGProbability)
+
+    sigma_g_probability[out_spike_idx] <<- current_and_proposed_sigmaGProbability[choice_matrix][out_spike_idx]
+
   }
+
+
 )

@@ -18,7 +18,7 @@ Navigate to a directory where you would like to install the zigzag repository th
 bash
 git clone https://github.com/ammonthompson/zigzag.git
 ```
-To install the R package, open an R terminal or in the console in Rstudio, type: (if your working directory is not where zigzag is, then include the relative or absolute path to zigzag)
+To install the R package, open an R terminal or in the console in Rstudio, type: (if your working directory is not where the zigzag package is, then include the path to zigzag). The package is a directory that contains the .Rproj and DESCRIPTION files.
 ```{r, eval=FALSE}
 R
 install.packages("zigzag", type = "source", repos = NULL)

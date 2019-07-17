@@ -1,15 +1,5 @@
 zigzag$methods(
 
-
-#' Title
-#'
-#' @param prefix
-#' @param post_pred_boolean
-#'
-#' @return
-#' @export
-#'
-#' @examples
   initializeOutputFiles = function(prefix, post_pred_boolean = FALSE){
 
     model_paramlist <<- c("gen", "lnl", "s0", "s1", "tau")
@@ -60,16 +50,6 @@ zigzag$methods(
 
   },
 
-
-#' Title
-#'
-#' @param prefix
-#' @param gen
-#'
-#' @return
-#' @export
-#'
-#' @examples
   writeToOutputFiles = function(prefix, gen){
 
     # Write parameter posterior samples to file
@@ -115,15 +95,6 @@ zigzag$methods(
 
   },
 
-
-#' Title
-#'
-#' @param prefix
-#'
-#' @return
-#' @export
-#'
-#' @examples
   computeGeneExpressionProbs_writeToFile = function(prefix){
 
 
@@ -144,6 +115,5 @@ zigzag$methods(
 
 
   }
-
 
 )

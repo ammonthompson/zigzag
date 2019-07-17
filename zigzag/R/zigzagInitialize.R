@@ -374,7 +374,7 @@ zigzag$methods(
 
         p_x <<- .self$get_px()
 
-        sigma_g <<- rlnorm(num_transcripts, log(Sg) + tau/10, sqrt(tau/10))
+        sigma_g[which(XgLikelihood == -Inf)] <<- rlnorm(length(which(XgLikelihood == -Inf)), 2, 1/2)
 
         XgLikelihood <<- .self$computeXgLikelihood(Xg, Yg, sigma_g, p_x)
 

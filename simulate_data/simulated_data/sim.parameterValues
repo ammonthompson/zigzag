@@ -1,0 +1,2 @@
+sim_number	mu_i	variance_i	spike_prob	weight_active	mu_a1	mu_a2	variance_a1	variance_a2	w_a1	w_a2	tau	s0	s1	alpha_r1	alpha_r2	alpha_r3	alpha_r4	alpha_r5
+sim_1	-2	2	0.1	0.7	2	6	1.5	1.5	0.95	0.05	0.5	-1.5	-0.5	20	20	20	20	20

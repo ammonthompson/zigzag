@@ -25,7 +25,7 @@ zigzag$methods(
 #'
   mcmc = function(sample_frequency = 10, ngen = 10000, target_ESS = NULL, progress_plot = FALSE,
                   write_to_files = TRUE, mcmcprefix = "out", compute_probs = TRUE,
-                  run_posterior_predictive = TRUE, append = FALSE){
+                  run_posterior_predictive = FALSE, append = FALSE){
 
     ###########################
     # initialize output files #
