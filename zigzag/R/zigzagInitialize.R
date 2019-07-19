@@ -288,9 +288,12 @@ zigzag$methods(
     tau_shape <<- tau_shape
     tau_rate <<- tau_rate
 
-    s0 <<- rnorm(1, s0_mu, s0_sigma)
-    s1 <<- -rgamma(1, s1_shape, s1_rate)
-    tau <<- rgamma(1, tau_shape, tau_rate)
+    # s0 <<- rnorm(1, s0_mu, s0_sigma)
+    # s1 <<- -rgamma(1, s1_shape, s1_rate)
+    # tau <<- rgamma(1, tau_shape, tau_rate)
+    s0 <<- rnorm(1, 0, 0.1)
+    s1 <<- -rgamma(1, 1, 5)
+    tau <<- rgamma(1, 1, 5)
 
     s0_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
     s1_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
@@ -349,8 +352,8 @@ zigzag$methods(
 
     ## Initialize Sigma_x and Sigma_g gene variance and shrinkage prior parameters
     Sg <<- exp(s0 + s1 * Yg)
-    # sigma_g <<- rlnorm(num_transcripts, 1, 1/2)
-    sigma_g <<- rlnorm(num_transcripts, log(Sg) + tau/25, sqrt(tau)/5 )
+    # sigma_g <<- rlnorm(num_transcripts, 1/2, 1/5)
+    sigma_g <<- rlnorm(num_transcripts, log(Sg) + tau, sqrt(tau) )
     sigma_g_trace <<- t(sapply(seq(num_transcripts), function(g){return(c(rep(0,77),rep(1,23)))}))
 
     p_x <<- .self$get_px()
@@ -376,9 +379,9 @@ zigzag$methods(
 
         p_x <<- .self$get_px()
 
-        # sigma_g[which(XgLikelihood == -Inf)] <<- rlnorm(length(which(XgLikelihood == -Inf)), 1, 1/2)
+        # sigma_g[which(XgLikelihood == -Inf)] <<- rlnorm(length(which(XgLikelihood == -Inf)), 1/2, 1/5)
         sigma_g[which(XgLikelihood == -Inf)] <<- rlnorm(length(which(XgLikelihood == -Inf)),
-                                                        log(Sg[which(XgLikelihood == -Inf)]) + tau/25, sqrt(tau)/5 )
+                                                        log(Sg[which(XgLikelihood == -Inf)]) + tau, sqrt(tau))
 
 
         XgLikelihood <<- .self$computeXgLikelihood(Xg, Yg, sigma_g, p_x)

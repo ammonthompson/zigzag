@@ -1,16 +1,16 @@
 # read some data
 
 
-dat <- read.table("../simulate_data/simulated_data/sim85_experiment_lib4_var2_nactive1919.tsv", header=TRUE, row.names=1)
+dat <- read.table("../../../bitbucket_repos/nmix_data_files/gtex_data/subfile1_25libs_Lung_RNA.tpm", header=TRUE, row.names=1)
 
-gene_length_df = read.table("../simulate_data/simulated_data/sim85_experiment_lib4_var2_gene_length.tsv", row.names = 1, header = FALSE)
+gene_length_df = read.table("../../../bitbucket_repos/nmix_data_files/gtex_data/protCoding_GTEx_hg19_meanLength.txt", row.names = 1, header = FALSE)
 
 
 sq=rbind(c(1,2),c(3,4)); layout(sq)
 
 mm <- zigzag$new(data = dat, gene_length = gene_length_df, candidate_gene_list = "random",
                     output_directory = "../testing", num_active_components =2,
-                    threshold_a = c(0,3), active_gene_set = NULL, shared_active_variances = T, beta = 1)
+                    threshold_a = c(0), active_gene_set = NULL, shared_active_variances = T, beta = 1)
 
 
 mm$burnin(sample_frequency = 20, burnin_target_acceptance_rate=0.44, progress_plot = T,
@@ -18,7 +18,7 @@ mm$burnin(sample_frequency = 20, burnin_target_acceptance_rate=0.44, progress_pl
 
 
 mm$mcmc(sample_frequency = 50, progress_plot = F, write_to_files = T, ngen=100000, append = F,
-        run_posterior_predictive = F, mcmcprefix = "sim85_t1")
+        run_posterior_predictive = T, mcmcprefix = "sim85_t1")
 
 
 

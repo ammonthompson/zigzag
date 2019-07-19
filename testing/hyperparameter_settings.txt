@@ -20,4 +20,4 @@ inactive_means_prior_rate	0.333333333333333
 inactive_variances_prior_min	0.01
 inactive_variances_prior_max	5
 threshold_i	0
-threshold_a	0, 3
+threshold_a	0
