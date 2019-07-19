@@ -1,15 +1,15 @@
 # read some data
 
 
-dat <- read.table("../simulate_data/simulated_data/sim1_sim_nactive3500.tsv", header=TRUE, row.names=1)
+dat <- read.table("../simulate_data/simulated_data/sim85_experiment_lib4_var2_nactive1919.tsv", header=TRUE, row.names=1)
 
-gene_length_df = read.table("../simulate_data/simulated_data/sim1_sim_gene_length.tsv", row.names = 1, header = FALSE)
+gene_length_df = read.table("../simulate_data/simulated_data/sim85_experiment_lib4_var2_gene_length.tsv", row.names = 1, header = FALSE)
 
 
 sq=rbind(c(1,2),c(3,4)); layout(sq)
 
-mm <- zigzag$new(data = dat[1:3000,1:3], gene_length = gene_length_df[1:3000,1], candidate_gene_list = "random",
-                    output_directory = "../testing", num_active_components =1,
+mm <- zigzag$new(data = dat, gene_length = gene_length_df, candidate_gene_list = "random",
+                    output_directory = "../testing", num_active_components =2,
                     threshold_a = c(1, 4), active_gene_set = NULL, shared_active_variances = T, beta = 1)
 
 
@@ -17,8 +17,8 @@ mm$burnin(sample_frequency = 50, burnin_target_acceptance_rate=0.44, progress_pl
           write_to_files = T, ngen=5000, append = F)
 
 
-mm$mcmc(sample_frequency = 50, progress_plot = F, write_to_files = T, ngen=50000, append = F,
-        run_posterior_predictive = F, mcmcprefix = "sim_spikebug")
+mm$mcmc(sample_frequency = 50, progress_plot = F, write_to_files = T, ngen=100000, append = F,
+        run_posterior_predictive = F, mcmcprefix = "sim85_t1")
 
 
 
