@@ -349,7 +349,8 @@ zigzag$methods(
 
     ## Initialize Sigma_x and Sigma_g gene variance and shrinkage prior parameters
     Sg <<- exp(s0 + s1 * Yg)
-    sigma_g <<- rlnorm(num_transcripts, 2, 1/2)
+    # sigma_g <<- rlnorm(num_transcripts, 1, 1/2)
+    sigma_g <<- rlnorm(num_transcripts, log(Sg) + tau/25, sqrt(tau)/5 )
     sigma_g_trace <<- t(sapply(seq(num_transcripts), function(g){return(c(rep(0,77),rep(1,23)))}))
 
     p_x <<- .self$get_px()
@@ -368,13 +369,17 @@ zigzag$methods(
 
       while(count(XgLikelihood, value = -Inf) > 0){
 
-        Yg[which(XgLikelihood == -Inf)] <<- rnorm(length(which(XgLikelihood == -Inf)), inactive_means, sqrt(inactive_variances))
+        Yg[which(XgLikelihood == -Inf)] <<- rnorm(length(which(XgLikelihood == -Inf)),
+                                                  inactive_means, sqrt(inactive_variances))
 
         Sg <<- exp(s0 + s1 * Yg)
 
         p_x <<- .self$get_px()
 
-        sigma_g[which(XgLikelihood == -Inf)] <<- rlnorm(length(which(XgLikelihood == -Inf)), 2, 1/2)
+        # sigma_g[which(XgLikelihood == -Inf)] <<- rlnorm(length(which(XgLikelihood == -Inf)), 1, 1/2)
+        sigma_g[which(XgLikelihood == -Inf)] <<- rlnorm(length(which(XgLikelihood == -Inf)),
+                                                        log(Sg[which(XgLikelihood == -Inf)]) + tau/25, sqrt(tau)/5 )
+
 
         XgLikelihood <<- .self$computeXgLikelihood(Xg, Yg, sigma_g, p_x)
 
