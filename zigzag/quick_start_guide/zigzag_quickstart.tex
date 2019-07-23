@@ -1,0 +1,360 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={z\^{}i\_gz\^{}a\_g quick start guide},
+            pdfauthor={Ammon Thompson},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{{#1}}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{{#1}}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{{#1}}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{{#1}}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{{#1}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{{#1}}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{{#1}}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{{#1}}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{{#1}}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{{#1}}}
+\newcommand{\ImportTok}[1]{{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{{#1}}}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{{#1}}}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{{#1}}}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{{#1}}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{{#1}}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{{#1}}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{{#1}}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{{#1}}}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{{#1}}}}
+\newcommand{\BuiltInTok}[1]{{#1}}
+\newcommand{\ExtensionTok}[1]{{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{{#1}}}
+\newcommand{\RegionMarkerTok}[1]{{#1}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{{#1}}}}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{{#1}}}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{{#1}}}}
+\newcommand{\NormalTok}[1]{{#1}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{\(z^i_gz^a_g\) quick start guide}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Ammon Thompson}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{July 9, 2019}
+
+
+\begin{document}
+\maketitle
+
+\subsubsection{Install zigzag}\label{install-zigzag}
+
+Navigate to a directory where you would like to install the zigzag
+repository that contains the R package, zigzag.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{bash}
+\KeywordTok{git} \NormalTok{clone https://github.com/ammonthompson/zigzag.git}
+\end{Highlighting}
+\end{Shaded}
+
+To install the R package, open an R terminal or in the console in
+Rstudio, type: (if your working directory is not where the zigzag
+package is, then include the path to zigzag). The package is a directory
+that contains the .Rproj and DESCRIPTION files.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{R}
+\KeywordTok{install.packages}\NormalTok{(}\StringTok{"zigzag"}\NormalTok{, }\DataTypeTok{type =} \StringTok{"source"}\NormalTok{, }\DataTypeTok{repos =} \OtherTok{NULL}\NormalTok{)}
+\KeywordTok{require}\NormalTok{(zigzag)}
+\end{Highlighting}
+\end{Shaded}
+
+Note, zigzag depends on R packages coda and matrixStates.
+
+\subsubsection{Load Expression and Gene Length
+Data}\label{load-expression-and-gene-length-data}
+
+After cloning the zigzag repository and instaling the zigzag R package,
+open R and set the quick\_start\_guide directory to your working
+directory. We have provided example data for this tutorial. These are
+subsets of genes used in the zigzag publication (cation). You can
+copy-and-paste the R code to run analyses.
+
+The expression data is found in the quick\_start\_guide directory. These
+files contain the TPM levels of 5,000 genes estimated in 4 human lung
+RNA-seq libraries from the GTEx dataset. zigzag requires the data
+contain row names which are gene names and column names which are the
+RNA sample labels. Ensure the row names correspond in the gene length
+and expression files.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{expression_data =}\StringTok{ }\KeywordTok{read.table}\NormalTok{(}\StringTok{"example_lung.tpm"}\NormalTok{, }\DataTypeTok{header =} \NormalTok{T, }\DataTypeTok{row.names =} \DecValTok{1}\NormalTok{)}
+
+\KeywordTok{head}\NormalTok{(}\KeywordTok{round}\NormalTok{(expression_data, }\DataTypeTok{digits =} \DecValTok{1}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                 Lib_1 Lib_2 Lib_3 Lib_4
+## ENSG00000127720   1.5   3.3   4.1   5.0
+## ENSG00000256574   0.2   1.0   0.4   0.1
+## ENSG00000109819   1.7   3.3   2.3   1.9
+## ENSG00000161057  42.8  53.3  44.2  48.9
+## ENSG00000237787   0.0   0.0   0.0   0.0
+## ENSG00000051596   2.8   3.0   6.1   5.6
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{human_gene_lengths =}\StringTok{ }\KeywordTok{read.table}\NormalTok{(}\StringTok{"example_gene_length.txt"}\NormalTok{, }\DataTypeTok{header =} \NormalTok{T, }\DataTypeTok{row.names =} \DecValTok{1}\NormalTok{)}
+
+\KeywordTok{head}\NormalTok{(}\KeywordTok{round}\NormalTok{(human_gene_lengths, }\DataTypeTok{digits =} \DecValTok{1}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                 gene_length
+## ENSG00000127720       872.5
+## ENSG00000256574      1756.3
+## ENSG00000109819      1391.7
+## ENSG00000161057      1335.7
+## ENSG00000237787       577.0
+## ENSG00000051596       767.0
+\end{verbatim}
+
+\subsubsection{Examine transcriptome
+distribution}\label{examine-transcriptome-distribution}
+
+The model used in zigzag assumes the transcriptome distribution is
+approximately bimodal and that each sub-distribution is approximately
+Normal, i.e.~symmetrical bell-shaped distributions on the log-scale.
+
+It is a good idea to check the densities of all libraries to make sure
+none of the data is anomalous. The vertical lines indicate good
+boundaries for setting component mean prior thresholds. The thick blue
+line on the left shows a good upper and lower boundary for the inactive
+distribution the main active distribution respectively. The thin red
+line on the right shows the boundary for a possible minor subpopulation
+of genes with high expression.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{plot}\NormalTok{(}\KeywordTok{density}\NormalTok{(}\KeywordTok{log}\NormalTok{(expression_data[,}\DecValTok{1}\NormalTok{])), }\DataTypeTok{main =}\StringTok{""}\NormalTok{, }\DataTypeTok{xlab =} \StringTok{"log Expression"}\NormalTok{, }\DataTypeTok{ylim =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\FloatTok{0.25}\NormalTok{))}
+
+\NormalTok{for(i in }\KeywordTok{seq}\NormalTok{(}\KeywordTok{ncol}\NormalTok{(expression_data))) }\KeywordTok{lines}\NormalTok{(}\KeywordTok{density}\NormalTok{(}\KeywordTok{log}\NormalTok{(expression_data[,i])))}
+
+\KeywordTok{abline}\NormalTok{(}\DataTypeTok{v =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{4}\NormalTok{), }\DataTypeTok{lwd =} \KeywordTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{), }\DataTypeTok{col =} \KeywordTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{, }\StringTok{"red"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{zigzag_quickstart_files/figure-latex/unnamed-chunk-5-1.pdf}
+
+\subsubsection{Load data and set priors in a zigzag
+object}\label{load-data-and-set-priors-in-a-zigzag-object}
+
+We will next load the data into a zigzag object that specifies a mixture
+model that contains two subdistributions in the active expression
+component with boundaries set at 0 and 4 using the threshold\_a flag:
+threshold\_a = c(1, 4). The upper threshold for the inactive mean prior
+is by default equal to the threshold\_a{[}1{]}. All other priors we will
+keep the default settings. Alternatively, ordered offsets for the means
+can be specified by only setting one lower threshold for the active
+compontnents: threshold\_a = 1. To see all zigzag variables and default
+settings including hyperpriors type ?zigzag in the R consol.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{my_zigzag =}\StringTok{ }\NormalTok{zigzag$}\KeywordTok{new}\NormalTok{(}\DataTypeTok{data =} \NormalTok{expression_data, }\DataTypeTok{gene_length =} \NormalTok{human_gene_lengths, }
+                       \DataTypeTok{output_directory =} \StringTok{"my_zigzag_output"}\NormalTok{, }
+                       \DataTypeTok{num_active_components =} \DecValTok{2}\NormalTok{, }\DataTypeTok{threshold_a =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{4}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+When the zigzag object is created, the hyperprior settings will be
+summarized in the file:
+example\_zigzag\_output/hyperparameter\_settings.txt
+
+\subsubsection{Run Burnin and assess convergence with log
+files}\label{run-burnin-and-assess-convergence-with-log-files}
+
+Use the burnin function to run an initial burnin. Here we will run the
+analysis for 5000 generations sampling every 50 generations of the
+chain. If write\_to\_files == TRUE, the burnin sample will, by default,
+be written to files in a directory called
+example\_zigzag\_output/output\_burnin. Type ?burnin for more details.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{my_zigzag$}\KeywordTok{burnin}\NormalTok{(}\DataTypeTok{sample_frequency =} \DecValTok{50}\NormalTok{, }\DataTypeTok{progress_plot =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{write_to_files =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{ngen=}\DecValTok{10000}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+evaluate the burnin log files to determine if the chain has converged to
+the stationary distribution. If satisfied all parameter chains have
+converged, run the mcmc. Type ?mcmc for more details.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{burn =}\StringTok{ }\KeywordTok{read.table}\NormalTok{(}\StringTok{"example_zigzag_output/output_burnin/output_model_parameters.log"}\NormalTok{, }\DataTypeTok{header =} \NormalTok{T, }\DataTypeTok{row.names =}\DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{for(i in }\KeywordTok{seq}\NormalTok{(}\KeywordTok{ncol}\NormalTok{(burn))) }\KeywordTok{plot}\NormalTok{(burn[,i], }\DataTypeTok{type =} \StringTok{"l"}\NormalTok{, }\DataTypeTok{main =} \KeywordTok{colnames}\NormalTok{(burn)[i])}
+\end{Highlighting}
+\end{Shaded}
+
+For example, the variable s0 appears to have converged on the stationary
+distribution around -2:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{plot}\NormalTok{(burn[,}\DecValTok{2}\NormalTok{], }\DataTypeTok{type =} \StringTok{"l"}\NormalTok{, }\DataTypeTok{main =} \KeywordTok{colnames}\NormalTok{(burn)[}\DecValTok{2}\NormalTok{])}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{zigzag_quickstart_files/figure-latex/unnamed-chunk-10-1.pdf}
+
+\subsubsection{Run MCMC}\label{run-mcmc}
+
+To sample from the posterior distribution fun the mcmc function.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{my_zigzag$}\KeywordTok{mcmc}\NormalTok{(}\DataTypeTok{sample_frequency =} \DecValTok{50}\NormalTok{, }\DataTypeTok{ngen =} \DecValTok{50000}\NormalTok{, }\DataTypeTok{mcmcprefix =} \StringTok{"human_lung"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Output files}\label{output-files}
+
+MCMC posterior sample files and posterior predictive simulations are
+located in the directory:
+example\_zigzag\_output/example\_lung\_mcmc\_output.
+
+Assess MCMC behavior.
+
+To plot all parameter mcmc chains:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{for(i in }\KeywordTok{seq}\NormalTok{(}\KeywordTok{ncol}\NormalTok{(post))) }\KeywordTok{plot}\NormalTok{(post[,i], }\DataTypeTok{type =} \StringTok{"l"}\NormalTok{, }\DataTypeTok{main =} \KeywordTok{colnames}\NormalTok{(post)[i])}
+\end{Highlighting}
+\end{Shaded}
+
+For example, s0 doesn't appear to shift or drift from a stable
+distribution around -2:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{plot}\NormalTok{(post[,}\DecValTok{2}\NormalTok{], }\DataTypeTok{type =} \StringTok{"l"}\NormalTok{, }\DataTypeTok{main =} \KeywordTok{colnames}\NormalTok{(post)[}\DecValTok{2}\NormalTok{])}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{zigzag_quickstart_files/figure-latex/unnamed-chunk-14-1.pdf}
+
+The probability each gene in the data is actively expressed is in the
+file: example\_lung\_probability\_active.tab
+
+\begin{verbatim}
+##                 prob_active
+## ENSG00000127720        0.78
+## ENSG00000256574        0.04
+## ENSG00000109819        0.68
+## ENSG00000161057        1.00
+## ENSG00000237787        0.00
+## ENSG00000051596        0.88
+\end{verbatim}
+
+Finally, you will want to create at least 2 zigzag objects and run two
+independent MCMC's and confirm they converge on the same stationary
+distribution for all parameters and produce the same estimates of the
+probability of active expression for all genes.
+
+
+\end{document}

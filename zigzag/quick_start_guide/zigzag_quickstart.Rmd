@@ -2,7 +2,10 @@
 title: "$z^i_gz^a_g$ quick start guide"
 author: "Ammon Thompson"
 date: "July 9, 2019"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
+  pdf_format: default
 ---
 
 ```{r setup, include=FALSE}
@@ -70,7 +73,7 @@ We will next load the data into a zigzag object that specifies a mixture model t
 
 ```{r, , eval=FALSE}
 my_zigzag = zigzag$new(data = expression_data, gene_length = human_gene_lengths, 
-                       output_directory = "example_zigzag_output", 
+                       output_directory = "my_zigzag_output", 
                        num_active_components = 2, threshold_a = c(1, 4))
 ```
 When the zigzag object is created, the hyperprior settings will be summarized in the file: example_zigzag_output/hyperparameter_settings.txt
@@ -111,7 +114,7 @@ plot(burn[,2], type = "l", main = colnames(burn)[2])
 To sample from the posterior distribution fun the mcmc function.
 
 ```{r,, eval = FALSE}
-my_zigzag$mcmc(sample_frequency = 50, ngen = 50000, mcmcprefix = "example_lung")
+my_zigzag$mcmc(sample_frequency = 50, ngen = 50000, mcmcprefix = "human_lung")
 ```
 
 
@@ -120,7 +123,7 @@ my_zigzag$mcmc(sample_frequency = 50, ngen = 50000, mcmcprefix = "example_lung")
 MCMC posterior sample files and posterior predictive simulations are located in the directory: example_zigzag_output/example_lung_mcmc_output. 
 
 Assess MCMC behavior.
-```{r, eval = TRUE, echo = TRUE}
+```{r, eval = TRUE, echo = FALSE}
 post = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung_model_parameters.log", header = T, row.names = 1)
 ```
 
@@ -142,7 +145,7 @@ plot(post[,2], type = "l", main = colnames(post)[2])
 
 The probability each gene in the data is actively expressed is in the file: example_lung_probability_active.tab
 
-```{r,,echo = TRUE}
+```{r,,echo = FALSE}
 Pr = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung_probability_active.tab", header = T, row.names = 1)
 
 head(round(Pr, digits = 2))

@@ -1,0 +1,8 @@
+*.pdf
+/.Rproj.user/*
+/.Rhistory
+/.RData
+/zigzag/zigzag/quick_start_guide/*synctex.gz
+/zigzag/zigzag/quick_start_guide/*.out
+/zigzag/zigzag/quick_start_guide/*.log
+/zigzag/zigzag/quick_start_guide/*.aux
