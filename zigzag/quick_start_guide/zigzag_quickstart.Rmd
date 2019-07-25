@@ -86,7 +86,7 @@ Use the burnin function to run an initial burnin. Here we will run the analysis 
 If write_to_files == TRUE, the burnin sample will, by default, be written to files in a directory called example_zigzag_output/output_burnin. Type ?burnin for more details.
 
 ```{r,, eval = FALSE}
-my_zigzag$burnin(sample_frequency = 50, progress_plot = TRUE, write_to_files = TRUE, ngen=10000)
+my_zigzag$burnin(sample_frequency = 50, progress_plot = TRUE, write_to_files = TRUE, ngen=5000)
 ```
 
 
@@ -94,7 +94,8 @@ evaluate the burnin log files to determine if the chain has converged to the sta
 
 ```{r, eval = TRUE, echo = TRUE}
 
-burn = read.table("example_zigzag_output/output_burnin/output_model_parameters.log", header = T, row.names =1)
+burn = read.table("example_zigzag_output/output_burnin/output_model_parameters.log", 
+                  header = T, row.names =1)
 ```
 
 ```{r, eval = FALSE}
@@ -114,7 +115,7 @@ plot(burn[,2], type = "l", main = colnames(burn)[2])
 To sample from the posterior distribution fun the mcmc function.
 
 ```{r,, eval = FALSE}
-my_zigzag$mcmc(sample_frequency = 50, ngen = 50000, mcmcprefix = "human_lung")
+my_zigzag$mcmc(sample_frequency = 50, ngen = 10000, mcmcprefix = "human_lung")
 ```
 
 
@@ -123,8 +124,9 @@ my_zigzag$mcmc(sample_frequency = 50, ngen = 50000, mcmcprefix = "human_lung")
 MCMC posterior sample files and posterior predictive simulations are located in the directory: example_zigzag_output/example_lung_mcmc_output. 
 
 Assess MCMC behavior.
-```{r, eval = TRUE, echo = FALSE}
-post = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung_model_parameters.log", header = T, row.names = 1)
+```{r, eval = FALSE, echo = TRUE}
+post = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung_model_parameters.log", 
+                  header = T, row.names = 1)
 ```
 
 To plot all parameter mcmc chains:
@@ -134,7 +136,7 @@ for(i in seq(ncol(post))) plot(post[,i], type = "l", main = colnames(post)[i])
 ```
 
 For example, s0 doesn't appear to shift or drift from a stable distribution around -2:
-```{r, eval = TRUE, echo = TRUE}
+```{r, eval = FALSE, echo = TRUE}
 
 plot(post[,2], type = "l", main = colnames(post)[2])
 
@@ -145,8 +147,9 @@ plot(post[,2], type = "l", main = colnames(post)[2])
 
 The probability each gene in the data is actively expressed is in the file: example_lung_probability_active.tab
 
-```{r,,echo = FALSE}
-Pr = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung_probability_active.tab", header = T, row.names = 1)
+```{r,,echo = TRUE}
+Pr = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung_probability_active.tab",
+                header = T, row.names = 1)
 
 head(round(Pr, digits = 2))
 
