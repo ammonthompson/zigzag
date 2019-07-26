@@ -103,7 +103,7 @@ zigzag$methods(
        #plot variance trend
        plotdx = seq(-6,8,by=0.1)
        # plot(rowMeans(Xg),rowVars(Xg), xlim=c(-6,8), ylim=c(0,5),col=rgb(0,0,0,0.1))
-       plot(Yg,sigma_g, xlim=c(-6,8), ylim = c(0, 50),col=rgb(0,0,0,0.1))
+       plot(Yg,sigma_g, xlim=c(-6,8), ylim = c(0, 0.5 * max(sigma_g)),col=rgb(0,0,0,0.1))
        polygon(c(plotdx, rev(plotdx)),
                c(qlnorm(0.025, s0 + s1*plotdx + tau, sqrt(tau)), rev(qlnorm(0.975, s0 + s1*plotdx +tau, sqrt(tau)))),
                col = rgb(1,0,0,0.2))
