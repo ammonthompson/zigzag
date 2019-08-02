@@ -8,7 +8,7 @@ gene_length_df = read.table("../../../bitbucket_repos/nmix_data_files/gtex_data/
 
 sq=rbind(c(1,2),c(3,4)); layout(sq)
 
-mm <- zigzag$new(data = alldat[,sample(seq(ncol(alldat)), 10, replace = F)], gene_length = gene_length_df$V2[-1], candidate_gene_list = "random",
+mm <- zigzag$new(data = alldat[1:1000,sample(seq(ncol(alldat)), 10, replace = F)], gene_length = gene_length_df$V2[-1][1:1000], candidate_gene_list = "random",
                     output_directory = "../testing", num_active_components =2,
                     threshold_i = -1, threshold_a = c(0,3), active_gene_set = NULL, shared_active_variances = T, beta = 1)
 

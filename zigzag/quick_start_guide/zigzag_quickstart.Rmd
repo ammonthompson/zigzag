@@ -35,7 +35,7 @@ Note, zigzag depends on R packages coda and matrixStates.
 After cloning the zigzag repository and instaling the zigzag R package, open R and set the quick_start_guide directory to your working directory.
 We have provided example data for this tutorial. These are subsets of genes used in the zigzag publication (cation). You can copy-and-paste the R code to run analyses. 
 
-The expression data is found in the quick_start_guide directory. These files contain the TPM levels of 5,000 genes estimated in 4 human lung RNA-seq libraries from the GTEx dataset. zigzag requires the data contain row names which are gene names and column names which are the RNA sample labels. Ensure the row names correspond in the gene length and expression files.
+The expression data is found in the quick_start_guide directory. These files contain the TPM levels of 5,000 genes estimated in 4 human lung RNA-seq libraries from the GTEx dataset. 
 
 ```{r,}
 expression_data = read.table("example_lung.tpm", header = T, row.names = 1)
@@ -43,6 +43,7 @@ expression_data = read.table("example_lung.tpm", header = T, row.names = 1)
 head(round(expression_data, digits = 1))
 ```
 
+zigzag requires the data contain row names which are gene names and column names which are the RNA sample labels. Ensure the row names correspond in the gene length and expression files.
 ```{r,}
 human_gene_lengths = read.table("example_gene_length.txt", header = T, row.names = 1)
 
@@ -69,14 +70,14 @@ abline(v = c(1, 4), lwd = c(2, 1), col = c("blue", "red"))
 
 
 ### Load data and set priors in a zigzag object
-We will next load the data into a zigzag object that specifies a mixture model that contains two subdistributions in the active expression component with boundaries set at 0 and 4 using the threshold_a flag: threshold_a = c(1, 4).  The upper threshold for the inactive mean prior is by default equal to the threshold_a[1]. All other priors we will keep the default settings. Alternatively, ordered offsets for the means can be specified by only setting one lower threshold for the active compontnents: threshold_a = 1. To see all zigzag variables and default settings including hyperpriors type ?zigzag in the R consol.
+We will next load the data into a zigzag object that specifies a mixture model that contains two subdistributions in the active expression component with boundaries set at 1 and 4 using the threshold_a flag: threshold_a = c(1, 4).  The upper threshold for the inactive mean prior is by default equal to the threshold_a[1]. All other priors we will keep the default settings. Alternatively, ordered offsets for the means can be specified by only setting one lower threshold for the active compontnents: threshold_a = 1. To see all zigzag variables and default settings including hyperpriors type ?zigzag in the R consol.
 
 ```{r, , eval=FALSE}
 my_zigzag = zigzag$new(data = expression_data, gene_length = human_gene_lengths, 
                        output_directory = "my_zigzag_output", 
                        num_active_components = 2, threshold_a = c(1, 4))
 ```
-When the zigzag object is created, the hyperprior settings will be summarized in the file: example_zigzag_output/hyperparameter_settings.txt
+When the zigzag object is created, the hyperprior settings will be summarized in a file in your output_directory, in this case my_zigzag_output, called: hyperparameter_settings.txt
 
 
 
@@ -97,6 +98,9 @@ evaluate the burnin log files to determine if the chain has converged to the sta
 burn = read.table("example_zigzag_output/output_burnin/output_model_parameters.log", 
                   header = T, row.names =1)
 ```
+
+
+If you interrupt the burnin, when you call the burnin function again it will start from where you left off.
 
 ```{r, eval = FALSE}
 
