@@ -1,0 +1,17 @@
+sigmag_tau	random
+sigmax_s0	random
+sigmax_s1	random
+num_libs	4
+num_genes	5000
+lambda_c	random
+ymeans_i	-2
+ymeans_a1	2
+ymeans_a2	3
+yVariance_i	2
+yVariance_a1	2
+yVariance_a2	2
+weight_active	random
+weight_a1	1
+weight_a2	0
+spike_prob	random
+num_sims	100
