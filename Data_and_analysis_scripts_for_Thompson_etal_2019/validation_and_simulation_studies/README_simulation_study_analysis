@@ -1,0 +1,164 @@
+##################################################################################################################
+## Instructions for simulating and analyzing data to replicate simulation studies in Thompson et al. XXXX 201X ###
+##################################################################################################################
+
+To generate simulated data, use the Rscript:
+simulate_nmix.cf.r my_control_file.cf output_prefix num_yg
+
+For coverage estimation to simulate from the joint prior distribution, use the Rscript:
+simulate_fromPrior_nmix.cf.r my_control_file.cf output_prefix num_yg
+
+These scripts first takes in the control file for the model parameters, *.cf, then a prefix for naming the output files, and finally, the n$
+The script also produces a file that contains num_yg gene names which can be used to in the zigzag setting candidate_gene_list to o$
+The script also produces a file called *.parameterValues with all simulated parameter values.
+
+
+General R commands for running a zigzag analysis. Requires a gene expression and a gene length file and optionally a genelist file containing genes of interest that you want output posterior files:
+dat <- read.table("simulated_expression_file", header=TRUE, row.names=1)
+genelength <- read.table("simulated_gene_length_file", row.names=1, header=FALSE)
+genelist <- read.table("simulated_gene_list_of_interest", row.names = 1, header = FALSE)
+
+my_zigzag <- zigzag$new(data = dat, gene_length = genelength, candidate_gene_list = genelist,
+        output_directory = "zigzag_output", num_active_components = num_comps, threshold_a = a_thresholds)
+		
+my_zigzag$burnin(sample_frequency = 100, progress_plot = F, write_to_files = F, ngen=10000)
+my_zigzag$mcmc(mcmcprefix = "fileprefix", sample_frequency = 20, progress_plot = F, write_to_files = T, ngen = 100000)
+
+
+############################################################################################################################
+
+S1.4.3: Validation Experiment 1. Comparing Analytical and Numerical Prior Distributions
+priordat = matrix(c(-Inf, -Inf), nrow = 1)
+goi = "gene1"
+row.names(priordat) = c("gene1")
+
+mm <- zigzag$new(data = priordat, gene_length = NULL, candidate_gene_list = goi,
+                    output_directory = "../testing_prior", num_active_components =2,
+                    threshold_i = 0, threshold_a = c(0,5), active_gene_set = NULL,
+                    shared_active_variances = T, beta = 0)
+
+mm$burnin(sample_frequency = 20, burnin_target_acceptance_rate=0.44, progress_plot = F,
+	 write_to_files = F, ngen=4000, append = F)
+
+
+mm$mcmc(sample_frequency = 50, progress_plot = F, write_to_files = T, ngen=4000000, mcmcprefix = "prior")
+
+
+############################################################################################################################
+
+S1.4.4: Validation Experiment 2. Computing coverage probabilities
+create a simulation control file with these settings:
+sigmag_tau      random
+sigmax_s0       random
+sigmax_s1       random
+num_libs        4
+num_genes       6000
+lambda_c        random
+ymeans_i        random
+ymeans_a1       random
+ymeans_a2       random
+yVariance_i     random
+yVariance_a1    random
+yVariance_a2    random
+weight_active   random
+weight_a1       random
+weight_a2       random
+spike_prob      random
+num_sims        200
+
+simulate_fromPrior_nmix.cf.r *.cf output_prefix 1
+
+For eash simulation (200) use zigzag with hyperparameters set to the same values as those used to simulate the data in the simulate_fromPrior_nmix.cf.r script:
+
+dat <- read.table("simulated_expression_data", header=TRUE, row.names=1)
+genelength <- read.table("simulated_gene_lengths", row.names=1, header=FALSE)
+
+mm <- zigzag(data = dat, gene_length = genelength, candidate_gene_list = genelist, output_directory = "zigzag_output",
+                num_active_components = 2,
+                active_means_dif_prior_shape = 2,  active_means_dif_prior_rate = 2,
+                inactive_means_prior_shape = 2, inactive_means_prior_rate = 2,
+                inactive_variances_prior_min = 1, active_variances_prior_min = 1,
+                inactive_variances_prior_max = 10, active_variances_prior_max = 10,
+                weight_active_shape_1 = 10, weight_active_shape_2 = 10,
+                alpha_r_shape = 15, alpha_r_rate = 1, s0_mu = -3, s0_sigma = 1/5, s1_shape = 1, s1_rate = 10,
+                tau_shape = 10, tau_rate = 60, spike_prior_shape_1 = 2, spike_prior_shape_2 = 8,
+                threshold_i = 0, threshold_a = c(1, 8) )
+
+mm$burnin(burninprefix = fileprefix, sample_frequency = 100,
+        burnin_target_acceptance_rate=0.44, progress_plot = F, write_to_files = F, ngen=20000)
+
+mm$mcmc(mcmcprefix = fileprefix, sample_frequency = 50, progress_plot = F, write_to_files = T, ngen = generations, run_posterior_predictive = F)
+
+
+############################################################################################################################
+
+S2.2: Simulation Studies
+
+############################################################################################################################
+experiment 1: Power
+First, for each condition simulate 100 datasets consisting of expression levels and gene lengths.
+To simulate data, create a control file that sets parameter conditions, for example a control file called my_control_file.cf: 
+
+sigmag_tau      random
+sigmax_s0       random
+sigmax_s1       random
+num_libs        6
+num_genes       5000
+lambda_c        random
+ymeans_i        -2
+ymeans_a1       2
+ymeans_a2       6
+yVariance_i     3
+yVariance_a1    3
+yVariance_a2    3
+weight_active   random
+weight_a1       random
+weight_a2       random
+spike_prob      random
+num_sims        100
+
+
+All these parameters must be set in the above order. Parameters set to random will be generated from the distributions specified in section S2.2.
+Gene lengths are simulated by drawing random gene lengths from the file forSims_mean_geneLength_grch38_gencode.v24.txt which are average gene lengths we calculated from the human genome annotation GRCH38 Gencode Version 24. 
+
+To perform the experiment in the paper Thompson et al. 201X XXXX, create 9 different .cf files each with num_libs and the yVariance_XX fields according to the described experiment.
+The 9 .cf files are available in the validation_and_simulation_studies directory and are labeled sim_control_file.Xrep.varX.cf
+For example run 
+simulate_nmix.cf.r sim_control_file.2rep.var1.cf 2rep_var1 1
+to generate simulations with 2 libraries, with normal distiributions with variance = 1. And output simulated Yg and sigma_g for 1 gene to a file.
+
+Then, analyze these data with zigzag using the commands in R detailed above setting num_active_components = 2, and threshold_a = 1, and using default hyperprior settings, except setting active_variances_prior_max and inactive_variances_prior_max to 8 instead of 5.
+The burnin function is run for 10,000 generations, and then mcmc was run until 100,000 generations are complete.
+
+
+############################################################################################################################
+experiment 2: Model Misspecification
+Like experiment 1 above, with the following variable settings denoted with XXX followed by, in braces the settings for simulating data with one or two active subcomponents for a total of 4 different .cf files for the four different conditions of the experiment:
+
+sigmag_tau      random
+sigmax_s0       random
+sigmax_s1       random
+num_libs        4
+num_genes       5000
+lambda_c        random
+ymeans_i        -2
+ymeans_a1       2
+ymeans_a2       XXX {3, 4, 6}
+yVariance_i     2
+yVariance_a1    2
+yVariance_a2    2
+weight_active   random
+weight_a1       XXX {random, 1}
+weight_a2       XXX {random, 0}
+spike_prob      random
+num_sims        100
+
+The experiment is to analyze the data under either the correct model (correct number of sub-active components used to simulate the data) or under a misspecified model (analyze with one active component for data simulated with 2, and 2 active subcomponents for data simulated with 1).
+The 4 .cf files used in the study files are available in the validation_and_simulation_studies directory and are labeled numCompMisspecified_Xcomps_aXmuX.cf 
+
+
+
+
+
+
+
