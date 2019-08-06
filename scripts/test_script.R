@@ -1,16 +1,18 @@
 # read some data
 
 
-dat <- read.table("../../../bitbucket_repos/nmix_data_files/gtex_data/allgenes_liver_gtex.tpm", header=TRUE, row.names=1)
+# dat <- read.table("../../../bitbucket_repos/nmix_data_files/gtex_data/allgenes_liver_gtex.tpm", header=TRUE, row.names=1)
+dat <- read.table("../simulate_data/simulated_data/sim31_twoComps_2mu3_nactive3054.tsv", header=TRUE, row.names=1)
 
-gene_length_df = read.table("../../../bitbucket_repos/nmix_data_files/gtex_data/allgenes_hg19_mean_length.txt", row.names = 1, header = FALSE)
+gene_length_df = read.table("../simulate_data/simulated_data/sim31_twoComps_2mu3_gene_length.tsv", row.names = 1, header = FALSE)
 
 
 sq=rbind(c(1,2),c(3,4)); layout(sq)
 
-mm <- zigzag$new(data = alldat[1:1000,sample(seq(ncol(alldat)), 10, replace = F)], gene_length = gene_length_df$V2[-1][1:1000], candidate_gene_list = "random",
+mm <- zigzag$new(data = dat, gene_length = gene_length_df, candidate_gene_list = "random",
                     output_directory = "../testing", num_active_components =2,
-                    threshold_i = -1, threshold_a = c(0,3), active_gene_set = NULL, shared_active_variances = T, beta = 1)
+                    active_means_dif_prior_shape = 20000, active_means_dif_prior_rate = 10000,
+                    threshold_i = -1, threshold_a = c(0, 1), active_gene_set = NULL, shared_active_variances = T, beta = 1)
 
 
 mm$burnin(sample_frequency = 20, burnin_target_acceptance_rate=0.44, progress_plot = T,
@@ -18,7 +20,7 @@ mm$burnin(sample_frequency = 20, burnin_target_acceptance_rate=0.44, progress_pl
 
 
 mm$mcmc(sample_frequency = 50, progress_plot = F, write_to_files = T, ngen=50000, append = F,
-        run_posterior_predictive = T, mcmcprefix = "allgenes")
+        run_posterior_predictive = T, mcmcprefix = "sim31")
 
 
 
