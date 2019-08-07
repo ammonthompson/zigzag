@@ -12,7 +12,9 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
+```{r, eval = FALSE, include=FALSE}
+options(tinytex.verbose = TRUE)
+```
 
 ### Install zigzag
 Navigate to a directory where you would like to install the zigzag repository that contains the R package, zigzag. 
@@ -56,7 +58,9 @@ head(round(human_gene_lengths, digits = 1))
 ### Examine transcriptome distribution
 The model used in zigzag assumes the transcriptome distribution is approximately bimodal and that each sub-distribution is approximately Normal, i.e. symmetrical bell-shaped distributions on the log-scale.
 
-It is a good idea to check the densities of all libraries to make sure none of the data is anomalous. The vertical lines indicate good boundaries for setting component mean prior thresholds. The thick blue line on the left shows a good upper and lower boundary for the inactive distribution the main active distribution respectively. The thin red line on the right shows the boundary for a possible minor subpopulation of genes with high expression.
+It is a good idea to check the densities of all libraries to make sure all libraries conform to the assumption of bimodal normal distributions. The vertical lines below indicate boundaries I have chosen for setting component mean prior thresholds. You can perform multiple analyses assuming different prior distributions with different boundaries to determine posterior sensitivity of the parameters of interest. 
+
+The thick blue line on the left shows an example upper and lower boundary for the prior on the inactive mean and the main active distribution respectively. The thin red line on the right shows the chosen lower boundary for a possible minor subpopulation of genes with high expression in the right tail of the distribution.
 
 ```{r, echo=TRUE}
 
@@ -70,6 +74,8 @@ abline(v = c(1, 4), lwd = c(2, 1), col = c("blue", "red"))
 
 
 ### Load data and set priors in a zigzag object
+zigzag objects are of class type R6. Their member variables and methods are called with the \$ symbol. Genererically methods and variables are called as object\$method(), or object\$variable.
+
 We will next load the data into a zigzag object that specifies a mixture model that contains two subdistributions in the active expression component with boundaries set at 1 and 4 using the threshold_a flag: threshold_a = c(1, 4).  The upper threshold for the inactive mean prior is by default equal to the threshold_a[1]. All other priors we will keep the default settings. Alternatively, ordered offsets for the means can be specified by only setting one lower threshold for the active compontnents: threshold_a = 1. To see all zigzag variables and default settings including hyperpriors type ?zigzag in the R consol.
 
 ```{r, , eval=FALSE}
@@ -77,7 +83,7 @@ my_zigzag = zigzag$new(data = expression_data, gene_length = human_gene_lengths,
                        output_directory = "my_zigzag_output", 
                        num_active_components = 2, threshold_a = c(1, 4))
 ```
-When the zigzag object is created, the hyperprior settings will be summarized in a file in your output_directory, in this case my_zigzag_output, called: hyperparameter_settings.txt
+When the zigzag object is created, the hyperprior settings will be summarized in a file in your output_directory, in this case my_zigzag_output/hyperparameter_settings.txt
 
 
 
@@ -91,7 +97,7 @@ my_zigzag$burnin(sample_frequency = 50, progress_plot = TRUE, write_to_files = T
 ```
 
 
-evaluate the burnin log files to determine if the chain has converged to the stationary distribution. If satisfied all parameter chains have converged, run the mcmc. Type ?mcmc for more details.
+evaluate the burnin log files to determine if the chain has converged to the stationary distribution. The plot of sampled parameter values should randomly vary around a constant. 
 
 ```{r, eval = TRUE, echo = TRUE}
 
@@ -113,6 +119,7 @@ For example, the variable s0 appears to have converged on the stationary distrib
 plot(burn[,2], type = "l", main = colnames(burn)[2])
 ```
 
+If satisfied all parameters have converged, proceed to run the mcmc. Type ?mcmc for more details.
 
 ### Run MCMC
 
@@ -152,10 +159,10 @@ plot(post[,2], type = "l", main = colnames(post)[2])
 The probability each gene in the data is actively expressed is in the file: example_lung_probability_active.tab
 
 ```{r,,echo = TRUE}
-Pr = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung_probability_active.tab",
+prob_active = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung_probability_active.tab",
                 header = T, row.names = 1)
 
-head(round(Pr, digits = 2))
+head(round(prob_active, digits = 2))
 
 ```
 
