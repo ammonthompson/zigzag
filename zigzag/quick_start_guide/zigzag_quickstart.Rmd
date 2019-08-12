@@ -3,9 +3,9 @@ title: "$z^i_gz^a_g$ quick start guide"
 author: "Ammon Thompson"
 date: "July 9, 2019"
 output:
-  pdf_document: default
+#  pdf_document: default
   html_document: default
-  pdf_format: default
+#  pdf_format: default
 ---
 
 ```{r setup, include=FALSE}
