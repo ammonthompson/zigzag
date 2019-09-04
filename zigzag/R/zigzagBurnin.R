@@ -16,10 +16,11 @@ zigzag$methods(
 #' @param burninprefix The prefix for the burnin output directory as well as the burnin output files within
 #' @param append If files already exist from previous interrupted burnin, append to those files if TRUE.
 #'
-#' @return
-#' @export
+# @return
+# @export
 #'
-#' @examples
+# @examples
+#'
   burnin = function(sample_frequency = 10, ngen = 1000, burnin_target_acceptance_rate=0.44,
                  threads = 1, target_ESS = NULL, progress_plot = FALSE, write_to_files = TRUE,
                  burninprefix = "output", append = FALSE){

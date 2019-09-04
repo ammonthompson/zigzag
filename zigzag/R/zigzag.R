@@ -1,8 +1,10 @@
-#' zigzag reference class.
+#' @title zigzag reference class.
 #'
-#' @usage zigzag$new(data,
-#' gene_length = NULL,
-#' candidate_gene_list = "random",
+#' @description  This class contains all the tools for computing the posterior probability
+#' each gene in a dataset is active given a set of libraries. Creating a zigzag object sets all the
+#' hyperparameters and initializes all model parameters.
+#'
+#' @usage zigzag$new(data, gene_length = NULL, candidate_gene_list = "random",
 #' num_active_components = 1,
 #' weight_active_shape_1 = 2,
 #' weight_active_shape_2 = 2,
@@ -18,11 +20,9 @@
 #' active_variances_prior_max = 5,
 #' shared_active_variances = TRUE,
 #' output_directory = "output",
-#' multi_ta = FALSE,
 #' threshold_a = 0,
 #' threshold_i = threshold_a[1],
 #' beta = 1,
-#' temperature = 1,
 #' tau_shape = 1,
 #' tau_rate = 1,
 #' s0_mu = -1,
@@ -30,58 +30,25 @@
 #' s1_shape = 1,
 #' s1_rate = 2,
 #' alpha_r_shape = 1,
-#' alpha_r_rate = 1/10,
-#' active_gene_set = NULL, ...)'
-#' @field gen .
-#' @field field_list_values .
-#' @field field_list_names .
-#' @field sqrt2pi .
-#' @field active_gene_set .
-#' @field active_gene_set_idx .
-#' @field Xg .
-#' @field Yg .
-#' @field Yg_proposed .
-#' @field Yg_trace .
-#' @field output_directory .
-#' @field gene_names .
-#' @field num_libraries .
-#' @field num_active_components .
-#' @field component_matrix .
-#' @field num_transcripts .
-#' @field gene_lengths .
-#' @field multi_thresh_a .
-#' @field threshold_a .
-#' @field threshold_i .
-#' @field inf_tol .
-#' @field model_paramlist .
-#' @field lnl_trace .
-#' @field inactive_mean_tuningParam .
-#' @field inactive_variance_tuningParam .
-#' @field spike_probability_tuningParam .
-#' @field active_mean_tuningParam .
-#' @field active_variance_tuningParam .
-#' @field mixture_weight_tuningParam .
-#' @field tuningParam_s0 .
-#' @field tuningParam_s1 .
-#' @field tuningParam_tau .
-#' @field tuningParam_s0tau .
-#' @field tuningParam_alpha_r .
-#' @field tuningParam_yg .
-#' @field tuningParam_sigma_g .
-#' @field tuningParam_multi_sigma .
-#' @field tuningParam_sigma_mu .
-#' @field multi_sigma_trace .
-#' @field sigma_mu_trace .
-#' @field active_idx .
-#' @field inactive_idx .
-#' @field beta .
-#' @field beta_oneLib .
-#' @field temperature .
-#' @field proposal_vector .
-#' @field proposal_probs .
-#' @field level_1_probs .
-#' @field hieararchical_probs_oneLibrary .
-#' @field combined_probs .
+#' alpha_r_rate = 1/10, ...)
+#'
+#' @field Xg A G x R matrix containing the log-relative-expression of G genes in R libraries.
+#' @field Yg A vector of length G containing the true latent log-relative-expression for G, genes.
+#' @field output_directory A directory where burnin and and mcmc log files and plots are created and stored.
+#' @field gene_names A character vector of length G contianing the gene names.
+#' @field num_libraries The number of libraries in the data.
+#' @field num_active_components The number of Normally-distributed subcomponents of the active distribution.
+#' @field num_transcripts The number of genes or transcripts in the data depending on whether the data is gene or transcript level expression.
+#' @field gene_lengths A vector of length G, containing either the mean lengths of gene transcripts or the lengths of transcripts.
+#' @field threshold_a A vector containing the lower-bound of the prior distribution for the active component means.
+#' If the length of the threshold_a vector is < than num_active_components then threshold_a[1] is used as the lower bound for the first active component
+#' and subsequent active means are parameterized with orderd offsets rather than component-specific
+#' lower boundaries. For example, if the user specifies 3 active subcomponents and sets threshold_a = c(1,3), then
+#' the lower boundary for subcomponent 1 will be set 1, and the prior distributions for the difference between mean 1 and 2,
+#' and the difference between mean 2 and 3 will be gamma distributed.
+#' @field threshold_i The upper boundary for the inactive distribution.
+#' @field candidate_gene_list A character vector of genes of interest for which mcmc log files for Yg and sigma_g should be output.
+#' @field shared_active_variances A boolean indicating if all active subcomponents share a variance component. If FALSE, a variance parameter is estimated for each component.
 #' @field weight_active_shape_1 .
 #' @field weight_active_shape_2 .
 #' @field inactive_means_prior_shape .
@@ -109,77 +76,31 @@
 #' @field s1_shape .
 #' @field Sg .
 #' @field s0 .
-#' @field s0_trace .
 #' @field s1 .
-#' @field s1_trace .
 #' @field tau_shape .
 #' @field tau_rate .
 #' @field tau .
-#' @field tau_trace .
 #' @field sigma_g .
-#' @field sigma_g_trace .
 #' @field s0tau_trace .
 #' @field alpha_r_shape .
 #' @field alpha_r_rate .
 #' @field p_x .
 #' @field alpha_r .
-#' @field alpha_r_trace .
-#' @field all_means .
-#' @field all_variances .
-#' @field no_detect_spike .
 #' @field inactive_spike_allocation .
-#' @field in_spike_idx .
-#' @field out_spike_idx .
-#' @field all_zero_idx .
 #' @field candidate_gene_list .
-#' @field XgLikelihood .
-#' @field YgLikelihood .
-#' @field sigma_g_probability .
 #' @field allocation_active_inactive .
-#' @field allocation_active_inactive_proposed .
-#' @field allocation_trace .
 #' @field allocation_active_inactive_prob .
-#' @field allocation_active_inactive_prob_proposed .
 #' @field inactive_means .
-#' @field inactive_means_proposed .
-#' @field inactive_means_trace .
-#' @field inactive_means_prob .
-#' @field inactive_means_prob_proposed .
 #' @field inactive_variances .
-#' @field inactive_variances_proposed .
-#' @field inactive_variances_trace .
-#' @field inactive_variances_prob .
-#' @field inactive_variances_prob_proposed .
 #' @field spike_probability .
-#' @field spike_probability_proposed .
-#' @field spike_probability_trace .
-#' @field spike_probability_prob .
-#' @field spike_probability_prob_proposed .
 #' @field active_means_dif .
-#' @field active_means_dif_proposed .
-#' @field active_means_trace .
-#' @field active_means_dif_prob .
-#' @field active_means_dif_prob_proposed .
 #' @field active_means .
-#' @field shared_active_variances .
 #' @field active_variances .
-#' @field active_variances_proposed .
-#' @field active_variances_trace .
-#' @field active_variances_prob .
-#' @field active_variances_prob_proposed .
 #' @field weight_active .
-#' @field weight_active_proposed .
-#' @field weight_active_trace .
-#' @field weight_active_prob .
-#' @field weight_active_prob_proposed .
 #' @field weight_within_active .
-#' @field weight_within_active_proposed .
-#' @field weight_within_active_trace .
-#' @field weight_within_active_prob .
-#' @field weight_within_active_prob_proposed .
-#' @field mixture_weight_trace .
 #' @field allocation_within_active .
-#' @field allocation_within_active_proposed .
+#' @field beta A power exponent for the likelihood function. If set to 0, then the mcmc samples from the joint prior.
+
 
 zigzag <- setRefClass(
 
@@ -194,13 +115,11 @@ zigzag <- setRefClass(
     gen = "numeric",
 
     field_list_values = "list",
-
     field_list_names = "list",
 
     sqrt2pi = "numeric",
 
     active_gene_set = "character",
-
     active_gene_set_idx = "numeric",
 
     Xg = "matrix",
@@ -324,9 +243,6 @@ zigzag <- setRefClass(
     p_x = "matrix",
     alpha_r = "numeric",
     alpha_r_trace = "list",
-
-    all_means = "list",
-    all_variances = "list",
 
     # whether Yg is allocated to the spike value inf_tol
     no_detect_spike = "numeric",

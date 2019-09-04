@@ -2,9 +2,9 @@
 
 
 # dat <- read.table("../../../bitbucket_repos/nmix_data_files/gtex_data/allgenes_liver_gtex.tpm", header=TRUE, row.names=1)
-dat <- read.table("../simulate_data/simulated_data/sim31_twoComps_2mu3_nactive3054.tsv", header=TRUE, row.names=1)
+dat <- read.table("../simulate_data/simulated_data/sim3_twoComps_2mu3_gene_length.tsv", header=TRUE, row.names=1)
 
-gene_length_df = read.table("../simulate_data/simulated_data/sim31_twoComps_2mu3_gene_length.tsv", row.names = 1, header = FALSE)
+gene_length_df = read.table("../simulate_data/simulated_data/sim3_twoComps_2mu3_gene_length.tsv", row.names = 1, header = TRUE)
 
 
 sq=rbind(c(1,2),c(3,4)); layout(sq)

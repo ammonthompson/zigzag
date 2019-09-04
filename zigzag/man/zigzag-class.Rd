@@ -6,9 +6,7 @@
 \alias{zigzag}
 \title{zigzag reference class.}
 \usage{
-zigzag$new(data,
-gene_length = NULL,
-candidate_gene_list = "random",
+zigzag$new(data, gene_length = NULL, candidate_gene_list = "random",
 num_active_components = 1,
 weight_active_shape_1 = 2,
 weight_active_shape_2 = 2,
@@ -24,11 +22,9 @@ active_variances_prior_min = 0.01,
 active_variances_prior_max = 5,
 shared_active_variances = TRUE,
 output_directory = "output",
-multi_ta = FALSE,
 threshold_a = 0,
 threshold_i = threshold_a[1],
 beta = 1,
-temperature = 1,
 tau_shape = 1,
 tau_rate = 1,
 s0_mu = -1,
@@ -36,114 +32,44 @@ s0_sigma = 2,
 s1_shape = 1,
 s1_rate = 2,
 alpha_r_shape = 1,
-alpha_r_rate = 1/10,
-active_gene_set = NULL, ...)#'
+alpha_r_rate = 1/10, ...)
 }
 \description{
-zigzag reference class.
+This class contains all the tools for computing the posterior probability
+each gene in a dataset is active given a set of libraries. Creating a zigzag object sets all the
+hyperparameters and initializes all model parameters.
 }
 \section{Fields}{
 
 \describe{
-\item{\code{gen}}{.}
+\item{\code{Xg}}{A G x R matrix containing the log-relative-expression of G genes in R libraries.}
 
-\item{\code{field_list_values}}{.}
+\item{\code{Yg}}{A vector of length G containing the true latent log-relative-expression for G, genes.}
 
-\item{\code{field_list_names}}{.}
+\item{\code{output_directory}}{A directory where burnin and and mcmc log files and plots are created and stored.}
 
-\item{\code{sqrt2pi}}{.}
+\item{\code{gene_names}}{A character vector of length G contianing the gene names.}
 
-\item{\code{active_gene_set}}{.}
+\item{\code{num_libraries}}{The number of libraries in the data.}
 
-\item{\code{active_gene_set_idx}}{.}
+\item{\code{num_active_components}}{The number of Normally-distributed subcomponents of the active distribution.}
 
-\item{\code{Xg}}{.}
+\item{\code{num_transcripts}}{The number of genes or transcripts in the data depending on whether the data is gene or transcript level expression.}
 
-\item{\code{Yg}}{.}
+\item{\code{gene_lengths}}{A vector of length G, containing either the mean lengths of gene transcripts or the lengths of transcripts.}
 
-\item{\code{Yg_proposed}}{.}
+\item{\code{threshold_a}}{A vector containing the lower-bound of the prior distribution for the active component means.
+If the length of the threshold_a vector is < than num_active_components then threshold_a[1] is used as the lower bound for the first active component
+and subsequent active means are parameterized with orderd offsets rather than component-specific
+lower boundaries. For example, if the user specifies 3 active subcomponents and sets threshold_a = c(1,3), then
+the lower boundary for subcomponent 1 will be set 1, and the prior distributions for the difference between mean 1 and 2,
+and the difference between mean 2 and 3 will be gamma distributed.}
 
-\item{\code{Yg_trace}}{.}
+\item{\code{threshold_i}}{The upper boundary for the inactive distribution.}
 
-\item{\code{output_directory}}{.}
+\item{\code{candidate_gene_list}}{A character vector of genes of interest for which mcmc log files for Yg and sigma_g should be output.}
 
-\item{\code{gene_names}}{.}
-
-\item{\code{num_libraries}}{.}
-
-\item{\code{num_active_components}}{.}
-
-\item{\code{component_matrix}}{.}
-
-\item{\code{num_transcripts}}{.}
-
-\item{\code{gene_lengths}}{.}
-
-\item{\code{multi_thresh_a}}{.}
-
-\item{\code{threshold_a}}{.}
-
-\item{\code{threshold_i}}{.}
-
-\item{\code{inf_tol}}{.}
-
-\item{\code{model_paramlist}}{.}
-
-\item{\code{lnl_trace}}{.}
-
-\item{\code{inactive_mean_tuningParam}}{.}
-
-\item{\code{inactive_variance_tuningParam}}{.}
-
-\item{\code{spike_probability_tuningParam}}{.}
-
-\item{\code{active_mean_tuningParam}}{.}
-
-\item{\code{active_variance_tuningParam}}{.}
-
-\item{\code{mixture_weight_tuningParam}}{.}
-
-\item{\code{tuningParam_s0}}{.}
-
-\item{\code{tuningParam_s1}}{.}
-
-\item{\code{tuningParam_tau}}{.}
-
-\item{\code{tuningParam_s0tau}}{.}
-
-\item{\code{tuningParam_alpha_r}}{.}
-
-\item{\code{tuningParam_yg}}{.}
-
-\item{\code{tuningParam_sigma_g}}{.}
-
-\item{\code{tuningParam_multi_sigma}}{.}
-
-\item{\code{tuningParam_sigma_mu}}{.}
-
-\item{\code{multi_sigma_trace}}{.}
-
-\item{\code{sigma_mu_trace}}{.}
-
-\item{\code{active_idx}}{.}
-
-\item{\code{inactive_idx}}{.}
-
-\item{\code{beta}}{.}
-
-\item{\code{beta_oneLib}}{.}
-
-\item{\code{temperature}}{.}
-
-\item{\code{proposal_vector}}{.}
-
-\item{\code{proposal_probs}}{.}
-
-\item{\code{level_1_probs}}{.}
-
-\item{\code{hieararchical_probs_oneLibrary}}{.}
-
-\item{\code{combined_probs}}{.}
+\item{\code{shared_active_variances}}{A boolean indicating if all active subcomponents share a variance component. If FALSE, a variance parameter is estimated for each component.}
 
 \item{\code{weight_active_shape_1}}{.}
 
@@ -199,11 +125,7 @@ zigzag reference class.
 
 \item{\code{s0}}{.}
 
-\item{\code{s0_trace}}{.}
-
 \item{\code{s1}}{.}
-
-\item{\code{s1_trace}}{.}
 
 \item{\code{tau_shape}}{.}
 
@@ -211,11 +133,7 @@ zigzag reference class.
 
 \item{\code{tau}}{.}
 
-\item{\code{tau_trace}}{.}
-
 \item{\code{sigma_g}}{.}
-
-\item{\code{sigma_g_trace}}{.}
 
 \item{\code{s0tau_trace}}{.}
 
@@ -227,119 +145,33 @@ zigzag reference class.
 
 \item{\code{alpha_r}}{.}
 
-\item{\code{alpha_r_trace}}{.}
-
-\item{\code{all_means}}{.}
-
-\item{\code{all_variances}}{.}
-
-\item{\code{no_detect_spike}}{.}
-
 \item{\code{inactive_spike_allocation}}{.}
-
-\item{\code{in_spike_idx}}{.}
-
-\item{\code{out_spike_idx}}{.}
-
-\item{\code{all_zero_idx}}{.}
 
 \item{\code{candidate_gene_list}}{.}
 
-\item{\code{XgLikelihood}}{.}
-
-\item{\code{YgLikelihood}}{.}
-
-\item{\code{sigma_g_probability}}{.}
-
 \item{\code{allocation_active_inactive}}{.}
-
-\item{\code{allocation_active_inactive_proposed}}{.}
-
-\item{\code{allocation_trace}}{.}
 
 \item{\code{allocation_active_inactive_prob}}{.}
 
-\item{\code{allocation_active_inactive_prob_proposed}}{.}
-
 \item{\code{inactive_means}}{.}
-
-\item{\code{inactive_means_proposed}}{.}
-
-\item{\code{inactive_means_trace}}{.}
-
-\item{\code{inactive_means_prob}}{.}
-
-\item{\code{inactive_means_prob_proposed}}{.}
 
 \item{\code{inactive_variances}}{.}
 
-\item{\code{inactive_variances_proposed}}{.}
-
-\item{\code{inactive_variances_trace}}{.}
-
-\item{\code{inactive_variances_prob}}{.}
-
-\item{\code{inactive_variances_prob_proposed}}{.}
-
 \item{\code{spike_probability}}{.}
-
-\item{\code{spike_probability_proposed}}{.}
-
-\item{\code{spike_probability_trace}}{.}
-
-\item{\code{spike_probability_prob}}{.}
-
-\item{\code{spike_probability_prob_proposed}}{.}
 
 \item{\code{active_means_dif}}{.}
 
-\item{\code{active_means_dif_proposed}}{.}
-
-\item{\code{active_means_trace}}{.}
-
-\item{\code{active_means_dif_prob}}{.}
-
-\item{\code{active_means_dif_prob_proposed}}{.}
-
 \item{\code{active_means}}{.}
-
-\item{\code{shared_active_variances}}{.}
 
 \item{\code{active_variances}}{.}
 
-\item{\code{active_variances_proposed}}{.}
-
-\item{\code{active_variances_trace}}{.}
-
-\item{\code{active_variances_prob}}{.}
-
-\item{\code{active_variances_prob_proposed}}{.}
-
 \item{\code{weight_active}}{.}
-
-\item{\code{weight_active_proposed}}{.}
-
-\item{\code{weight_active_trace}}{.}
-
-\item{\code{weight_active_prob}}{.}
-
-\item{\code{weight_active_prob_proposed}}{.}
 
 \item{\code{weight_within_active}}{.}
 
-\item{\code{weight_within_active_proposed}}{.}
-
-\item{\code{weight_within_active_trace}}{.}
-
-\item{\code{weight_within_active_prob}}{.}
-
-\item{\code{weight_within_active_prob_proposed}}{.}
-
-\item{\code{mixture_weight_trace}}{.}
-
 \item{\code{allocation_within_active}}{.}
 
-\item{\code{allocation_within_active_proposed}}{.}
+\item{\code{beta}}{A power exponent for the likelihood function. If set to 0, then the mcmc samples from the joint prior.}
 }}
 
 

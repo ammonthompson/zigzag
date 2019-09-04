@@ -34,7 +34,6 @@ zigzag$methods(
                         alpha_r_shape = 1,
                         alpha_r_rate = 1/10,
                         active_gene_set = NULL,
-
                         ...) {
 
     ##########################################
