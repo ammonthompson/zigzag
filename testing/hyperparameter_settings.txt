@@ -8,11 +8,11 @@ alpha_r_shape	1
 alpha_r_rate	0.1
 weight_active_shape_1	2
 weight_active_shape_2	2
-weight_within_active_alpha	1
+weight_within_active_alpha	0.666666666666667
 spike_prior_shape_1	1
 spike_prior_shape_2	1
-active_means_dif_prior_shape	20000
-active_meaans_dif_prior_rate	10000
+active_means_dif_prior_shape	1
+active_meaans_dif_prior_rate	1
 active_variances_prior_min	0.01
 active_variances_prior_max	5
 inactive_means_prior_shape	1
@@ -20,4 +20,4 @@ inactive_means_prior_rate	0.333333333333333
 inactive_variances_prior_min	0.01
 inactive_variances_prior_max	5
 threshold_i	-1
-threshold_a	0, 1
+threshold_a	1, 4, 6
