@@ -179,15 +179,15 @@ zigzag$methods(
      tuningParam_alpha_r <<- sapply(1:num_libraries, function(xtrace){
        return(.self$x_tune(alpha_r_trace[[1]][[1]][xtrace,], tuningParam_alpha_r[xtrace], burnin_target_acceptance_rate, mintuningParam = 0.01, maxtuningParam = 2)
        )})
-     tuningParam_s0 <<- .self$x_tune(s0_trace[[1]][[1]], tuningParam_s0, burnin_target_acceptance_rate, mintuningParam = 0.001, maxtuningParam = 5)
-     tuningParam_s1 <<- .self$x_tune(s1_trace[[1]][[1]], tuningParam_s1, burnin_target_acceptance_rate, mintuningParam = 0.001, maxtuningParam = 5)
-     tuningParam_tau <<- .self$x_tune(tau_trace[[1]][[1]], tuningParam_tau, burnin_target_acceptance_rate, mintuningParam = 0.001, maxtuningParam = 5)
-     tuningParam_s0tau <<- .self$x_tune(s0tau_trace[[1]][[1]], tuningParam_s0tau, burnin_target_acceptance_rate, mintuningParam = 0.001, maxtuningParam = 5)
-     tuningParam_sigma_g <<- .self$x_tune(sigma_g_trace, tuningParam_sigma_g, burnin_target_acceptance_rate, mintuningParam = 0.001, maxtuningParam = 10)
-     tuningParam_yg <<- .self$x_tune(Yg_trace, tuningParam_yg, burnin_target_acceptance_rate, mintuningParam = 0.001, maxtuningParam = 10)
+     tuningParam_s0 <<- .self$x_tune(s0_trace[[1]][[1]], tuningParam_s0, burnin_target_acceptance_rate, mintuningParam = 0.0001, maxtuningParam = 5)
+     tuningParam_s1 <<- .self$x_tune(s1_trace[[1]][[1]], tuningParam_s1, burnin_target_acceptance_rate, mintuningParam = 0.0001, maxtuningParam = 5)
+     tuningParam_tau <<- .self$x_tune(tau_trace[[1]][[1]], tuningParam_tau, burnin_target_acceptance_rate, mintuningParam = 0.0001, maxtuningParam = 5)
+     tuningParam_s0tau <<- .self$x_tune(s0tau_trace[[1]][[1]], tuningParam_s0tau, burnin_target_acceptance_rate, mintuningParam = 0.0001, maxtuningParam = 5)
+     tuningParam_sigma_g <<- .self$x_tune(sigma_g_trace, tuningParam_sigma_g, burnin_target_acceptance_rate, mintuningParam = 0.0001, maxtuningParam = 10)
+     tuningParam_yg <<- .self$x_tune(Yg_trace, tuningParam_yg, burnin_target_acceptance_rate, mintuningParam = 0.0001, maxtuningParam = 10)
 
-     tuningParam_multi_sigma <<- .self$x_tune(multi_sigma_trace[[1]][[1]], tuningParam_multi_sigma, burnin_target_acceptance_rate, mintuningParam = 0.01, maxtuningParam = 10)
-     inactive_mean_tuningParam     <<- .self$x_tune(inactive_means_trace[[1]][[1]], inactive_mean_tuningParam, burnin_target_acceptance_rate, mintuningParam = 0.01, maxtuningParam = 10)
+     tuningParam_multi_sigma <<- .self$x_tune(multi_sigma_trace[[1]][[1]], tuningParam_multi_sigma, burnin_target_acceptance_rate, mintuningParam = 0.001, maxtuningParam = 10)
+     inactive_mean_tuningParam     <<- .self$x_tune(inactive_means_trace[[1]][[1]], inactive_mean_tuningParam, burnin_target_acceptance_rate, mintuningParam = 0.001, maxtuningParam = 10)
      inactive_variance_tuningParam <<- .self$x_tune(inactive_variances_trace[[1]][[1]], inactive_variance_tuningParam, burnin_target_acceptance_rate,
                                                     mintuningParam = 0.01, maxtuningParam = (inactive_variances_prior_log_max - inactive_variances_prior_log_min))
 

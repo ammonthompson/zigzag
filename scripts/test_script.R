@@ -1,15 +1,23 @@
 # read some data
 
 
+<<<<<<< HEAD
 dat <- read.table("../../nmix_data_files/gtex_data/subfile1_25libs_Lung_RNA.tpm", header=TRUE, row.names=1)
 #dat <- read.table("../simulate_data/simulated_data/sim3_twoComps_2mu3_nactive2500.tsv", header=TRUE, row.names=1)
 
 gene_length_df = read.table("../../nmix_data_files/gtex_data/protCoding_GTEx_hg19_meanLength.txt",
+=======
+dat <- read.table("../../../bitbucket_repos/nmix_data_files/gtex_data/subfile1_25libs_Lung_RNA.tpm", header=TRUE, row.names=1)
+# dat <- read.table("../simulate_data/simulated_data/sim3_twoComps_2mu3_gene_length.tsv", header=TRUE, row.names=1)
+
+gene_length_df = read.table("../../../bitbucket_repos/nmix_data_files/gtex_data/protCoding_GTEx_hg19_meanLength.txt",
+>>>>>>> d138008f770846338d0310df957b29bb2361fff9
                             row.names = 1, header = FALSE)
 
 
 sq=rbind(c(1,2),c(3,4)); layout(sq)
 
+<<<<<<< HEAD
 mm <- zigzag$new(data = as.data.frame(dat[1:2000,1]), gene_length = gene_length_df[1:2000,1], candidate_gene_list = "random",
                     output_directory = "../testing", num_active_components =3,
                     active_means_dif_prior_shape = 1, active_means_dif_prior_rate = 1,
@@ -18,10 +26,20 @@ mm <- zigzag$new(data = as.data.frame(dat[1:2000,1]), gene_length = gene_length_
 
 mm$burnin(sample_frequency = 20, burnin_target_acceptance_rate=0.44, progress_plot = T,
           write_to_files = T, ngen=25000, append = F)
+=======
+mm <- zigzag$new(data = as.data.frame(dat[,1:2]), gene_length = gene_length_df, candidate_gene_list = "random",
+                    output_directory = "../testing", num_active_components =2, inactive_variances_prior_max = 10,
+                    active_means_dif_prior_shape = 1, active_means_dif_prior_rate = 1/3,
+                    threshold_i = -1, threshold_a = c(1,4), active_gene_set = NULL, shared_active_variances = T, beta = 1)
 
 
-mm$mcmc(sample_frequency = 50, progress_plot = F, write_to_files = T, ngen=50000, append = F,
-        run_posterior_predictive = T, mcmcprefix = "sim31")
+mm$burnin(sample_frequency = 20, burnin_target_acceptance_rate=0.44, progress_plot = T,
+          write_to_files = T, ngen=20000, append = F)
+>>>>>>> d138008f770846338d0310df957b29bb2361fff9
+
+
+mm$mcmc(sample_frequency = 50, progress_plot = F, write_to_files = T, ngen=60000, append = F,
+        run_posterior_predictive = F, mcmcprefix = "sim_check")
 
 
 
