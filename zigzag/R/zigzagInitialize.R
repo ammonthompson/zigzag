@@ -148,14 +148,14 @@ zigzag$methods(
     #############################################################
     ## Set up parameter proposal relative probabilities #########
     #############################################################
-    proposal_probs <<- c(10, 40,40,                                    ### weights, alloc active_inactive, alloc within_active
-                          10, 10,                                         ### i_mean, i_var
-                          8 * num_active_components,                    ### a_mean
-                          8 + 8 * (num_active_components - 1) * (1 - shared_active_variances),            ### a_var
-                          5, 5,                                         ### spike prob, spike alloc
-                          c(1, 1) * 2,           ### Yg, sigm_g
-                          8, 16, 0,                                    ### tau, Sg, s0tau
-                          num_libraries * 0.75)                         ### p_x
+    proposal_probs <<- c(5, 20,20,                                                        ### weights, alloc active_inactive, alloc within_active
+                          5, 10,                                                          ### i_mean, i_var
+                          4 * num_active_components,                                      ### a_mean
+                          4 + 4 * (num_active_components - 1) * (1 - shared_active_variances),            ### a_var
+                          5, 10,                                                          ### spike prob, spike alloc
+                          c(1, 1) + 4 * (num_transcripts < 15000),                        ### Yg, sigm_g
+                          5, 10, 0,                                                     ### tau, Sg, s0tau
+                          num_libraries * 0.75)                                           ### p_x
 
 
     ##########################

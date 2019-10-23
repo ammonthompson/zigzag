@@ -132,18 +132,12 @@ zigzag$methods(
 
   mhTau = function(recover_x = FALSE, tune = FALSE){
 
-    # proposed_tau <- abs(tau + rnorm(1, 0, tuningParam_tau))
-
     proposal <- .self$scale_move(tau, tuningParam_tau)
-
     proposed_tau <- proposal[[1]]
 
     HR <- log(proposal[[2]])
 
     proposed_tau_Likelihood <- .self$computeSigmaGPriorProbability(sigma_g[out_spike_idx], Sg[out_spike_idx], gtau = proposed_tau)
-
-    # tau_Likelihood <- .self$computeSigmaGPriorProbability(sigma_g[out_spike_idx], Sg[out_spike_idx], gtau = tau)
-
     tau_Likelihood <- sigma_g_probability[out_spike_idx]
 
     Lp <- sum(proposed_tau_Likelihood)
