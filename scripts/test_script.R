@@ -1,10 +1,9 @@
 # read some data
 
 
-dat <- read.table("../../../bitbucket_repos/nmix_data_files/gtex_data/subfile1_25libs_Lung_RNA.tpm", header=TRUE, row.names=1)
 # dat <- read.table("../simulate_data/simulated_data/sim3_twoComps_2mu3_gene_length.tsv", header=TRUE, row.names=1)
 
-gene_length_df = read.table("../../../bitbucket_repos/nmix_data_files/gtex_data/protCoding_GTEx_hg19_meanLength.txt",
+gene_length_df = read.table("../simulated_data",
                             row.names = 1, header = FALSE)
 
 
@@ -13,7 +12,7 @@ sq=rbind(c(1,2),c(3,4)); layout(sq)
 mm <- zigzag$new(data = as.data.frame(dat[,1:2]), gene_length = gene_length_df, candidate_gene_list = "random",
                     output_directory = "../testing", num_active_components =2, inactive_variances_prior_max = 10,
                     active_means_dif_prior_shape = 1, active_means_dif_prior_rate = 1/3,
-                    threshold_i = -1, threshold_a = c(1,4), active_gene_set = NULL, shared_active_variances = T, beta = 1)
+                    threshold_i = 0, threshold_a = c(0,4), active_gene_set = NULL, shared_active_variances = T, beta = 1)
 
 
 mm$burnin(sample_frequency = 20, burnin_target_acceptance_rate=0.44, progress_plot = T,
