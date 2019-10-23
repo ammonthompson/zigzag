@@ -153,8 +153,8 @@ zigzag$methods(
                           4 * num_active_components,                                      ### a_mean
                           4 + 4 * (num_active_components - 1) * (1 - shared_active_variances),            ### a_var
                           5, 10,                                                          ### spike prob, spike alloc
-                          c(1, 1) + 4 * (num_transcripts < 15000),                        ### Yg, sigm_g
-                          5, 10, 0,                                                     ### tau, Sg, s0tau
+                          c(1, 1) + 2 * (num_transcripts < 15000),                        ### Yg, sigm_g
+                          2, 4, 1,                                                     ### tau, Sg, s0tau
                           num_libraries * 0.75)                                           ### p_x
 
 
