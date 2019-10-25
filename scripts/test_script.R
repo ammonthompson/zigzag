@@ -10,10 +10,10 @@ gene_length_df = read.table("../simulated_data",
 sq=rbind(c(1,2),c(3,4)); layout(sq)
 subsample = sample(seq(5000), 2000, replace = F)
 
-mm <- zigzag$new(data = as.data.frame(cbind(dat[,1], dat[,1], dat[,1], dat[,1], dat[,1], dat[,1], dat[,1])), gene_length = gene_length_df[, 1], candidate_gene_list = "random",
-                    output_directory = "../testing", num_active_components =2, inactive_variances_prior_max = 10,
+mm <- zigzag$new(data = as.data.frame(dat[,2]), gene_length = gene_length_df[, 1], candidate_gene_list = "random",
+                    output_directory = "../testing", num_active_components = 3, inactive_variances_prior_max = 10,
                     active_means_dif_prior_shape = 1, active_means_dif_prior_rate = 1/3,
-                    threshold_i = 0, threshold_a = c(0,4), active_gene_set = NULL, shared_active_variances = T, beta = 1)
+                    threshold_i = 0, threshold_a = c(0,4,6), active_gene_set = NULL, shared_active_variances = T, beta = 1)
 
 
 mm$burnin(sample_frequency = 100, burnin_target_acceptance_rate=0.44, progress_plot = T,
@@ -21,7 +21,7 @@ mm$burnin(sample_frequency = 100, burnin_target_acceptance_rate=0.44, progress_p
 
 
 mm$mcmc(sample_frequency = 50, progress_plot = F, write_to_files = T, ngen=50000, append = F,
-        run_posterior_predictive = F, mcmcprefix = "sim_check")
+        run_posterior_predictive = T, mcmcprefix = "sim_check")
 
 
 
