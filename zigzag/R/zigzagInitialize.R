@@ -149,7 +149,7 @@ zigzag$methods(
     ## Set up parameter proposal relative probabilities #########
     #############################################################
 
-    if(num_libraries > 1){
+    if(num_libraries > 1 ){
 
       proposal_probs <<- c(5, 40,10,                                                        ### weights, alloc active_inactive, alloc within_active
                            5, 10,                                                          ### i_mean, i_var
