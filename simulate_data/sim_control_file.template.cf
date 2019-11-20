@@ -1,8 +1,8 @@
 sigmag_tau	0.5
-sigmax_s0	-1.5
-sigmax_s1	-0.5
+sigmax_s0	-1
+sigmax_s1	-0.25
 num_libs	4
-num_genes	5000
+num_genes	8000
 lambda_c	20
 ymeans_i	-2
 ymeans_a1	2
@@ -10,7 +10,7 @@ ymeans_a2	6
 yVariance_i	2
 yVariance_a1	1.5
 yVariance_a2	1.5
-weight_active	0.7
+weight_active	0.6
 weight_a1	0.975
 weight_a2	0.025
 spike_prob	0.1

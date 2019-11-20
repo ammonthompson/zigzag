@@ -8,4 +8,4 @@ zigzag/quick_start_guide/*.log
 zigzag/quick_start_guide/*.aux
 zigzag/quick_start_guide/*.tex
 testing/
-
+simulate_data/simulated_data/*
