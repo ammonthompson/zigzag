@@ -725,7 +725,7 @@ zigzag$methods(
 
   mhActiveVariances = function(recover_x = FALSE, tune = FALSE){
 
-    k = sample(num_active_components, num_active_components, replace = TRUE)
+    k = sample(num_active_components, 1, replace = TRUE)
 
     if(shared_active_variances){
 
