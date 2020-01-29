@@ -153,25 +153,27 @@ zigzag$methods(
 
     if(num_libraries > 1 ){
 
-      proposal_probs <<- c(5, 40,10,                                                        ### weights, alloc active_inactive, alloc within_active
+      proposal_probs <<- c(5, 40,10,                                                       ### weights, alloc active_inactive, alloc within_active
                            5, 10,                                                          ### i_mean, i_var
                            4 * num_active_components,                                      ### a_mean
-                           4 + 4 * (num_active_components - 1) * (1 - shared_active_variances),            ### a_var
+                           4 + 4 * (num_active_components - 1) *
+                             (1 - shared_active_variances),                                ### a_var
                            5, 10,                                                          ### spike prob, spike alloc
-                           c(1, 1 + is2Libs) + 1 * (num_transcripts < 15000),              ### Yg, sigm_g
-                           c(6, 6, 6) + 4 * is2Libs,                                                        ### tau, Sg, s0tau
+                           c(1, 1) + is2Libs + 1 * (num_transcripts < 15000),              ### Yg, sigm_g
+                           c(6, 6, 6),                                                     ### tau, Sg, s0tau
                            num_libraries * 0.75)                                           ### p_x
 
     }else{
 
-      proposal_probs <<- c(5, 40,10,                                                       ### weights, alloc active_inactive, alloc within_active
-                           5, 10,                                                          ### i_mean, i_var
-                           4 * num_active_components,                                      ### a_mean
-                           4 + 4 * (num_active_components - 1) * (1 - shared_active_variances),            ### a_var
+      proposal_probs <<- c(5, 40,10,                                                      ### weights, alloc active_inactive, alloc within_active
+                           5, 10,                                                         ### i_mean, i_var
+                           4 * num_active_components,                                     ### a_mean
+                           4 + 4 * (num_active_components - 1) *
+                             (1 - shared_active_variances),                               ### a_var
                            5, 0,                                                          ### spike prob, spike alloc
-                           c(1, 1) * 0,                                                    ### Yg, sigm_g
-                           c(6, 6, 6) * 0,                                                 ### tau, Sg, s0tau
-                           num_libraries * 0.75 * 0)                                        ### p_x
+                           c(1, 1) * 0,                                                   ### Yg, sigm_g
+                           c(6, 6, 6) * 0,                                                ### tau, Sg, s0tau
+                           num_libraries * 0.75 * 0)                                      ### p_x
 
     }
 
