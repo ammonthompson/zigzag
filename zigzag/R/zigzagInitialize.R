@@ -149,7 +149,7 @@ zigzag$methods(
     ## Set up parameter proposal relative probabilities #########
     #############################################################
 
-    is2Libs <- (num_libraries == 2) * 1
+    is2Libs <- (num_libraries == 2) * 1 # use this variable to upweight probability of proposing L1 variance param
 
     if(num_libraries > 1 ){
 
@@ -159,7 +159,7 @@ zigzag$methods(
                            4 + 4 * (num_active_components - 1) * (1 - shared_active_variances),            ### a_var
                            5, 10,                                                          ### spike prob, spike alloc
                            c(1, 1 + is2Libs) + 1 * (num_transcripts < 15000),              ### Yg, sigm_g
-                           6, 6, 6,                                                        ### tau, Sg, s0tau
+                           c(6, 6, 6) + 2 * is2Libs,                                                        ### tau, Sg, s0tau
                            num_libraries * 0.75)                                           ### p_x
 
     }else{
@@ -309,7 +309,7 @@ zigzag$methods(
     # tau <<- rgamma(1, tau_shape, tau_rate)
     s0 <<- rnorm(1, 0, 0.1)
     s1 <<- -rgamma(1, 1, 5)
-    tau <<- rgamma(1, 1, 5)
+    tau <<- rgamma(1, 2, 5)
 
     s0_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
     s1_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
