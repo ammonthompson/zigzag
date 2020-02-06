@@ -210,6 +210,58 @@ zigzag$methods(
 
   },
 
+  mhS0Tau_shift = function(recover_x = FALSE, tune = FALSE){
+    HR = 0
+
+    # proposal <- .self$scale_move(tau, tuningParam_s0tau)
+    #
+    # proposed_s0 <- s0 - log(proposal[[2]])
+    #
+    # proposed_tau <- proposal[[1]]
+    #
+    # HR <- log(proposal[[2]])
+
+    shift <- rnorm(1, 0, tuningParam_s0tau)
+
+    proposed_s0 <- s0 + shift
+
+    proposed_tau <- abs(tau - 0.63 * shift)
+
+    if(tune) s0tau_trace[[1]][[1]] <<- c(s0tau_trace[[1]][[1]][-1], 0)
+
+    proposed_Sg <- .self$get_sigmax(ss0 = proposed_s0, ss1 = s1)
+
+    proposed_sigma_g_Likelihood <- .self$computeSigmaGPriorProbability(sigma_g[out_spike_idx], proposed_Sg[out_spike_idx], proposed_tau)
+
+    Lp <- sum(proposed_sigma_g_Likelihood)
+
+    Lc <- sum(sigma_g_probability[out_spike_idx])
+
+    pp <- .self$computeS0PriorProbability(proposed_s0) + .self$computeTauPriorProbability(proposed_tau)
+
+    pc <- .self$computeS0PriorProbability(s0) + .self$computeTauPriorProbability(tau)
+
+    R <- temperature * (Lp - Lc + pp - pc) + HR
+
+    if(recover_x) recover()
+
+    if(log(runif(1)) < R){
+
+      s0 <<- proposed_s0
+
+      tau <<- proposed_tau
+
+      Sg <<- proposed_Sg
+
+      if(tune) s0tau_trace[[1]][[1]][100] <<- 1
+
+      sigma_g_probability[out_spike_idx] <<- proposed_sigma_g_Likelihood
+
+    }
+
+  },
+
+
   mhP_x = function(recover_x = FALSE, tune = FALSE){
 
     randlib=sample(num_libraries,1)
