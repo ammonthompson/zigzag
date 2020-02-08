@@ -306,9 +306,6 @@ zigzag$methods(
     tau_shape <<- tau_shape
     tau_rate <<- tau_rate
 
-    # s0 <<- rnorm(1, s0_mu, s0_sigma)
-    # s1 <<- -rgamma(1, s1_shape, s1_rate)
-    # tau <<- rgamma(1, tau_shape, tau_rate)
     s0 <<- rnorm(1, 0, 0.1)
     s1 <<- -rgamma(1, 1, 5)
     tau <<- rgamma(1, 2, 5)
@@ -370,8 +367,7 @@ zigzag$methods(
 
     ## Initialize Sigma_x and Sigma_g gene variance and shrinkage prior parameters
     Sg <<- exp(s0 + s1 * Yg)
-    # sigma_g <<- rlnorm(num_transcripts, 1/2, 1/5)
-    sigma_g <<- rlnorm(num_transcripts, log(Sg) + tau, sqrt(tau) )
+    sigma_g <<- rlnorm(num_transcripts, 1/2, 1/5)
     sigma_g_trace <<- t(sapply(seq(num_transcripts), function(g){return(c(rep(0,77),rep(1,23)))}))
 
     p_x <<- .self$get_px()
@@ -381,7 +377,7 @@ zigzag$methods(
 
     cat("Reinitialize genes with zero likelihood: ", which(XgLikelihood == -Inf), "\n")
 
-    # Occasionally there are combinations of intial values of Yg and alpha_r
+    # Occasionally there are combinations of intial values of Yg, sigma_g and alpha_r
     # that can lead to 0 likelihood for some genes.
     # For those genes, reinitialize until a combination that has > 0 likelihood is generated.
     if(num_libraries > 1){
@@ -397,7 +393,6 @@ zigzag$methods(
 
         p_x <<- .self$get_px()
 
-        # sigma_g[which(XgLikelihood == -Inf)] <<- rlnorm(length(which(XgLikelihood == -Inf)), 1/2, 1/5)
         sigma_g[which(XgLikelihood == -Inf)] <<- rlnorm(length(which(XgLikelihood == -Inf)),
                                                         log(Sg[which(XgLikelihood == -Inf)]) + tau, sqrt(tau))
 

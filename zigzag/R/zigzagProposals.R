@@ -261,7 +261,6 @@ zigzag$methods(
 
   },
 
-
   mhP_x = function(recover_x = FALSE, tune = FALSE){
 
     randlib=sample(num_libraries,1)
