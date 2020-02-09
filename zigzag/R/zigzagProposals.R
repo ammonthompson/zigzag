@@ -166,6 +166,7 @@ zigzag$methods(
   },
 
   mhS0Tau = function(recover_x = FALSE, tune = FALSE){
+
     HR = 0
 
     proposal <- .self$scale_move(tau, tuningParam_s0tau)
@@ -930,16 +931,6 @@ zigzag$methods(
   }
 
 )
-
-
-
-
-
-
-
-
-
-
 
 
 
