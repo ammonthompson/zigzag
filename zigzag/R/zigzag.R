@@ -123,7 +123,9 @@ zigzag <- setRefClass(
     active_gene_set_idx = "numeric",
 
     Xg = "matrix",
-    #sim_xg = "list",
+
+    rwm = "numeric",
+    rwv = "numeric",
 
     Yg = "numeric",
     Yg_proposed = "numeric",
