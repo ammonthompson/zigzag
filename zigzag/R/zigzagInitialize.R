@@ -367,7 +367,7 @@ zigzag$methods(
 
     ## Initialize Sigma_x and Sigma_g gene variance and shrinkage prior parameters
     Sg <<- exp(s0 + s1 * Yg)
-    sigma_g <<- rlnorm(num_transcripts, 1/2, 1)
+    sigma_g <<- rlnorm(num_transcripts, 1/2, 1/5)
     sigma_g_trace <<- t(sapply(seq(num_transcripts), function(g){return(c(rep(0,77),rep(1,23)))}))
 
     p_x <<- .self$get_px()
