@@ -31,6 +31,7 @@ zigzag$methods(
                         s0_sigma = 2,
                         s1_shape = 1,
                         s1_rate = 2,
+                        sigma_g_upper_bound = Inf,
                         alpha_r_shape = 1,
                         alpha_r_rate = 1/10,
                         active_gene_set = NULL,
@@ -60,6 +61,7 @@ zigzag$methods(
 
     #Set up Xg
     if(min(data) >= 0) Xg <<- log(as.matrix(data)) else Xg <<- as.matrix(data)
+
     Xg[Xg == -Inf] <<- inf_tol
 
 
@@ -85,7 +87,6 @@ zigzag$methods(
     }else{
 
       candidate_gene_list <<- candidate_gene_list
-
       if(length(which(!( candidate_gene_list %in% gene_names))) > 0){
         print("WARNING: one or more gene list names are not in the data")
         print(candidate_gene_list[which(!( candidate_gene_list %in% gene_names))])
@@ -176,6 +177,23 @@ zigzag$methods(
                            num_libraries * 0.75 * 0)                                      ### p_x
 
     }
+
+    proposal_list <<- list(.self$gibbsMixtureWeights,
+                           .self$gibbsAllocationActiveInactive,
+                           .self$gibbsAllocationWithinActive,
+                           .self$mhInactiveMeans,
+                           .self$mhInactiveVariances,
+                           .self$mhActiveMeansDif,
+                           .self$mhActiveVariances,
+                           .self$gibbsSpikeProb,
+                           .self$mhSpikeAllocation,
+                           .self$mhYg,
+                           .self$mhSigma_g,
+                           .self$mhTau,
+                           .self$mhSg,
+                           .self$mhS0Tau,
+                           .self$mhP_x )
+
 
     ##########################
     # Initialize the priors. #
@@ -369,6 +387,8 @@ zigzag$methods(
     Sg <<- exp(s0 + s1 * Yg)
     sigma_g <<- rlnorm(num_transcripts, 1/2, 1/5)
     sigma_g_trace <<- t(sapply(seq(num_transcripts), function(g){return(c(rep(0,77),rep(1,23)))}))
+    sigma_g_upper_bound <<- sigma_g_upper_bound
+    sigma_g[which(sigma_g > sigma_g_upper_bound)] <<- sigma_g_upper_bound
 
     p_x <<- .self$get_px()
 
@@ -396,6 +416,9 @@ zigzag$methods(
         sigma_g[which(XgLikelihood == -Inf)] <<- rlnorm(length(which(XgLikelihood == -Inf)),
                                                         log(Sg[which(XgLikelihood == -Inf)]) + tau, sqrt(tau))
 
+        sigma_g[which(sigma_g > sigma_g_upper_bound)] <<- sigma_g_upper_bound
+
+
 
         XgLikelihood <<- .self$computeXgLikelihood(Xg, Yg, sigma_g, p_x)
 
@@ -411,6 +434,8 @@ zigzag$methods(
     }
 
     sigma_g_probability <<- .self$computeSigmaGPriorProbability(sigma_g, Sg)
+
+
 
     ## write user specified prior parameter values to file
     write.table(data.frame(cbind(c("s0_mu", "s0_sigma", "s1_shape", "s1_rate", "tau_rate", "tau_shape", "alpha_r_shape", "alpha_r_rate",

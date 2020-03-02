@@ -139,6 +139,33 @@ zigzag$methods(
 
 
 
+  },
+
+
+  burninProgressPlot = function(){
+
+    #plot variance trend
+    plotdx = seq(-6,8,by=0.1)
+    plot(Yg,sigma_g, xlim=c(-6,8), ylim = c(0, 0.5 * max(sigma_g)),col=rgb(0,0,0,0.1))
+    polygon(c(plotdx, rev(plotdx)),
+            c(qlnorm(0.025, s0 + s1*plotdx + tau, sqrt(tau)), rev(qlnorm(0.975, s0 + s1*plotdx +tau, sqrt(tau)))),
+            col = rgb(1,0,0,0.2))
+    lines(plotdx, exp(s0 + s1*plotdx),lwd = 2, col="red")
+
+    #plot prob detection curves
+    plot(seq(-10,10,by=0.1), .self$get_px(yy = seq(-10,10,by=0.1), gl = 1)[,1],type="l",ylim=c(0,1), ylab = "prob. detection", xlab = "log expression", col=rgb(0,0,0,0.1))
+    sapply(1:num_libraries,function(x){lines(seq(-10,10,by=0.1), .self$get_px(yy = seq(-10,10,by=0.1), gl = 1)[,x])})
+
+    #plot(mean Xg, Yg relationship)
+    rawdat<-Xg; rawdat[rawdat == -Inf] <- -15
+    plot(rowMeans(rawdat)[allocation_active_inactive==0],Yg[allocation_active_inactive==0],ylab = "Y", xlab = "log expression", col=rgb(0,0,1,0.2), xlim=c(-15,12),ylim=c(-8,12))
+    points(rowMeans(rawdat)[allocation_active_inactive==1], Yg[allocation_active_inactive==1],col=rgb(1,0,0,0.2))
+    abline(0,1,col="red")
+
+    #plot Yg mixture distribution
+    .self$plotHistoDensities(Yg)
+
+
   }
 
 )

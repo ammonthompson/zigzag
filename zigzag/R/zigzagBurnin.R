@@ -27,7 +27,9 @@ zigzag$methods(
 
   timestart = as.numeric(Sys.time())
 
-  # initialize output files
+  ###########################
+  # initialize output files #
+  ###########################
   mcmc_prefixdir = paste0(burninprefix, "_burnin")
   vprefix = unlist(strsplit(burninprefix, split = "/"))
   prefix = vprefix[length(vprefix)]
@@ -49,23 +51,11 @@ zigzag$methods(
   i = gen
   j = 0
 
-
-  proposal_list <- list(.self$gibbsMixtureWeights, .self$gibbsAllocationActiveInactive, .self$gibbsAllocationWithinActive,
-                       .self$mhInactiveMeans, .self$mhInactiveVariances,
-                       .self$mhActiveMeansDif,
-                       .self$mhActiveVariances,
-                       .self$gibbsSpikeProb, .self$mhSpikeAllocation,
-                       .self$mhYg, .self$mhSigma_g,
-                       .self$mhTau, .self$mhSg, .self$mhS0Tau,
-                       .self$mhP_x)
-
   plist_length <- length(proposal_list)
 
   ################
   # run the mcmc #
   ################
-
-  # MCMC
 
   while(j <= ngen ){
    end = FALSE
@@ -86,44 +76,19 @@ zigzag$methods(
    if(end) break
 
 
+   #####################
+   # sample from chain #
+   #####################
    if(i %% sample_frequency == 0 & i > 2 * sample_frequency){
 
      xx_timestart = as.numeric(Sys.time())
 
      if(is.null(target_ESS)) j = i
 
-     cat("#### ",i," ####  ", lnl_trace[[length(lnl_trace)]], "  prop. tscripts from inactive: ", round((sum(exp(Yg[inactive_idx])) - sum(exp(Yg[in_spike_idx])))/(10^6), 4),
-         " inactive mean: ", round(inactive_means, 2), "  active_means: ", round(active_means, 2),"\n")
+     cat("#### ",i," ####  ", lnl_trace[[length(lnl_trace)]], "\n")
 
-     ##########################
-     ### Progress plot ########
-     ##########################
+     if(progress_plot) .self$burninProgressPlot()
 
-     if(progress_plot){
-
-       #plot variance trend
-       plotdx = seq(-6,8,by=0.1)
-       # plot(rowMeans(Xg),rowVars(Xg), xlim=c(-6,8), ylim=c(0,5),col=rgb(0,0,0,0.1))
-       plot(Yg,sigma_g, xlim=c(-6,8), ylim = c(0, 0.5 * max(sigma_g)),col=rgb(0,0,0,0.1))
-       polygon(c(plotdx, rev(plotdx)),
-               c(qlnorm(0.025, s0 + s1*plotdx + tau, sqrt(tau)), rev(qlnorm(0.975, s0 + s1*plotdx +tau, sqrt(tau)))),
-               col = rgb(1,0,0,0.2))
-       lines(plotdx, exp(s0 + s1*plotdx),lwd = 2, col="red")
-
-       #plot prob detection curves
-       plot(seq(-10,10,by=0.1), .self$get_px(yy = seq(-10,10,by=0.1), gl = 1)[,1],type="l",ylim=c(0,1), ylab = "prob. detection", xlab = "log expression", col=rgb(0,0,0,0.1))
-       sapply(1:num_libraries,function(x){lines(seq(-10,10,by=0.1), .self$get_px(yy = seq(-10,10,by=0.1), gl = 1)[,x])})
-
-       #plot(mean Xg, Yg relationship)
-       rawdat<-Xg; rawdat[rawdat == -Inf] <- -15
-       plot(rowMeans(rawdat)[allocation_active_inactive==0],Yg[allocation_active_inactive==0],ylab = "Y", xlab = "log expression", col=rgb(0,0,1,0.2), xlim=c(-15,12),ylim=c(-8,12))
-       points(rowMeans(rawdat)[allocation_active_inactive==1], Yg[allocation_active_inactive==1],col=rgb(1,0,0,0.2))
-       abline(0,1,col="red")
-
-       #plot Yg mixture distribution
-       .self$plotHistoDensities(Yg)
-
-     }
 
      #####################################################################
      ## set trace vars (this doesn't store the values, just updates it. ##
@@ -153,7 +118,14 @@ zigzag$methods(
 
      lnl_trace[[length(lnl_trace) + 1]] <<- .self$calculate_lnl(num_libraries)
 
-     if(write_to_files & temperature == 1) .self$writeToOutputFiles(paste0(mcmc_prefixdir,"/", prefix), gen = i)
+     if(write_to_files & temperature == 1){
+
+       .self$writeToOutputFiles(paste0(mcmc_prefixdir,"/", prefix), gen = i)
+
+       if((i / sample_frequency) %% 4 == 0)
+         .self$writeToYgSigmagOutputFiles(paste0(mcmc_prefixdir,"/", prefix), gen = i)
+
+     }
 
      if(!is.null(target_ESS)  & length(lnl_trace) > 100){
        if(.self$calculate_lnl_ESS() > target_ESS){
@@ -173,65 +145,7 @@ zigzag$methods(
    ################################################
    ### tune the tuning parameters (tuningParam) ###
    ################################################
-
-   if( gen %% 400 == 0 ){
-
-     tuningParam_alpha_r <<- sapply(1:num_libraries, function(xtrace){
-       return(.self$x_tune(alpha_r_trace[[1]][[1]][xtrace,], tuningParam_alpha_r[xtrace], 
-                           burnin_target_acceptance_rate, mintuningParam = 0.01, maxtuningParam = 2)
-       )})
-     
-     tuningParam_s0 <<- .self$x_tune(s0_trace[[1]][[1]], tuningParam_s0, 
-                                     target_rate = burnin_target_acceptance_rate, 
-                                     mintuningParam = 0.0001, maxtuningParam = 5)
-     tuningParam_s1 <<- .self$x_tune(s1_trace[[1]][[1]], tuningParam_s1, 
-                                     burnin_target_acceptance_rate, 
-                                     mintuningParam = 0.0001, maxtuningParam = 5)
-     tuningParam_tau <<- .self$x_tune(tau_trace[[1]][[1]], tuningParam_tau, 
-                                      target_rate = burnin_target_acceptance_rate, 
-                                      mintuningParam = 0.0001,  maxtuningParam = 5)
-     tuningParam_s0tau <<- .self$x_tune(s0tau_trace[[1]][[1]], tuningParam_s0tau, 
-                                        burnin_target_acceptance_rate, 
-                                        mintuningParam = 0.0001, maxtuningParam = 5)
-     tuningParam_sigma_g <<- .self$x_tune(sigma_g_trace, tuningParam_sigma_g, 
-                                          burnin_target_acceptance_rate, 
-                                          mintuningParam = 0.0001, maxtuningParam = 10)
-     tuningParam_yg <<- .self$x_tune(Yg_trace, tuningParam_yg, burnin_target_acceptance_rate, 
-                                     mintuningParam = 0.0001, maxtuningParam = 10)
-
-     tuningParam_multi_sigma <<- .self$x_tune(multi_sigma_trace[[1]][[1]], tuningParam_multi_sigma, 
-                                              burnin_target_acceptance_rate, 
-                                              mintuningParam = 0.001, maxtuningParam = 10)
-     inactive_mean_tuningParam     <<- .self$x_tune(inactive_means_trace[[1]][[1]], inactive_mean_tuningParam, 
-                                                    burnin_target_acceptance_rate, 
-                                                    mintuningParam = 0.001, maxtuningParam = 10)
-     inactive_variance_tuningParam <<- .self$x_tune(inactive_variances_trace[[1]][[1]], inactive_variance_tuningParam, 
-                                                    burnin_target_acceptance_rate,
-                                                    mintuningParam = 0.01, maxtuningParam = (inactive_variances_prior_log_max - inactive_variances_prior_log_min))
-
-     active_mean_tuningParam       <<- sapply(seq(num_active_components), function(lib){
-       return(.self$x_tune(active_means_trace[[1]][[1]][lib,], active_mean_tuningParam[lib], 
-                           burnin_target_acceptance_rate, 
-                           mintuningParam = 0.01, maxtuningParam = 10))})
-
-     if(shared_active_variances){
-
-       active_variance_tuningParam   <<- sapply(seq(num_active_components), function(lib){
-         return(.self$x_tune(active_variances_trace[[1]][[1]][1,], active_variance_tuningParam[1], burnin_target_acceptance_rate,
-                             mintuningParam = 0.01, maxtuningParam = (active_variances_prior_log_max - active_variances_prior_log_min)))})
-
-     }else{
-
-       active_variance_tuningParam   <<- sapply(seq(num_active_components), function(lib){
-         return(.self$x_tune(active_variances_trace[[1]][[1]][lib,], active_variance_tuningParam[lib], burnin_target_acceptance_rate,
-                             mintuningParam = 0.01, maxtuningParam = (active_variances_prior_log_max - active_variances_prior_log_min)))})
-
-     }
-
-     spike_probability_tuningParam <<- 1/.self$x_tune(spike_probability_trace[[1]][[1]], 1/spike_probability_tuningParam, burnin_target_acceptance_rate, maxtuningParam = 1/10, mintuningParam = 1/100000)
-     mixture_weight_tuningParam <<- 1/.self$x_tune(mixture_weight_trace[[1]][[1]], 1/mixture_weight_tuningParam, burnin_target_acceptance_rate, maxtuningParam = 1/10, mintuningParam = 1/1000000)
-
-   }
+   if( gen %% 400 == 0 ) .self$tune_all(burnin_target_acceptance_rate)
 
   } #end mcmc
 

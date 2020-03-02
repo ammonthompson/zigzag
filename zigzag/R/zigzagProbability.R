@@ -11,14 +11,20 @@ zigzag$methods(
   computeSigmaGPriorProbability = function(x, sx, gtau = tau){
 
     # lnp <- dlnorm(x, log(sx) + gtau, sqrt(gtau), log=TRUE)
+    # lnp <- dgamma(x, shape = sx/gtau, rate = 1/gtau, log = TRUE)
 
     rtgtau = sqrt(gtau)
 
-    lnp <- -log(x * rtgtau * sqrt2pi) - 0.5 * ((log(x) - log(sx) - gtau)/rtgtau)^2
+    if(sigma_g_upper_bound == Inf){
 
+      lnp <- -log(x * rtgtau * sqrt2pi) - 0.5 * ((log(x) - log(sx) - gtau)/rtgtau)^2
 
+    }else{
 
-    # lnp <- dgamma(x, shape = sx/gtau, rate = 1/gtau, log = TRUE)
+      lnp <- -log(x * rtgtau * sqrt2pi) - 0.5 * ((log(x) - log(sx) - gtau)/rtgtau)^2 -
+        plnorm(sigma_g_upper_bound, log(sx) + gtau, sqrt(gtau), log.p = TRUE)
+
+    }
 
     return(lnp)
 
