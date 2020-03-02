@@ -71,6 +71,8 @@ and the difference between mean 2 and 3 will be gamma distributed.}
 
 \item{\code{shared_active_variances}}{A boolean indicating if all active subcomponents share a variance component. If FALSE, a variance parameter is estimated for each component.}
 
+\item{\code{sigma_g_upper_bound}}{The upper boundary for the truncated log-normal prior for gene-specific variances. Default = Inf}
+
 \item{\code{weight_active_shape_1}}{.}
 
 \item{\code{weight_active_shape_2}}{.}

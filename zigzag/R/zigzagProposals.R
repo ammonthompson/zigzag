@@ -25,6 +25,8 @@ zigzag$methods(
 
     R = temperature * (Lp_pp - Lc_pp) + HR
 
+    R[which(sigma_g_proposed > sigma_g_upper_bound)] <- -Inf
+
     if(recover_x) recover()
 
     current_and_proposed <- cbind(sigma_g[out_spike_idx], sigma_g_proposed)
@@ -211,57 +213,6 @@ zigzag$methods(
 
   },
 
-  mhS0Tau_shift = function(recover_x = FALSE, tune = FALSE){
-    HR = 0
-
-    # proposal <- .self$scale_move(tau, tuningParam_s0tau)
-    #
-    # proposed_s0 <- s0 - log(proposal[[2]])
-    #
-    # proposed_tau <- proposal[[1]]
-    #
-    # HR <- log(proposal[[2]])
-
-    shift <- rnorm(1, 0, tuningParam_s0tau)
-
-    proposed_s0 <- s0 + shift
-
-    proposed_tau <- abs(tau - 0.63 * shift)
-
-    if(tune) s0tau_trace[[1]][[1]] <<- c(s0tau_trace[[1]][[1]][-1], 0)
-
-    proposed_Sg <- .self$get_sigmax(ss0 = proposed_s0, ss1 = s1)
-
-    proposed_sigma_g_Likelihood <- .self$computeSigmaGPriorProbability(sigma_g[out_spike_idx], proposed_Sg[out_spike_idx], proposed_tau)
-
-    Lp <- sum(proposed_sigma_g_Likelihood)
-
-    Lc <- sum(sigma_g_probability[out_spike_idx])
-
-    pp <- .self$computeS0PriorProbability(proposed_s0) + .self$computeTauPriorProbability(proposed_tau)
-
-    pc <- .self$computeS0PriorProbability(s0) + .self$computeTauPriorProbability(tau)
-
-    R <- temperature * (Lp - Lc + pp - pc) + HR
-
-    if(recover_x) recover()
-
-    if(log(runif(1)) < R){
-
-      s0 <<- proposed_s0
-
-      tau <<- proposed_tau
-
-      Sg <<- proposed_Sg
-
-      if(tune) s0tau_trace[[1]][[1]][100] <<- 1
-
-      sigma_g_probability[out_spike_idx] <<- proposed_sigma_g_Likelihood
-
-    }
-
-  },
-
   mhP_x = function(recover_x = FALSE, tune = FALSE){
 
     randlib=sample(num_libraries,1)
@@ -397,100 +348,6 @@ zigzag$methods(
     }
 
     ## update XgLikelihood, Sg and p_x
-
-    XgLikelihood[out_spike_idx] <<- current_and_proposed_likelihood[choice_matrix]
-
-    .self$set_sigmaX_pX()
-
-    current_and_proposed_sigmaGProbability <- cbind(sigma_g_probability[out_spike_idx], proposed_sigmaGProbability)
-
-    sigma_g_probability[out_spike_idx] <<- current_and_proposed_sigmaGProbability[choice_matrix]
-
-  },
-
-  mhYgSigmag = function(recover_x = FALSE, tune = FALSE){
-
-    # mean_Xg = rowMeans(Xg[out_spike_idx,])
-    # sd_Xg = sapply(out_spike_idx, function(g){sd(Xg[g,])}) #alternatively, compute sd_meanXg
-
-    Sg_current = .self$get_sigmax(yy = Yg[out_spike_idx])
-
-    # proposed new yg
-    num_choice = length(out_spike_idx)
-
-    inactive_outspike_idx = which(allocation_active_inactive[out_spike_idx] == 0)
-    active_outspike_idx = which(allocation_active_inactive[out_spike_idx] == 1)
-
-    Yg_proposed <<-  rnorm(num_choice, rwm[out_spike_idx], sqrt(rwv[out_spike_idx]))#only change out of spike genes
-
-    Sg_proposed <- .self$get_sigmax(yy = Yg_proposed)
-
-    p_x_proposed <- .self$get_px(yy = Yg_proposed, gl = gene_lengths[out_spike_idx])
-
-
-    # propose new sigma_g
-    sigma_g_proposed <- rlnorm(num_choice, log(Sg_proposed) + tau, sqrt(tau))
-
-
-    # compute hastings ratio
-    HR <- dlnorm(sigma_g[out_spike_idx], log(Sg_current) + tau, sqrt(tau), log = TRUE) +
-      dnorm(Yg[out_spike_idx], rwm[out_spike_idx], sqrt(rwv[out_spike_idx]), log = TRUE) -
-      dlnorm(sigma_g_proposed, log(Sg_proposed) + tau, sqrt(tau), log = TRUE) -
-      dnorm(Yg_proposed, rwm[out_spike_idx], sqrt(rwv[out_spike_idx]), log = TRUE)
-
-
-    # compute current priors X Likelihoods
-    Lc_pc = XgLikelihood[out_spike_idx]
-
-    Lc_pc[inactive_outspike_idx] = Lc_pc[inactive_outspike_idx] +
-      .self$computeInactiveLikelihood(Yg[out_spike_idx][inactive_outspike_idx], spike_probability, inactive_means,
-                                      inactive_variances, inactive_spike_allocation[out_spike_idx][inactive_outspike_idx])
-
-    Lc_pc[active_outspike_idx] = Lc_pc[active_outspike_idx] +
-      .self$computeActiveLikelihood(Yg[out_spike_idx][active_outspike_idx],  allocation_within_active[[1]][out_spike_idx][active_outspike_idx],
-                                    active_means, active_variances)
-
-    Lc_pc = Lc_pc + sigma_g_probability[out_spike_idx]
-
-
-
-    # compute proposed priors X Likelihoods
-    proposed_XgLikelihood <- .self$computeXgLikelihood(Xg[out_spike_idx,], Yg_proposed, sigma_g_proposed, p_x_proposed,
-                                                       spike_allocation = inactive_spike_allocation[out_spike_idx])
-
-    proposed_sigmaGProbability <- .self$computeSigmaGPriorProbability(sigma_g_proposed, Sg_proposed)
-
-    Lp_pp <- proposed_XgLikelihood
-
-    Lp_pp[inactive_outspike_idx] <- Lp_pp[inactive_outspike_idx] +
-      .self$computeInactiveLikelihood(Yg_proposed[inactive_outspike_idx], spike_probability, inactive_means,
-                                      inactive_variances, inactive_spike_allocation[out_spike_idx][inactive_outspike_idx])
-
-    Lp_pp[active_outspike_idx] <- Lp_pp[active_outspike_idx] +
-      .self$computeActiveLikelihood(Yg_proposed[active_outspike_idx], allocation_within_active[[1]][out_spike_idx][active_outspike_idx],
-                                    active_means, active_variances)
-
-    Lp_pp <- Lp_pp + proposed_sigmaGProbability
-
-
-    # accept or reject proposed move
-
-    R = temperature * (Lp_pp - Lc_pc) + HR
-    if(recover_x) recover()
-
-    current_and_proposed_Yg <- cbind(Yg[out_spike_idx], Yg_proposed)
-    current_and_proposed_sigma_g <- cbind(sigma_g[out_spike_idx], sigma_g_proposed)
-
-    current_and_proposed_likelihood <- cbind(XgLikelihood[out_spike_idx], proposed_XgLikelihood)
-
-
-    choice_idx <- (log(runif(num_choice)) < R) + 1  # 1 means reject proposal, 2 means accept proposal.
-    choice_matrix <- cbind(seq(num_choice), choice_idx) # row-column pairs for current_and_proposed_sigma_g_probability with 1st column meaning reject proposal
-
-    Yg[out_spike_idx] <<- current_and_proposed_Yg[cbind(seq(num_choice), choice_idx)]
-    sigma_g[out_spike_idx] <<- current_and_proposed_sigma_g[choice_matrix]
-
-    ## update XgLikelihood, sigma_g, Sg and p_x
 
     XgLikelihood[out_spike_idx] <<- current_and_proposed_likelihood[choice_matrix]
 
@@ -765,7 +622,9 @@ zigzag$methods(
 
     #*** Update Parameters
 
-    R = temperature * (Lp - Lc + pp - pc) + HR
+    R <- temperature * (Lp - Lc + pp - pc) + HR
+
+    R[which(sigma_g_proposed > sigma_g_upper_bound)] <- -Inf
 
     choice <- (log(runif(length(zero_and_inactive_idx))) < R) + 1
 
@@ -927,6 +786,156 @@ zigzag$methods(
       }
 
     }
+
+  },
+
+
+  ###################
+  ### DEVELOPMENT ###
+  ###################
+
+  mhS0Tau_shift = function(recover_x = FALSE, tune = FALSE){
+    HR = 0
+
+    # proposal <- .self$scale_move(tau, tuningParam_s0tau)
+    #
+    # proposed_s0 <- s0 - log(proposal[[2]])
+    #
+    # proposed_tau <- proposal[[1]]
+    #
+    # HR <- log(proposal[[2]])
+
+    shift <- rnorm(1, 0, tuningParam_s0tau)
+
+    proposed_s0 <- s0 + shift
+
+    proposed_tau <- abs(tau - 0.63 * shift)
+
+    if(tune) s0tau_trace[[1]][[1]] <<- c(s0tau_trace[[1]][[1]][-1], 0)
+
+    proposed_Sg <- .self$get_sigmax(ss0 = proposed_s0, ss1 = s1)
+
+    proposed_sigma_g_Likelihood <- .self$computeSigmaGPriorProbability(sigma_g[out_spike_idx], proposed_Sg[out_spike_idx], proposed_tau)
+
+    Lp <- sum(proposed_sigma_g_Likelihood)
+
+    Lc <- sum(sigma_g_probability[out_spike_idx])
+
+    pp <- .self$computeS0PriorProbability(proposed_s0) + .self$computeTauPriorProbability(proposed_tau)
+
+    pc <- .self$computeS0PriorProbability(s0) + .self$computeTauPriorProbability(tau)
+
+    R <- temperature * (Lp - Lc + pp - pc) + HR
+
+    if(recover_x) recover()
+
+    if(log(runif(1)) < R){
+
+      s0 <<- proposed_s0
+
+      tau <<- proposed_tau
+
+      Sg <<- proposed_Sg
+
+      if(tune) s0tau_trace[[1]][[1]][100] <<- 1
+
+      sigma_g_probability[out_spike_idx] <<- proposed_sigma_g_Likelihood
+
+    }
+
+  },
+
+  mhYgSigmag = function(recover_x = FALSE, tune = FALSE){
+
+    # mean_Xg = rowMeans(Xg[out_spike_idx,])
+    # sd_Xg = sapply(out_spike_idx, function(g){sd(Xg[g,])}) #alternatively, compute sd_meanXg
+
+    Sg_current = .self$get_sigmax(yy = Yg[out_spike_idx])
+
+    # proposed new yg
+    num_choice = length(out_spike_idx)
+
+    inactive_outspike_idx = which(allocation_active_inactive[out_spike_idx] == 0)
+    active_outspike_idx = which(allocation_active_inactive[out_spike_idx] == 1)
+
+    Yg_proposed <<-  rnorm(num_choice, rwm[out_spike_idx], sqrt(rwv[out_spike_idx]))#only change out of spike genes
+
+    Sg_proposed <- .self$get_sigmax(yy = Yg_proposed)
+
+    p_x_proposed <- .self$get_px(yy = Yg_proposed, gl = gene_lengths[out_spike_idx])
+
+
+    # propose new sigma_g
+    sigma_g_proposed <- rlnorm(num_choice, log(Sg_proposed) + tau, sqrt(tau))
+
+
+    # compute hastings ratio
+    HR <- dlnorm(sigma_g[out_spike_idx], log(Sg_current) + tau, sqrt(tau), log = TRUE) +
+      dnorm(Yg[out_spike_idx], rwm[out_spike_idx], sqrt(rwv[out_spike_idx]), log = TRUE) -
+      dlnorm(sigma_g_proposed, log(Sg_proposed) + tau, sqrt(tau), log = TRUE) -
+      dnorm(Yg_proposed, rwm[out_spike_idx], sqrt(rwv[out_spike_idx]), log = TRUE)
+
+
+    # compute current priors X Likelihoods
+    Lc_pc = XgLikelihood[out_spike_idx]
+
+    Lc_pc[inactive_outspike_idx] = Lc_pc[inactive_outspike_idx] +
+      .self$computeInactiveLikelihood(Yg[out_spike_idx][inactive_outspike_idx], spike_probability, inactive_means,
+                                      inactive_variances, inactive_spike_allocation[out_spike_idx][inactive_outspike_idx])
+
+    Lc_pc[active_outspike_idx] = Lc_pc[active_outspike_idx] +
+      .self$computeActiveLikelihood(Yg[out_spike_idx][active_outspike_idx],  allocation_within_active[[1]][out_spike_idx][active_outspike_idx],
+                                    active_means, active_variances)
+
+    Lc_pc = Lc_pc + sigma_g_probability[out_spike_idx]
+
+
+
+    # compute proposed priors X Likelihoods
+    proposed_XgLikelihood <- .self$computeXgLikelihood(Xg[out_spike_idx,], Yg_proposed, sigma_g_proposed, p_x_proposed,
+                                                       spike_allocation = inactive_spike_allocation[out_spike_idx])
+
+    proposed_sigmaGProbability <- .self$computeSigmaGPriorProbability(sigma_g_proposed, Sg_proposed)
+
+    Lp_pp <- proposed_XgLikelihood
+
+    Lp_pp[inactive_outspike_idx] <- Lp_pp[inactive_outspike_idx] +
+      .self$computeInactiveLikelihood(Yg_proposed[inactive_outspike_idx], spike_probability, inactive_means,
+                                      inactive_variances, inactive_spike_allocation[out_spike_idx][inactive_outspike_idx])
+
+    Lp_pp[active_outspike_idx] <- Lp_pp[active_outspike_idx] +
+      .self$computeActiveLikelihood(Yg_proposed[active_outspike_idx], allocation_within_active[[1]][out_spike_idx][active_outspike_idx],
+                                    active_means, active_variances)
+
+    Lp_pp <- Lp_pp + proposed_sigmaGProbability
+
+
+    # accept or reject proposed move
+
+    R = temperature * (Lp_pp - Lc_pc) + HR
+    if(recover_x) recover()
+
+    current_and_proposed_Yg <- cbind(Yg[out_spike_idx], Yg_proposed)
+    current_and_proposed_sigma_g <- cbind(sigma_g[out_spike_idx], sigma_g_proposed)
+
+    current_and_proposed_likelihood <- cbind(XgLikelihood[out_spike_idx], proposed_XgLikelihood)
+
+
+    choice_idx <- (log(runif(num_choice)) < R) + 1  # 1 means reject proposal, 2 means accept proposal.
+    choice_matrix <- cbind(seq(num_choice), choice_idx) # row-column pairs for current_and_proposed_sigma_g_probability with 1st column meaning reject proposal
+
+    Yg[out_spike_idx] <<- current_and_proposed_Yg[cbind(seq(num_choice), choice_idx)]
+    sigma_g[out_spike_idx] <<- current_and_proposed_sigma_g[choice_matrix]
+
+    ## update XgLikelihood, sigma_g, Sg and p_x
+
+    XgLikelihood[out_spike_idx] <<- current_and_proposed_likelihood[choice_matrix]
+
+    .self$set_sigmaX_pX()
+
+    current_and_proposed_sigmaGProbability <- cbind(sigma_g_probability[out_spike_idx], proposed_sigmaGProbability)
+
+    sigma_g_probability[out_spike_idx] <<- current_and_proposed_sigmaGProbability[choice_matrix]
 
   }
 

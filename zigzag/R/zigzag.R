@@ -49,6 +49,7 @@
 #' @field threshold_i The upper boundary for the inactive distribution.
 #' @field candidate_gene_list A character vector of genes of interest for which mcmc log files for Yg and sigma_g should be output.
 #' @field shared_active_variances A boolean indicating if all active subcomponents share a variance component. If FALSE, a variance parameter is estimated for each component.
+#' @field sigma_g_upper_bound The upper boundary for the truncated log-normal prior for gene-specific variances. Default = Inf
 #' @field weight_active_shape_1 .
 #' @field weight_active_shape_2 .
 #' @field inactive_means_prior_shape .
@@ -179,6 +180,7 @@ zigzag <- setRefClass(
     level_1_probs = "numeric",
     hieararchical_probs_oneLibrary = "numeric",
     combined_probs = "numeric",
+    proposal_list = "list",
 
     ##########
     # priors #
@@ -237,6 +239,7 @@ zigzag <- setRefClass(
     tau_trace = "list",
     sigma_g = "numeric",
     sigma_g_trace = "matrix",
+    sigma_g_upper_bound = "numeric",
 
     s0tau_trace = "list",
 
