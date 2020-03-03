@@ -34,10 +34,10 @@ zigzag$methods(
     write.table(matrix(c("gen", candidate_gene_list), nrow = 1),
                 file=paste0(output_directory, "/", prefix, "_yg_candidate_genes.log"), col.names = F, row.names = F, sep = "\t", quote = F)
 
-    ## posterior for sigma_g of candidate genes
+    ## posterior for variance_g of candidate genes
 
     write.table(matrix(c("gen", candidate_gene_list), nrow = 1),
-                file=paste0(output_directory, "/", prefix, "_sigmag_candidate_genes.log"), col.names = F, row.names = F, sep = "\t", quote = F)
+                file=paste0(output_directory, "/", prefix, "_varianceg_candidate_genes.log"), col.names = F, row.names = F, sep = "\t", quote = F)
 
     ## posterior predicitve simulation file
     if(post_pred_boolean){
@@ -78,7 +78,7 @@ zigzag$methods(
 
   },
 
-  writeToYgSigmagOutputFiles = function(prefix, gen){
+  writeToYgVariancegOutputFiles = function(prefix, gen){
 
     ### write candidate gene Yg posterior samples to file
     geneExp <- Yg[match(candidate_gene_list, gene_names)] *
@@ -90,13 +90,13 @@ zigzag$methods(
                 append=T, sep="\t",row.names=F, col.names=F)
 
 
-    ### write candidate gene sigma_g posterior samples to file
-    geneSigma_g <- sigma_g[match(candidate_gene_list, gene_names)] *
+    ### write candidate gene variance_g posterior samples to file
+    geneVariance_g <- variance_g[match(candidate_gene_list, gene_names)] *
       (1-inactive_spike_allocation[match(candidate_gene_list, gene_names)]) +
       0 * inactive_spike_allocation[match(candidate_gene_list, gene_names)]
 
-    write.table(matrix(c(gen, round(geneSigma_g, digits = 6)), nrow=1),
-                file=paste0(output_directory, "/", prefix, "_sigmag_candidate_genes.log"),
+    write.table(matrix(c(gen, round(geneVariance_g, digits = 6)), nrow=1),
+                file=paste0(output_directory, "/", prefix, "_varianceg_candidate_genes.log"),
                 append=T, sep="\t",row.names=F, col.names=F)
 
   },

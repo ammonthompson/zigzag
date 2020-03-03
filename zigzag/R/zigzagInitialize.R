@@ -31,7 +31,7 @@ zigzag$methods(
                         s0_sigma = 2,
                         s1_shape = 1,
                         s1_rate = 2,
-                        sigma_g_upper_bound = Inf,
+                        variance_g_upper_bound = Inf,
                         alpha_r_shape = 1,
                         alpha_r_rate = 1/10,
                         active_gene_set = NULL,
@@ -123,7 +123,7 @@ zigzag$methods(
     tuningParam_s0tau <<- 0.05
     tuningParam_alpha_r <<- rep(0.5, num_libraries)
     tuningParam_yg <<- rep(0.5, num_transcripts)
-    tuningParam_sigma_g <<- rep(0.5, num_transcripts)
+    tuningParam_variance_g <<- rep(0.5, num_transcripts)
     tuningParam_multi_sigma <<- 0.5
     tuningParam_sigma_mu <<- 0.5
 
@@ -188,7 +188,7 @@ zigzag$methods(
                            .self$gibbsSpikeProb,
                            .self$mhSpikeAllocation,
                            .self$mhYg,
-                           .self$mhSigma_g,
+                           .self$mhVariance_g,
                            .self$mhTau,
                            .self$mhSg,
                            .self$mhS0Tau,
@@ -345,7 +345,7 @@ zigzag$methods(
     inactive_idx <<- which(allocation_active_inactive == 0)
 
 
-    # initialize Yg and sigma_g near observed values in data. If undetected, sample
+    # initialize Yg and variance_g near observed values in data. If undetected, sample
     if(num_libraries > 1 & max(Xg) > -Inf){
 
       #Yg from Xg means
@@ -383,21 +383,21 @@ zigzag$methods(
     Yg_trace <<- t(sapply(seq(num_transcripts), function(g){return(c(rep(0,77),rep(1,23)))}))
 
 
-    ## Initialize Sigma_x and Sigma_g gene variance and shrinkage prior parameters
+    ## Initialize Sigma_x and Variance_g gene variance and shrinkage prior parameters
     Sg <<- exp(s0 + s1 * Yg)
-    sigma_g <<- rlnorm(num_transcripts, 1/2, 1/5)
-    sigma_g_trace <<- t(sapply(seq(num_transcripts), function(g){return(c(rep(0,77),rep(1,23)))}))
-    sigma_g_upper_bound <<- sigma_g_upper_bound
-    sigma_g[which(sigma_g > sigma_g_upper_bound)] <<- sigma_g_upper_bound
+    variance_g <<- rlnorm(num_transcripts, 1/2, 1/5)
+    variance_g_trace <<- t(sapply(seq(num_transcripts), function(g){return(c(rep(0,77),rep(1,23)))}))
+    variance_g_upper_bound <<- variance_g_upper_bound
+    variance_g[which(variance_g > variance_g_upper_bound)] <<- variance_g_upper_bound
 
     p_x <<- .self$get_px()
 
     # Initialize XgLikelihood. resample Yg and downstream values if -Inf likelihood results
-    XgLikelihood <<- .self$computeXgLikelihood(Xg, Yg, sigma_g, p_x)
+    XgLikelihood <<- .self$computeXgLikelihood(Xg, Yg, variance_g, p_x)
 
     cat("Reinitialize genes with zero likelihood: ", which(XgLikelihood == -Inf), "\n")
 
-    # Occasionally there are combinations of intial values of Yg, sigma_g and alpha_r
+    # Occasionally there are combinations of intial values of Yg, variance_g and alpha_r
     # that can lead to 0 likelihood for some genes.
     # For those genes, reinitialize until a combination that has > 0 likelihood is generated.
     if(num_libraries > 1){
@@ -413,14 +413,14 @@ zigzag$methods(
 
         p_x <<- .self$get_px()
 
-        sigma_g[which(XgLikelihood == -Inf)] <<- rlnorm(length(which(XgLikelihood == -Inf)),
+        variance_g[which(XgLikelihood == -Inf)] <<- rlnorm(length(which(XgLikelihood == -Inf)),
                                                         log(Sg[which(XgLikelihood == -Inf)]) + tau, sqrt(tau))
 
-        sigma_g[which(sigma_g > sigma_g_upper_bound)] <<- sigma_g_upper_bound
+        variance_g[which(variance_g > variance_g_upper_bound)] <<- variance_g_upper_bound
 
 
 
-        XgLikelihood <<- .self$computeXgLikelihood(Xg, Yg, sigma_g, p_x)
+        XgLikelihood <<- .self$computeXgLikelihood(Xg, Yg, variance_g, p_x)
 
         counter  = counter + 1
 
@@ -433,7 +433,7 @@ zigzag$methods(
 
     }
 
-    sigma_g_probability <<- .self$computeSigmaGPriorProbability(sigma_g, Sg)
+    variance_g_probability <<- .self$computeVarianceGPriorProbability(variance_g, Sg)
 
 
 
@@ -462,13 +462,13 @@ zigzag$methods(
     field_list_values <<- list(allocation_active_inactive, allocation_within_active, inactive_spike_allocation,
                         weight_active, weight_within_active,
                         inactive_means, inactive_variances, active_means, active_means_dif, active_variances,
-                        Xg, Yg, s0, s1, Sg, sigma_g, alpha_r, p_x,
+                        Xg, Yg, s0, s1, Sg, variance_g, alpha_r, p_x,
                         active_idx, inactive_idx, in_spike_idx, out_spike_idx)
 
     field_list_names <<- list("allocation_active_inactive", "allocation_within_active", "inactive_spike_allocation",
                         "weight_active", "weight_within_active",
                         "inactive_means", "inactive_variances", "active_means", "active_means_dif", "active_variances",
-                        "Xg", "Yg", "s0", "s1", "Sg", "sigma_g", "alpha_r", "p_x",
+                        "Xg", "Yg", "s0", "s1", "Sg", "variance_g", "alpha_r", "p_x",
                         "active_idx", "inactive_idx", "in_spike_idx", "out_spike_idx")
 
 

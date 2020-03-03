@@ -168,7 +168,7 @@ zigzag$methods(
           .self$writeToOutputFiles(paste0(mcmc_prefixdir,"/", mcmcprefix), gen = i)
 
           if((i / sample_frequency) %% 4 == 0)
-            .self$writeToYgSigmagOutputFiles(paste0(mcmc_prefixdir,"/", mcmcprefix), gen = i)
+            .self$writeToYgVariancegOutputFiles(paste0(mcmc_prefixdir,"/", mcmcprefix), gen = i)
 
         }
 

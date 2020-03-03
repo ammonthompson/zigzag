@@ -798,7 +798,7 @@ zigzag$methods(
     yg_proposed = rnorm(length(zero_and_inactive_idx), inactive_means, sqrt(inactive_variances))
 
     p_x_proposed <- .self$get_px(yy = yg_proposed, gl = gene_lengths[zero_and_inactive_idx])
-    # p_x_proposed <- .self$xxget_px(yy = yg_proposed, gl = gene_lengths[zero_and_inactive_idx], xx = Xg[zero_and_inactive_idx,], sg = sigma_g[zero_and_inactive_idx])
+    # p_x_proposed <- .self$xxget_px(yy = yg_proposed, gl = gene_lengths[zero_and_inactive_idx], xx = Xg[zero_and_inactive_idx,], sg = variance_g[zero_and_inactive_idx])
 
 
     #*** Compute likelihoods and prior probabilities
@@ -915,7 +915,7 @@ zigzag$methods(
     Yg_proposed <<- Yg[all_zero_idx] + rnorm(length(all_zero_idx), 0, tuningParam_yg[all_zero_idx]) * (1 - inactive_spike_allocation[all_zero_idx])
 
     p_x_proposed <- .self$get_px(yy = Yg_proposed,  gl = gene_lengths[all_zero_idx])
-    # p_x_proposed <- .self$xxget_px(yy = Yg_proposed,  gl = gene_lengths[all_zero_idx], xx = Xg[all_zero_idx,], sg = sigma_g[all_zero_idx])
+    # p_x_proposed <- .self$xxget_px(yy = Yg_proposed,  gl = gene_lengths[all_zero_idx], xx = Xg[all_zero_idx,], sg = variance_g[all_zero_idx])
 
     ## proposed Yg likelihoods
     proposed_XgLikelihood = .self$computeXgLikelihood_oneLibrary(Xg[all_zero_idx], p_x_proposed, spike_allocation = inactive_spike_allocation[all_zero_idx],
@@ -1323,9 +1323,9 @@ zigzag$methods(
     p_x_proposed <- .self$get_px(yy = Yg_proposed)
 
     ## proposed Yg likelihoods
-    proposed_XgLikelihood = .self$computeXgLikelihood(Xg, Yg_proposed, sigma_g, p_x_proposed)
+    proposed_XgLikelihood = .self$computeXgLikelihood(Xg, Yg_proposed, variance_g, p_x_proposed)
 
-    proposed_sigmaGProbability = .self$computeSigmaGPriorProbability(sigma_g, Sg_proposed)
+    proposed_varianceGProbability = .self$computeVarianceGPriorProbability(variance_g, Sg_proposed)
 
     Lp_pp = proposed_XgLikelihood
 
@@ -1337,7 +1337,7 @@ zigzag$methods(
       .self$computeActiveLikelihood(Yg_proposed[active_idx],  allocation_within_active[[1]][active_idx],
                                     active_means, active_variances)
 
-    Lp_pp = Lp_pp + proposed_sigmaGProbability
+    Lp_pp = Lp_pp + proposed_varianceGProbability
 
 
     ## current Yg likelihoods
@@ -1351,7 +1351,7 @@ zigzag$methods(
       .self$computeActiveLikelihood(Yg[active_idx],  allocation_within_active[[1]][active_idx],
                                     active_means, active_variances)
 
-    Lc_pc = Lc_pc + sigma_g_probability
+    Lc_pc = Lc_pc + variance_g_probability
 
     R = temperature * (Lp_pp - Lc_pc)
 
@@ -1385,9 +1385,9 @@ zigzag$methods(
 
     .self$set_sigmaX_pX()
 
-    current_and_proposed_sigmaGProbability <- cbind(sigma_g_probability, proposed_sigmaGProbability)
+    current_and_proposed_varianceGProbability <- cbind(variance_g_probability, proposed_varianceGProbability)
 
-    sigma_g_probability[out_spike_idx] <<- current_and_proposed_sigmaGProbability[choice_matrix][out_spike_idx]
+    variance_g_probability[out_spike_idx] <<- current_and_proposed_varianceGProbability[choice_matrix][out_spike_idx]
 
   }
 

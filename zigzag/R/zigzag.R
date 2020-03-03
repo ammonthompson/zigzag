@@ -47,9 +47,9 @@
 #' the lower boundary for subcomponent 1 will be set 1, and the prior distributions for the difference between mean 1 and 2,
 #' and the difference between mean 2 and 3 will be gamma distributed.
 #' @field threshold_i The upper boundary for the inactive distribution.
-#' @field candidate_gene_list A character vector of genes of interest for which mcmc log files for Yg and sigma_g should be output.
+#' @field candidate_gene_list A character vector of genes of interest for which mcmc log files for Yg and variance_g should be output.
 #' @field shared_active_variances A boolean indicating if all active subcomponents share a variance component. If FALSE, a variance parameter is estimated for each component.
-#' @field sigma_g_upper_bound The upper boundary for the truncated log-normal prior for gene-specific variances. Default = Inf
+#' @field variance_g_upper_bound The upper boundary for the truncated log-normal prior for gene-specific variances. Default = Inf
 #' @field weight_active_shape_1 .
 #' @field weight_active_shape_2 .
 #' @field inactive_means_prior_shape .
@@ -81,7 +81,7 @@
 #' @field tau_shape .
 #' @field tau_rate .
 #' @field tau .
-#' @field sigma_g .
+#' @field variance_g .
 #' @field s0tau_trace .
 #' @field alpha_r_shape .
 #' @field alpha_r_rate .
@@ -160,7 +160,7 @@ zigzag <- setRefClass(
     tuningParam_s0tau = "numeric",
     tuningParam_alpha_r ="numeric",
     tuningParam_yg = "numeric",
-    tuningParam_sigma_g = "numeric",
+    tuningParam_variance_g = "numeric",
     tuningParam_multi_sigma = "numeric",
     tuningParam_sigma_mu = "numeric",
 
@@ -237,9 +237,9 @@ zigzag <- setRefClass(
     tau_rate = "numeric",
     tau = "numeric",
     tau_trace = "list",
-    sigma_g = "numeric",
-    sigma_g_trace = "matrix",
-    sigma_g_upper_bound = "numeric",
+    variance_g = "numeric",
+    variance_g_trace = "matrix",
+    variance_g_upper_bound = "numeric",
 
     s0tau_trace = "list",
 
@@ -260,7 +260,7 @@ zigzag <- setRefClass(
 
     XgLikelihood = "numeric",
     YgLikelihood = "numeric",
-    sigma_g_probability = "numeric",
+    variance_g_probability = "numeric",
 
     #######################
 

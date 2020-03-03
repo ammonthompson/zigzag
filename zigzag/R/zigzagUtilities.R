@@ -71,7 +71,7 @@ zigzag$methods(
 
     if(num_libs > 1){
 
-      yg_lnl <- sum(.self$computeXgLikelihood(Xg, Yg, sigma_g, p_x))
+      yg_lnl <- sum(.self$computeXgLikelihood(Xg, Yg, variance_g, p_x))
 
     }else{
 
@@ -198,7 +198,7 @@ zigzag$methods(
     tuningParam_s0tau <<- .self$x_tune(s0tau_trace[[1]][[1]], tuningParam_s0tau,
                                        burnin_target_acceptance_rate,
                                        mintuningParam = 0.0001, maxtuningParam = 5)
-    tuningParam_sigma_g <<- .self$x_tune(sigma_g_trace, tuningParam_sigma_g,
+    tuningParam_variance_g <<- .self$x_tune(variance_g_trace, tuningParam_variance_g,
                                          burnin_target_acceptance_rate,
                                          mintuningParam = 0.0001, maxtuningParam = 10)
     tuningParam_yg <<- .self$x_tune(Yg_trace, tuningParam_yg, burnin_target_acceptance_rate,
@@ -250,7 +250,7 @@ zigzag$methods(
         .self$computeActiveWeightPriorProbability(weight_active) + .self$computeWithinActiveWeightPriorProbability(weight_within_active) +
         .self$computeActiveMeansDifPriorProbability(active_means_dif) + .self$computeActiveVariancesPriorProbability(active_variances) +
         .self$computeInactiveMeansPriorProbability(inactive_means) + .self$computeInactiveVariancesPriorProbability(inactive_variances) +
-        .self$computeSigmaGPriorProbability(sigma_g, Sg) + .self$computeTauPriorProbability(tau) + .self$computeS0PriorProbability(s0) + .self$computeS1PriorProbability(s1)
+        .self$computeVarianceGPriorProbability(variance_g, Sg) + .self$computeTauPriorProbability(tau) + .self$computeS0PriorProbability(s0) + .self$computeS1PriorProbability(s1)
 
       tlogpost <- t * sum(lnLxy + lnPrior)
 
@@ -304,7 +304,7 @@ zigzag$methods(
                              tuningParam_s0tau,
                              tuningParam_alpha_r,
                              tuningParam_yg,
-                             tuningParam_sigma_g,
+                             tuningParam_variance_g,
                              tuningParam_multi_sigma,
                              tuningParam_sigma_mu)
 
@@ -328,7 +328,7 @@ zigzag$methods(
     tuningParam_s0tau <<- hlist[[10]]
     tuningParam_alpha_r <<- hlist[[11]]
     tuningParam_yg <<- hlist[[12]]
-    tuningParam_sigma_g <<- hlist[[13]]
+    tuningParam_variance_g <<- hlist[[13]]
     tuningParam_multi_sigma <<- hlist[[14]]
     tuningParam_sigma_mu <<- hlist[[15]]
 
@@ -345,11 +345,11 @@ zigzag$methods(
   #### TESTING or DEPRICATED ########
   ###################################
 
-  xxget_px = function(falpha_r = alpha_r, yy = Yg, sg = sigma_g, xx = Xg, gl = gene_lengths, recover_x = FALSE){
+  xxget_px = function(falpha_r = alpha_r, yy = Yg, sg = variance_g, xx = Xg, gl = gene_lengths, recover_x = FALSE){
 
     # doesn't work. Not sure why, but when mhP_x is run, XgLikelihood seems to increment more and more positive for a lot of genes.
 
-    sd_sigma_g = sqrt(sg)
+    sd_variance_g = sqrt(sg)
 
     if(recover_x == TRUE) recover()
 
@@ -365,8 +365,8 @@ zigzag$methods(
 
         #P(x is not detected)
         lib_pdetect[yyzero] = 1 - as.numeric(sapply(yyzero, function(gidx){
-          integrate(function(x){exp(-falpha_r[lib] * gl[gidx] * exp(x)) * dnorm(x, yy[gidx], sd_sigma_g[gidx])},
-                    lower = yy[gidx] - 8*sd_sigma_g[gidx], upper = yy[gidx] + 8*sd_sigma_g[gidx])[1]
+          integrate(function(x){exp(-falpha_r[lib] * gl[gidx] * exp(x)) * dnorm(x, yy[gidx], sd_variance_g[gidx])},
+                    lower = yy[gidx] - 8*sd_variance_g[gidx], upper = yy[gidx] + 8*sd_variance_g[gidx])[1]
         }))
 
 
@@ -390,8 +390,8 @@ zigzag$methods(
 
       #P(x is not detected)
       npdetect[yyzero] = 1 - as.numeric(sapply(yyzero, function(gidx){
-        integrate(function(x){exp(-falpha_r * gl[gidx] * exp(x)) * dnorm(x, yy[gidx], sd_sigma_g[gidx])},
-                  lower = yy[gidx] - 8*sd_sigma_g[gidx], upper = yy[gidx] + 8*sd_sigma_g[gidx])[1]
+        integrate(function(x){exp(-falpha_r * gl[gidx] * exp(x)) * dnorm(x, yy[gidx], sd_variance_g[gidx])},
+                  lower = yy[gidx] - 8*sd_variance_g[gidx], upper = yy[gidx] + 8*sd_variance_g[gidx])[1]
       }))
 
 

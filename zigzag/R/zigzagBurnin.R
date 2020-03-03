@@ -62,9 +62,9 @@ zigzag$methods(
    for(p in sample(seq(plist_length), plist_length, replace = TRUE, prob = proposal_probs)){
      proposal_list[[p]](tune = TRUE);
 
-     if(is.na(sum(Yg)) || is.na(sum(sigma_g)) ||is.na(sum(tuningParam_yg)) || is.na(sum(inactive_spike_allocation)) ||
+     if(is.na(sum(Yg)) || is.na(sum(variance_g)) ||is.na(sum(tuningParam_yg)) || is.na(sum(inactive_spike_allocation)) ||
         is.nan(sum(inactive_spike_allocation)) || is.na(sum(allocation_active_inactive))||
-        is.nan(sum(allocation_active_inactive)) || is.na(sum(sigma_g_trace)) || is.na(sum(Yg_trace))){
+        is.nan(sum(allocation_active_inactive)) || is.na(sum(variance_g_trace)) || is.na(sum(Yg_trace))){
 
        print("an NA or NaN somewhere!")
        print(p)
@@ -123,7 +123,7 @@ zigzag$methods(
        .self$writeToOutputFiles(paste0(mcmc_prefixdir,"/", prefix), gen = i)
 
        if((i / sample_frequency) %% 4 == 0)
-         .self$writeToYgSigmagOutputFiles(paste0(mcmc_prefixdir,"/", prefix), gen = i)
+         .self$writeToYgVariancegOutputFiles(paste0(mcmc_prefixdir,"/", prefix), gen = i)
 
      }
 

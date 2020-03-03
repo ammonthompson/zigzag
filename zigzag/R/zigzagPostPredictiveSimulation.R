@@ -19,7 +19,7 @@ zigzag$methods(
 
     #### Simulate data from posterior and compute realized discrepancy statstics
 
-    sim_xg = sapply(1:num_libraries, function(x){return(rnorm(length(Yg), Yg, sqrt(sigma_g)))})
+    sim_xg = sapply(1:num_libraries, function(x){return(rnorm(length(Yg), Yg, sqrt(variance_g)))})
 
     # p detect
     sim_xg = sapply(1:num_libraries, function(lib){
