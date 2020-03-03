@@ -22,6 +22,7 @@
 #' output_directory = "output",
 #' threshold_a = 0,
 #' threshold_i = threshold_a[1],
+#' variance_g_upper_bound = Inf,
 #' beta = 1,
 #' tau_shape = 1,
 #' tau_rate = 1,

@@ -13,6 +13,7 @@ zigzag$methods(
 #' @param mcmcprefix prefix for mcmc output directory as well as the output files within.
 #' @param compute_probs compute probabilities of activity for each gene. Default is TRUE.
 #' @param run_posterior_predictive run posterior predictive simulation for every other sample from the chain.
+#' @param run_posterior_predictive_and_plot run posterior predictive simulation and plot simulated densities over observed densities.
 #' @param append If posterior sample log files in mcmcprefix_mcmc_ouput already exists, then append samples to those files. Default is FALSE.
 #'
 #' @return blorb

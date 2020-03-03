@@ -24,6 +24,7 @@ shared_active_variances = TRUE,
 output_directory = "output",
 threshold_a = 0,
 threshold_i = threshold_a[1],
+variance_g_upper_bound = Inf,
 beta = 1,
 tau_shape = 1,
 tau_rate = 1,
@@ -67,11 +68,11 @@ and the difference between mean 2 and 3 will be gamma distributed.}
 
 \item{\code{threshold_i}}{The upper boundary for the inactive distribution.}
 
-\item{\code{candidate_gene_list}}{A character vector of genes of interest for which mcmc log files for Yg and sigma_g should be output.}
+\item{\code{candidate_gene_list}}{A character vector of genes of interest for which mcmc log files for Yg and variance_g should be output.}
 
 \item{\code{shared_active_variances}}{A boolean indicating if all active subcomponents share a variance component. If FALSE, a variance parameter is estimated for each component.}
 
-\item{\code{sigma_g_upper_bound}}{The upper boundary for the truncated log-normal prior for gene-specific variances. Default = Inf}
+\item{\code{variance_g_upper_bound}}{The upper boundary for the truncated log-normal prior for gene-specific variances. Default = Inf}
 
 \item{\code{weight_active_shape_1}}{.}
 
@@ -135,7 +136,7 @@ and the difference between mean 2 and 3 will be gamma distributed.}
 
 \item{\code{tau}}{.}
 
-\item{\code{sigma_g}}{.}
+\item{\code{variance_g}}{.}
 
 \item{\code{s0tau_trace}}{.}
 

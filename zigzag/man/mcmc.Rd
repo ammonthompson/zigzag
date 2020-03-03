@@ -15,8 +15,6 @@ compute_probs = TRUE, run_posterior_predictive = TRUE, append = FALSE)
 
 \item{target_ESS}{Run chain until the target effective sample size is achieved for the likelihood}
 
-\item{progress_plot}{Display a plot showing summary statistics and graphs. (in Rstudio)}
-
 \item{write_to_files}{Write posterior samples to output files located in mcmcprefix_mcmc_ouput directory}
 
 \item{mcmcprefix}{prefix for mcmc output directory as well as the output files within.}
@@ -24,6 +22,8 @@ compute_probs = TRUE, run_posterior_predictive = TRUE, append = FALSE)
 \item{compute_probs}{compute probabilities of activity for each gene. Default is TRUE.}
 
 \item{run_posterior_predictive}{run posterior predictive simulation for every other sample from the chain.}
+
+\item{run_posterior_predictive_and_plot}{run posterior predictive simulation and plot simulated densities over observed densities.}
 
 \item{append}{If posterior sample log files in mcmcprefix_mcmc_ouput already exists, then append samples to those files. Default is FALSE.}
 }
