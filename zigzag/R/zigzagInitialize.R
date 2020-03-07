@@ -53,6 +53,8 @@ zigzag$methods(
     num_libraries   <<- ncol(data)
     num_transcripts <<- nrow(data)
 
+    if(num_libraries < 2) stop("Data must have > 1 library.")
+
     # Active sub-components
     num_active_components <<- as.integer(num_active_components)
     component_matrix      <<- matrix(rep(c(0,seq(num_active_components)), num_transcripts),
