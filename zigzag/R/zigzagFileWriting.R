@@ -85,7 +85,7 @@ zigzag$methods(
       (1-inactive_spike_allocation[match(candidate_gene_list, gene_names)]) +
       -10 * inactive_spike_allocation[match(candidate_gene_list, gene_names)]
 
-    write.table(matrix(c(gen, round(geneExp, digits = 6)), nrow=1),
+    write.table(matrix(c(gen, round(geneExp, digits = 3)), nrow=1),
                 file=paste0(output_directory, "/", prefix, "_yg_candidate_genes.log"),
                 append=T, sep="\t",row.names=F, col.names=F)
 
@@ -95,7 +95,7 @@ zigzag$methods(
       (1-inactive_spike_allocation[match(candidate_gene_list, gene_names)]) +
       0 * inactive_spike_allocation[match(candidate_gene_list, gene_names)]
 
-    write.table(matrix(c(gen, round(geneVariance_g, digits = 6)), nrow=1),
+    write.table(matrix(c(gen, round(geneVariance_g, digits = 3)), nrow=1),
                 file=paste0(output_directory, "/", prefix, "_varianceg_candidate_genes.log"),
                 append=T, sep="\t",row.names=F, col.names=F)
 

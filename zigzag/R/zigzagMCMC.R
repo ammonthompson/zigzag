@@ -31,9 +31,9 @@ zigzag$methods(
     ###########################
     # initialize output files #
     ###########################
-    mcmc_prefixdir = paste0(mcmcprefix, "_mcmc_output")
-    vprefix = unlist(strsplit(mcmcprefix, split = "/"))
-    prefix = vprefix[length(vprefix)]
+    mcmc_prefixdir <- paste0(mcmcprefix, "_mcmc_output")
+    vprefix <- unlist(strsplit(mcmcprefix, split = "/"))
+    prefix <- vprefix[length(vprefix)]
 
 
     if(write_to_files & append == FALSE){
@@ -60,18 +60,18 @@ zigzag$methods(
     # Initialize posterior predictive density plot of       #
     # Xg level 1 (lower level) and Yg level 2 (upper level) #
     #########################################################
-    posXg_rowMeans = apply(Xg, 1, function(g) if(max(g) > -Inf) mean(g[g > -Inf]) else -Inf)
-    xg_colmeans = apply(Xg, 2, function(x) mean(x[x > -Inf]))
-    grandmean_xg_colmeans = mean(xg_colmeans)
-    scaled_xg = sapply(seq(num_libraries), function(lib) Xg[,lib] - xg_colmeans[lib] + grandmean_xg_colmeans)
+    posXg_rowMeans <- apply(Xg, 1, function(g) if(max(g) > -Inf) mean(g[g > -Inf]) else -Inf)
+    xg_colmeans <- apply(Xg, 2, function(x) mean(x[x > -Inf]))
+    grandmean_xg_colmeans <- mean(xg_colmeans)
+    scaled_xg <- sapply(seq(num_libraries), function(lib) Xg[,lib] - xg_colmeans[lib] + grandmean_xg_colmeans)
 
-    num_libs_plot_postpred = num_libraries
+    num_libs_plot_postpred <- num_libraries
     if(num_libs_plot_postpred > 25) num_libs_plot_postpred = 25
 
-    plot_rows = sqrt(num_libs_plot_postpred) - sqrt(num_libs_plot_postpred)%%1 + (sqrt(num_libs_plot_postpred)%%1 > 0)
-    plot_cols = num_libs_plot_postpred/plot_rows - (num_libs_plot_postpred/plot_rows)%%1 + ((num_libs_plot_postpred/plot_rows)%%1 > 0)
+    plot_rows <- sqrt(num_libs_plot_postpred) - sqrt(num_libs_plot_postpred)%%1 + (sqrt(num_libs_plot_postpred)%%1 > 0)
+    plot_cols <- num_libs_plot_postpred/plot_rows - (num_libs_plot_postpred/plot_rows)%%1 + ((num_libs_plot_postpred/plot_rows)%%1 > 0)
 
-    multi_plot_pars = list()
+    multi_plot_pars <- list()
 
 
     if(run_posterior_predictive_and_plot){
@@ -122,17 +122,21 @@ zigzag$methods(
     #########################
     ### Set up MCMC params###
     #########################
-    all_allocation_mcmc = allocation_active_inactive * allocation_within_active[[1]]
+    all_allocation_mcmc <- allocation_active_inactive * allocation_within_active[[1]]
 
     allocation_trace <<- matrix(apply(component_matrix, 2, function(comp_matrix_col) 1 *
                         (comp_matrix_col == all_allocation_mcmc)), nrow = num_transcripts)
 
     lnl_trace[[length(lnl_trace) + 1]] <<- .self$calculate_lnl(num_libraries)
 
+    ngen <- ngen + gen
     i <- gen
     j <- 0
 
     plist_length <- length(proposal_list)
+
+    yg_varg_subsample_frequence = floor(ngen/(sample_frequency * 500))
+    if(write_to_files) write_yg_varg = TRUE
 
     ##############
     # begin mcmc #
@@ -155,7 +159,7 @@ zigzag$methods(
         ### For computing Pr(zag = 1) ###
         if(temperature == 1){
 
-          all_allocation_mcmc = allocation_active_inactive * allocation_within_active[[1]]
+          all_allocation_mcmc <- allocation_active_inactive * allocation_within_active[[1]]
           allocation_trace <<- allocation_trace + apply(component_matrix, 2, function(comp_matrix_col) 1 *
                                                           (comp_matrix_col == all_allocation_mcmc))
 
@@ -164,13 +168,14 @@ zigzag$methods(
         lnl_trace[[length(lnl_trace) + 1]] <<- .self$calculate_lnl(num_libraries)
 
 
-        if(write_to_files & temperature == 1){
+        if(write_to_files & write_yg_varg * temperature == 1){
 
           .self$writeToOutputFiles(paste0(mcmc_prefixdir,"/", mcmcprefix), gen = i)
 
-          if((i / sample_frequency) %% 4 == 0)
-            .self$writeToYgVariancegOutputFiles(paste0(mcmc_prefixdir,"/", mcmcprefix), gen = i)
-
+          # if((i / sample_frequency) %% 4 == 0)
+          if((i / sample_frequency) %% yg_varg_subsample_frequence == 0)
+              .self$writeToYgVariancegOutputFiles(paste0(mcmc_prefixdir,"/", mcmcprefix), gen = i)
+              if(i / (yg_varg_subsample_frequence * sample_frequency) > 500) write_yg_varg = FALSE
         }
 
         if(!is.null(target_ESS) & length(lnl_trace) > 100){
@@ -190,7 +195,7 @@ zigzag$methods(
 
       if((run_posterior_predictive | run_posterior_predictive_and_plot) & (i / (4 * sample_frequency)) %% 1 == 0){
 
-        post_pred_instance = .self$posteriorPredictiveSimulation(prefix = mcmcprefix)
+        post_pred_instance <- .self$posteriorPredictiveSimulation(prefix = mcmcprefix)
 
         if((i / (4 * 4 * sample_frequency)) %% 1 == 0 & run_posterior_predictive_and_plot){
 
