@@ -4,7 +4,7 @@
 #' each gene in a dataset is active given a set of libraries. Creating a zigzag object sets all the
 #' hyperparameters and initializes all model parameters.
 #'
-#' @usage zigzag$new(data, gene_length = NULL, candidate_gene_list = "random",
+#' @usage zigzag$new(data, gene_length = NULL, candidate_gene_list = "all",
 #' num_active_components = 1,
 #' weight_active_shape_1 = 2,
 #' weight_active_shape_2 = 2,
@@ -51,6 +51,7 @@
 #' @field candidate_gene_list A character vector of genes of interest for which mcmc log files for Yg and variance_g should be output.
 #' @field shared_active_variances A boolean indicating if all active subcomponents share a variance component. If FALSE, a variance parameter is estimated for each component.
 #' @field variance_g_upper_bound The upper boundary for the truncated log-normal prior for gene-specific variances. Default = Inf
+#' @field candidate_gene_list A character vector of gene names to record Yg and variange_g samples from the chain. Set = "random" to record 100 random genes. Default = "all".
 #' @field weight_active_shape_1 .
 #' @field weight_active_shape_2 .
 #' @field inactive_means_prior_shape .
@@ -89,7 +90,6 @@
 #' @field p_x .
 #' @field alpha_r .
 #' @field inactive_spike_allocation .
-#' @field candidate_gene_list .
 #' @field allocation_active_inactive .
 #' @field allocation_active_inactive_prob .
 #' @field inactive_means .

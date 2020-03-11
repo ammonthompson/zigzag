@@ -129,7 +129,6 @@ zigzag$methods(
 
     lnl_trace[[length(lnl_trace) + 1]] <<- .self$calculate_lnl(num_libraries)
 
-    ngen <- ngen + gen
     i <- gen
     j <- 0
 
@@ -137,6 +136,10 @@ zigzag$methods(
 
     yg_varg_subsample_frequence = floor(ngen/(sample_frequency * 500))
     if(write_to_files) write_yg_varg = TRUE
+
+    starting_gen <- gen
+    ngen <- ngen + gen
+
 
     ##############
     # begin mcmc #
@@ -175,7 +178,7 @@ zigzag$methods(
           # if((i / sample_frequency) %% 4 == 0)
           if((i / sample_frequency) %% yg_varg_subsample_frequence == 0)
               .self$writeToYgVariancegOutputFiles(paste0(mcmc_prefixdir,"/", mcmcprefix), gen = i)
-              if(i / (yg_varg_subsample_frequence * sample_frequency) > 500) write_yg_varg = FALSE
+              if((i - starting_gen) / (yg_varg_subsample_frequence * sample_frequency) > 500) write_yg_varg = FALSE
         }
 
         if(!is.null(target_ESS) & length(lnl_trace) > 100){

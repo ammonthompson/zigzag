@@ -4,7 +4,7 @@ zigzag$methods(
   # Constructor #
   ###############
 
-  initialize = function(data, gene_length = NULL, candidate_gene_list = "random",
+  initialize = function(data, gene_length = NULL, candidate_gene_list = "all",
                         num_active_components = 1,
                         weight_active_shape_1 = 2,
                         weight_active_shape_2 = 2,
@@ -82,16 +82,24 @@ zigzag$methods(
 
 
     # candidate genes to output posterior samples to files
+    cat("Reading candidate genes to record in mcmc log files...\n")
+
     if(candidate_gene_list[1] == "random"){
 
       candidate_gene_list <<- c(gene_names[c(1:10,sample(num_transcripts, size = 100, replace = F))])
 
+    }else if(candidate_gene_list[1] == "all"){
+
+      candidate_gene_list <<- gene_names
+
     }else{
 
       candidate_gene_list <<- candidate_gene_list
+
       if(length(which(!( candidate_gene_list %in% gene_names))) > 0){
-        print("WARNING: one or more gene list names are not in the data")
-        print(candidate_gene_list[which(!( candidate_gene_list %in% gene_names))])
+
+        stop("Invalid candidate_gene_list. Check for typos and gene names not present in the data.")
+
       }
 
     }
@@ -107,6 +115,7 @@ zigzag$methods(
     # create output directory
     output_directory <<- output_directory
     dir.create(output_directory)
+    cat("Created output directory called: ", output_directory, "...\n")
 
 
     ##########################################################

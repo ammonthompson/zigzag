@@ -30,9 +30,6 @@ zigzag$methods(
 
   },
 
-
-  #### hierarchical #####
-
   computeS0PriorProbability = function(x) {
 
     lnp <- dnorm(x, s0_mu, s0_sigma, log = TRUE)
@@ -128,120 +125,6 @@ zigzag$methods(
     return(beta * lnl)
 
   },
-
-
-
-
-  ######################################################
-
-
-  x_computeXgLikelihood_oneLibrary = function(xg, px,
-                                 spike_allocation = inactive_spike_allocation,
-                                 spike_prob = spike_probability,
-                                 nd_spike = no_detect_spike, recover_x = FALSE) { # returns a vecor of log-likelihoods, one for each gene x given y and Sg and p_x
-
-    xg <- as.matrix(xg)
-    px <- as.matrix(px)
-
-    inspike_idx <- which(spike_allocation == 1)
-    outspike_idx <- which(spike_allocation == 0)
-
-    lnl = NULL
-
-    if(length(outspike_idx) > 1){
-
-      not_detected_idx <- which(xg[outspike_idx, 1] == inf_tol)
-
-      detected_idx <- which(xg[outspike_idx, 1] != inf_tol)
-
-
-      if(length(not_detected_idx) > 0){
-
-        lnl[outspike_idx][not_detected_idx] <- log(1 - px[outspike_idx, 1][not_detected_idx])
-
-      }
-
-      if(length(detected_idx) > 0){
-
-        lnl[outspike_idx][detected_idx] <- log(px[outspike_idx, 1][detected_idx])
-
-      }
-
-    }
-
-    lnl[inspike_idx] <- log(spike_allocation[inspike_idx] * nd_spike[inspike_idx])
-
-    if(recover_x) recover()
-
-    return(beta * lnl)
-
-  },
-
-
-
-  computeXgLikelihood_oneLibrary = function(xg, px,
-                                 spike_allocation = inactive_spike_allocation,
-                                 spike_prob = spike_probability,
-                                 nd_spike = no_detect_spike, recover_x = FALSE) { # returns a vecor of log-likelihoods, one for each gene x given y and Sg and p_x
-
-    xg <- as.matrix(xg)
-    px <- as.matrix(px)
-
-    inspike_idx <- which(spike_allocation == 1)
-    outspike_idx <- which(spike_allocation == 0)
-
-    lnl = rep(NA, length(px))
-
-    if(length(outspike_idx) > 0){
-
-        not_detected_idx <- which(xg[outspike_idx] == inf_tol)
-
-        detected_idx <- which(xg[outspike_idx] != inf_tol)
-
-        detected_inactive_idx <- which(allocation_active_inactive[outspike_idx][detected_idx] == 0)
-
-        detected_active_idx <- which(allocation_active_inactive[outspike_idx][detected_idx] == 1)
-
-        lnl[outspike_idx][not_detected_idx] <- log(1 - px[outspike_idx][not_detected_idx])
-
-        if(recover_x) recover()
-
-        if(length(detected_inactive_idx) > 0){
-
-          # lnl[outspike_idx][detected_idx][detected_inactive_idx] <- log(px[outspike_idx][detected_idx][detected_inactive_idx]) +
-          #   log((1 - weight_active) * exp(.self$computeInactiveLikelihood(Yg[outspike_idx][detected_idx][detected_inactive_idx], spike_probability,
-          #                                                                 inactive_means, inactive_variances, inactive_spike_allocation[outspike_idx][detected_idx][detected_inactive_idx])))
-          #
-
-          lnl[outspike_idx][detected_idx][detected_inactive_idx] <- log(px[outspike_idx][detected_idx][detected_inactive_idx])
-        }
-
-        if(length(detected_active_idx) > 0){
-
-
-          # lnl[outspike_idx][detected_idx][detected_active_idx] <- log(px[outspike_idx][detected_idx][detected_active_idx]) +
-          #   log( weight_active * exp(.self$computeActiveLikelihood(Yg[outspike_idx][detected_idx][detected_active_idx],
-          #                                                          allocation_within_active[[1]][outspike_idx][detected_idx][detected_active_idx], active_means, active_variances)))
-
-
-          lnl[outspike_idx][detected_idx][detected_active_idx] <- log(px[outspike_idx][detected_idx][detected_active_idx])
-
-        }
-
-    }
-
-    lnl[inspike_idx] <- log(spike_allocation[inspike_idx] * nd_spike[inspike_idx])
-
-    return(beta * lnl)
-
-  },
-
-
-
-  ######################################################
-
-
-
 
   computeActiveWeightPriorProbability = function(x) {
 
@@ -392,7 +275,7 @@ zigzag$methods(
 
 
   ###############
-  ### TESTING ###
+  ### Develop ###
   ###############
 
   old_computeInactiveLikelihood = function(y, spike_p, im, iv, spike_allocation = inactive_spike_allocation) { # returns a vecor of log-likelihoods, one for each gene x allocated to inacive component
@@ -448,6 +331,63 @@ zigzag$methods(
     }
 
     return(lnl)
+
+  },
+
+  computeXgLikelihood_oneLibrary = function(xg, px,
+                                            spike_allocation = inactive_spike_allocation,
+                                            spike_prob = spike_probability,
+                                            nd_spike = no_detect_spike, recover_x = FALSE) { # returns a vecor of log-likelihoods, one for each gene x given y and Sg and p_x
+
+    xg <- as.matrix(xg)
+    px <- as.matrix(px)
+
+    inspike_idx <- which(spike_allocation == 1)
+    outspike_idx <- which(spike_allocation == 0)
+
+    lnl = rep(NA, length(px))
+
+    if(length(outspike_idx) > 0){
+
+      not_detected_idx <- which(xg[outspike_idx] == inf_tol)
+
+      detected_idx <- which(xg[outspike_idx] != inf_tol)
+
+      detected_inactive_idx <- which(allocation_active_inactive[outspike_idx][detected_idx] == 0)
+
+      detected_active_idx <- which(allocation_active_inactive[outspike_idx][detected_idx] == 1)
+
+      lnl[outspike_idx][not_detected_idx] <- log(1 - px[outspike_idx][not_detected_idx])
+
+      if(recover_x) recover()
+
+      if(length(detected_inactive_idx) > 0){
+
+        # lnl[outspike_idx][detected_idx][detected_inactive_idx] <- log(px[outspike_idx][detected_idx][detected_inactive_idx]) +
+        #   log((1 - weight_active) * exp(.self$computeInactiveLikelihood(Yg[outspike_idx][detected_idx][detected_inactive_idx], spike_probability,
+        #                                                                 inactive_means, inactive_variances, inactive_spike_allocation[outspike_idx][detected_idx][detected_inactive_idx])))
+        #
+
+        lnl[outspike_idx][detected_idx][detected_inactive_idx] <- log(px[outspike_idx][detected_idx][detected_inactive_idx])
+      }
+
+      if(length(detected_active_idx) > 0){
+
+
+        # lnl[outspike_idx][detected_idx][detected_active_idx] <- log(px[outspike_idx][detected_idx][detected_active_idx]) +
+        #   log( weight_active * exp(.self$computeActiveLikelihood(Yg[outspike_idx][detected_idx][detected_active_idx],
+        #                                                          allocation_within_active[[1]][outspike_idx][detected_idx][detected_active_idx], active_means, active_variances)))
+
+
+        lnl[outspike_idx][detected_idx][detected_active_idx] <- log(px[outspike_idx][detected_idx][detected_active_idx])
+
+      }
+
+    }
+
+    lnl[inspike_idx] <- log(spike_allocation[inspike_idx] * nd_spike[inspike_idx])
+
+    return(beta * lnl)
 
   },
 
