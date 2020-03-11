@@ -6,7 +6,7 @@
 \alias{zigzag}
 \title{zigzag reference class.}
 \usage{
-zigzag$new(data, gene_length = NULL, candidate_gene_list = "random",
+zigzag$new(data, gene_length = NULL, candidate_gene_list = "all",
 num_active_components = 1,
 weight_active_shape_1 = 2,
 weight_active_shape_2 = 2,
@@ -73,6 +73,8 @@ and the difference between mean 2 and 3 will be gamma distributed.}
 \item{\code{shared_active_variances}}{A boolean indicating if all active subcomponents share a variance component. If FALSE, a variance parameter is estimated for each component.}
 
 \item{\code{variance_g_upper_bound}}{The upper boundary for the truncated log-normal prior for gene-specific variances. Default = Inf}
+
+\item{\code{candidate_gene_list}}{A character vector of gene names to record Yg and variange_g samples from the chain. Set = "random" to record 100 random genes. Default = "all".}
 
 \item{\code{weight_active_shape_1}}{.}
 
@@ -149,8 +151,6 @@ and the difference between mean 2 and 3 will be gamma distributed.}
 \item{\code{alpha_r}}{.}
 
 \item{\code{inactive_spike_allocation}}{.}
-
-\item{\code{candidate_gene_list}}{.}
 
 \item{\code{allocation_active_inactive}}{.}
 
