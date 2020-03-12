@@ -10,17 +10,17 @@ gene_length_df = read.table("../simulate_data/simulated_data/sim1_sim_gene_lengt
 sq=rbind(c(1,2),c(3,4)); layout(sq)
 subsample = sample(seq(5000), 2000, replace = F)
 
+library(zigzag)
+
 mm <- zigzag$new(data = as.data.frame(dat), gene_length = gene_length_df[, 1], candidate_gene_list = "random",
-                    output_directory = "../testing", num_active_components = 2, inactive_variances_prior_max = 10,
-                    active_means_dif_prior_shape = 1, active_means_dif_prior_rate = 1/3,
-                    threshold_i = 0, threshold_a = c(0,4), active_gene_set = NULL, shared_active_variances = T, beta = 1)
+                    output_directory = "testing", num_active_components = 2, threshold_a = c(0,4))
 
 
-mm$burnin(sample_frequency = 100, burnin_target_acceptance_rate=0.44, progress_plot = T,
-          write_to_files = T, ngen=25000, append = F)
+mm$burnin(sample_frequency = 100, burnin_target_acceptance_rate=0.44,
+          write_to_files = T, ngen=25000)
 
 
-mm$mcmc(sample_frequency = 50, progress_plot = F, write_to_files = T, ngen=30000, append = F,
+mm$mcmc(sample_frequency = 50, write_to_files = T, ngen=30000, append = F,
         run_posterior_predictive = T, mcmcprefix = "sim_check")
 
 

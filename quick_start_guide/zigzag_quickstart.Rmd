@@ -1,0 +1,176 @@
+---
+title: "$z^i_gz^a_g$ quick start guide"
+author: "Ammon Thompson"
+date: "July 9, 2019"
+output:
+#  pdf_document: default
+  html_document: default
+#  pdf_format: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, eval = FALSE, include=FALSE}
+options(tinytex.verbose = TRUE)
+```
+I recommend you work this quick-start guide using Rstudio.
+
+### Install zigzag
+Navigate to a directory where you would like to install the zigzag repository that contains the R package, zigzag. 
+
+```{bash, eval = FALSE}
+bash
+git clone https://github.com/ammonthompson/zigzag.git
+```
+To install the R package, open an R terminal or in the console in Rstudio, type: (if your working directory is not where the zigzag package is, then include the path to zigzag). The package is a directory that contains the .Rproj and DESCRIPTION files.
+```{r, eval=FALSE}
+R
+install.packages("zigzag", type = "source", repos = NULL)
+require(zigzag)
+```
+Note, zigzag depends on R packages coda and matrixStats.
+
+
+
+### Load Expression and Gene Length Data
+After cloning the zigzag repository and instaling the zigzag R package, open R and set the quick_start_guide directory as your working directory.
+We have provided example data for this tutorial. These are subsets of genes used in the zigzag publication (cation). You can copy-and-paste the R code to run analyses. 
+
+The expression data is found in the quick_start_guide directory. These files contain the TPM levels of 5,000 genes estimated in 4 human lung RNA-seq libraries from the GTEx dataset. 
+
+```{r,}
+expression_data = read.table("example_lung.tpm", header = T, row.names = 1)
+
+head(round(expression_data, digits = 1))
+```
+
+zigzag requires the data contain row names which are gene names. Ensure the row names correspond in the gene length and expression files.
+```{r,}
+human_gene_lengths = read.table("example_gene_length.txt", header = T, row.names = 1)
+
+head(round(human_gene_lengths, digits = 1))
+```
+
+
+
+
+### Examine transcriptome distribution
+The model used in zigzag assumes the transcriptome distribution is approximately bimodal and that each sub-distribution is approximately Normal, i.e. symmetrical bell-shaped distributions on the log-scale.
+
+It is a good idea to check the log-expression densities of all libraries to make sure all libraries conform to the assumption of bimodal normal distributions. For example, data that has been rounded to only a couple digits may nolonger look normal for low expressed genes. The vertical lines below indicate boundaries I have chosen for setting component mean prior thresholds. You can perform multiple analyses assuming different prior distributions with different boundaries to determine posterior sensitivity of the parameters of interest. 
+
+The thick blue line on the left shows an example upper and lower boundary for the prior on the inactive mean and the main active distribution respectively. The thin red line on the right shows the chosen lower boundary for a possible minor subpopulation of genes with high expression in the right tail of the distribution.
+
+```{r, echo=TRUE}
+
+plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25))
+
+for(i in seq(ncol(expression_data))) lines(density(log(expression_data[,i])))
+
+abline(v = c(1, 4), lwd = c(2, 1), col = c("blue", "red"))
+```
+
+
+
+### Load data and set priors in a zigzag object
+zigzag instances are Refclass objects. Their member variables and methods are called with the \$ symbol. Methods and variables are called with the following notation: object\$method(), or object\$variable. A new zigzag object is instantiated by 
+
+```{r, eval=FALSE}
+my_zigzag =zigzag$new(data and hyperprior settings)
+```
+
+We will now load the expression data and gene length data into a zigzag object. We will specify a mixture model that contains two subdistributions in the active expression component with lower boundaries set at 1 and 4 by setting threshold_a = c(1, 4). The upper threshold for the inactive mean prior is by default equal to the threshold_a[1], in this case 1. All other priors we will keep the default settings. Alternatively, ordered offsets for the means can be specified by only setting one lower threshold for the active compontnents: threshold_a = 1. Zigzag uses the output_directory variable to create a directory where all output files will be written. To see all zigzag variables and default settings including hyperpriors type ?zigzag in the Rstudio consol.
+
+```{r, , eval=FALSE}
+my_zigzag = zigzag$new(data = expression_data, gene_length = human_gene_lengths, 
+                       output_directory = "my_zigzag_output", 
+                       num_active_components = 2, threshold_a = c(1, 4))
+```
+When the zigzag object is created, the hyperprior settings will be summarized in a file in your output_directory, in this case my_zigzag_output/hyperparameter_settings.txt
+
+
+
+
+### Run Burnin and assess convergence with log files
+Use the burnin function to run an initial burnin. Here we will run the analysis for 5000 generations sampling every 50 generations of the chain.
+If write_to_files == TRUE, the burnin sample will, by default, be written to files in a directory called example_zigzag_output/output_burnin. Type ?burnin for more details.
+
+```{r,, eval = FALSE}
+my_zigzag$burnin(sample_frequency = 50, ngen=5000, write_to_files = TRUE)
+```
+
+
+evaluate the burnin log files to determine if the chain has converged to the stationary distribution. The plot of sampled parameter values should randomly vary around a constant. If you don't want to wait for burnin to complete, you can look at output files for pre-made located in "example_zigzag_output":
+
+```{r, eval = TRUE, echo = TRUE}
+
+burn = read.table("example_zigzag_output/output_burnin/output_model_parameters.log", 
+                  header = T, row.names =1)
+```
+
+
+If you interrupt the burnin, when you call the burnin function again it will start from where you left off. 
+
+```{r, eval = FALSE}
+
+for(i in seq(ncol(burn))) plot(burn[,i], type = "l", main = colnames(burn)[i])
+
+```
+For example, the variable $s_0$ appears to have converged on the stationary distribution around -2:
+
+```{r, echo = TRUE}
+plot(burn[,2], type = "l", main = colnames(burn)[2])
+```
+
+If satisfied all parameters have converged, proceed to run the mcmc. Type ?mcmc for more details.
+
+### Run MCMC
+
+To sample from the posterior distribution use the mcmc function. To run posterior predictive simulation during the mcmc set run_posterior_predictive = TRUE.
+
+```{r,, eval = FALSE}
+my_zigzag$mcmc(sample_frequency = 50, ngen = 10000, run_posterior_predictive = TRUE)
+```
+
+
+
+### Output files
+MCMC posterior sample files and posterior predictive simulations are located in the directory: example_zigzag_output/example_lung_mcmc_output. 
+
+Assess MCMC behavior.
+```{r, eval = FALSE, echo = TRUE}
+post = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung_model_parameters.log", 
+                  header = T, row.names = 1)
+```
+
+To plot all parameter mcmc chains:
+```{r, eval = FALSE}
+for(i in seq(ncol(post))) plot(post[,i], type = "l", main = colnames(post)[i])
+
+```
+
+For example, $s_0$ doesn't appear to shift or drift from a stable distribution around -2:
+```{r, eval = FALSE, echo = TRUE}
+
+plot(post[,2], type = "l", main = colnames(post)[2])
+
+```
+
+
+The probability each gene in the data is actively expressed is in the file: example_lung_probability_active.tab
+
+```{r,,echo = TRUE}
+prob_active = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung_probability_active.tab",
+                header = T, row.names = 1)
+
+head(round(prob_active, digits = 2))
+
+```
+
+Finally, you will want to create at least 2 zigzag objects and run two independent MCMC's and confirm they converge on the same stationary distribution for all parameters. Also, check that all runs produce the same estimates of the probability of active expression for all genes. If you see a signficant difference for some genes, that indicates those genes didn't converge. Check the mcmc traces for $Y_g$ and $\sigma^2_g$ for those genes. 
+
+
+Tracer is a good program for viewing mcmc files: [Tracer download page](http://tree.bio.ed.ac.uk/software/tracer/)
+

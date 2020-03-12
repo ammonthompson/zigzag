@@ -1,6 +1,6 @@
 *.pdf
 zigzag/.Rproj.user/
-zigzag/.Rhistory
+zigzag/**.Rhistory
 zigzag/.RData
 zigzag/quick_start_guide/*synctex.gz
 zigzag/quick_start_guide/*.out

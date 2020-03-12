@@ -2,7 +2,6 @@
 #	1:	control file
 #	2:	Output file prefix
 #	3:	How many randomly selected Yg values to output
-#	Gene length file is: ammon/expression_state_analysis/scripts/K562_mean_geneLength_grch38_gencode.v24.txt
 ##########################
 
 file_prefix = "sim"
@@ -24,14 +23,6 @@ get_sigma2_g = function(gene){
     return(rlnorm(length(gene), log(sigma_x) + taux, sqrt(taux)))
 
 }
-#alt
-# get_sigma2_g = function(gene){
-#
-#   sigma_x = exp(s0x + s1x * gene) + 2
-#
-#   return(rlnorm(length(gene), log(sigma_x) + taux, sqrt(taux)))
-#
-# }
 
 
 get_p_x = function(gene, lib, gl){
@@ -39,16 +30,6 @@ get_p_x = function(gene, lib, gl){
   return(1 - exp(-alpha_rx[lib] * gl * exp(gene)))
 
 }
-#alt
-# get_p_x = function(gene, lib, gl){
-#
-#   ppp = 1 - exp(-alpha_rx[lib] * gl * exp(gene))
-#
-#   ppp[sample(which(ppp < 0.5), 0.5 * length(which(ppp < 0.5)), replace = F)] = 1
-#
-#   return(ppp)
-#
-# }
 
 prior_settings_file = paste0(output_dir, file_prefix, ".parameterValues")
 write.table(matrix(c("sim_number", "mu_i", "variance_i", "spike_prob", "weight_active",
@@ -135,23 +116,6 @@ for(i in seq(params[17])){
 	  sim_xg[(runif(length(sim_yg)) < (1 - p_x)), lib] <<- -Inf  #because the in-spike genes will be place at the beginning of sim_xg/yg
 
 	})
-	#pdetect depends on Xg not Yg
-	# sapply(1:num_libs, function(lib){
-	#
-	#   p_x = get_p_x(sim_xg[,lib], lib, sim_rel_gl[(num_spike + 1):total])
-	#
-	#   sim_xg[(runif(length(sim_yg)) < (1 - p_x)), lib] <<- -Inf  #because the in-spike genes will be place at the beginning of sim_xg/yg
-	#
-	# })
-	#pdetect has lower cuttoff
-	# sapply(1:num_libs, function(lib){
-	#
-	#   p_x = get_p_x(sim_yg, lib, sim_rel_gl[(num_spike + 1):total])
-	#
-	#   sim_xg[(runif(length(sim_yg)) < (1 - p_x)), lib] <<- -Inf  #because the in-spike genes will be place at the beginning of sim_xg/yg
-	#
-	#   sim_xg[sim_xg[,lib] < 0 & sim_rel_gl[(num_spike + 1):total] < 2, lib] <<- -Inf #cutoff
-	# })
 
 
 	### simulate spike # first num_spike genes are in spike
