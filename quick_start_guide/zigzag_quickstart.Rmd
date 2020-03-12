@@ -171,6 +171,17 @@ head(round(prob_active, digits = 2))
 
 Finally, you will want to create at least 2 zigzag objects and run two independent MCMC's and confirm they converge on the same stationary distribution for all parameters. Also, check that all runs produce the same estimates of the probability of active expression for all genes. If you see a signficant difference for some genes, that indicates those genes didn't converge. Check the mcmc traces for $Y_g$ and $\sigma^2_g$ for those genes. 
 
+The code below plots $P(z^a_g = 1 | X)$ of all 5000 genes in relation to the empirical log-expression distributions.
+
+```{r, echo =TRUE}
+plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25))
+
+points(log(rowMeans(expression_data)), 0.25 * prob_active$prob_active, col = "red", cex = 0.5)
+
+for(i in seq(ncol(expression_data))) lines(density(log(expression_data[,i])))
+
+```
+
 
 Tracer is a good program for viewing mcmc files: [Tracer download page](http://tree.bio.ed.ac.uk/software/tracer/)
 
