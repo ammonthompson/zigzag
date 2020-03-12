@@ -81,7 +81,7 @@ zigzag instances are Refclass objects. Their member variables and methods are ca
 my_zigzag =zigzag$new(data and hyperprior settings)
 ```
 
-We will now load the expression data and gene length data into a zigzag object. We will specify a mixture model that contains two subdistributions in the active expression component with lower boundaries set at 1 and 4 by setting threshold_a = c(1, 4). The upper threshold for the inactive mean prior is by default equal to the threshold_a[1], in this case 1. All other priors we will keep the default settings. Alternatively, ordered offsets for the means can be specified by only setting one lower threshold for the active compontnents: threshold_a = 1. Zigzag uses the output_directory variable to create a directory where all output files will be written. To see all zigzag variables and default settings including hyperpriors type ?zigzag in the Rstudio consol.
+We will now load the expression data and gene length data into a zigzag object. Because there may be a group of outlier genes with very high expression we will specify a mixture model that contains two subdistributions in the active expression component with \textit{lower} boundaries set at 1 and 4 by setting threshold_a = c(1, 4). The \textit{upper} boundary for the inactive mean prior is by default equal to the threshold_a[1], in this case 1. For all other priors we will keep the default settings. Alternatively, ordered offsets for the means can be specified by only setting one lower threshold for the active compontnents: threshold_a = 1. Zigzag uses the output_directory variable to create a directory where all output files will be written. To see all zigzag variables and default settings including hyperpriors type ?zigzag in the Rstudio consol.
 
 ```{r, , eval=FALSE}
 my_zigzag = zigzag$new(data = expression_data, gene_length = human_gene_lengths, 
@@ -98,7 +98,7 @@ Use the burnin function to run an initial burnin. Here we will run the analysis 
 If write_to_files == TRUE, the burnin sample will, by default, be written to files in a directory called example_zigzag_output/output_burnin. Type ?burnin for more details.
 
 ```{r,, eval = FALSE}
-my_zigzag$burnin(sample_frequency = 50, ngen=5000, write_to_files = TRUE)
+my_zigzag$burnin(sample_frequency = 50, ngen=20000, write_to_files = TRUE)
 ```
 
 
@@ -131,7 +131,7 @@ If satisfied all parameters have converged, proceed to run the mcmc. Type ?mcmc 
 To sample from the posterior distribution use the mcmc function. To run posterior predictive simulation during the mcmc set run_posterior_predictive = TRUE.
 
 ```{r,, eval = FALSE}
-my_zigzag$mcmc(sample_frequency = 50, ngen = 10000, run_posterior_predictive = TRUE)
+my_zigzag$mcmc(sample_frequency = 50, ngen = 60000, run_posterior_predictive = TRUE, mcmcprefix = "my_lung")
 ```
 
 
@@ -158,12 +158,14 @@ plot(post[,2], type = "l", main = colnames(post)[2])
 
 ```
 
+*Tracer is a good program for viewing mcmc files: [Tracer download page](http://tree.bio.ed.ac.uk/software/tracer/)
+
 
 The probability each gene in the data is actively expressed is in the file: example_lung_probability_active.tab
 
 ```{r,,echo = TRUE}
 prob_active = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung_probability_active.tab",
-                header = T, row.names = 1)
+                         header = T, row.names = 1)
 
 head(round(prob_active, digits = 2))
 
@@ -171,10 +173,11 @@ head(round(prob_active, digits = 2))
 
 Finally, you will want to create at least 2 zigzag objects and run two independent MCMC's and confirm they converge on the same stationary distribution for all parameters. Also, check that all runs produce the same estimates of the probability of active expression for all genes. If you see a signficant difference for some genes, that indicates those genes didn't converge. Check the mcmc traces for $Y_g$ and $\sigma^2_g$ for those genes. 
 
-The code below plots $P(z^a_g = 1 | X)$ of all 5000 genes in relation to the empirical log-expression distributions.
+The code below plots $P(z^a_g = 1 | X)$ of all 5000 genes (scaled by 0.25) in relation to the empirical log-expression distributions.
 
 ```{r, echo =TRUE}
-plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25))
+plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25), axes = FALSE)
+axis(1)
 
 points(log(rowMeans(expression_data)), 0.25 * prob_active$prob_active, col = "red", cex = 0.5)
 
@@ -183,5 +186,10 @@ for(i in seq(ncol(expression_data))) lines(density(log(expression_data[,i])))
 ```
 
 
-Tracer is a good program for viewing mcmc files: [Tracer download page](http://tree.bio.ed.ac.uk/software/tracer/)
+
+
+### Assess Model Adequacy with Posterior Predictive Simulation...
+If run_posterior_predictive = TRUE, zigzag will will periodically sample from the mcmc chain and sample from the the posterior predictive distribution by simulating data given the posterior sample of model parameters. Zigzag measures three discrpency statistics...
+
+
 
