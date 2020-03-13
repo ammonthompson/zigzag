@@ -6,7 +6,6 @@
 /.RData
 /quick_start_guide/*synctex.gz
 /quick_start_guide/*.out
-/quick_start_guide/*.log
 /quick_start_guide/*.aux
 /quick_start_guide/*.tex
 testing/
