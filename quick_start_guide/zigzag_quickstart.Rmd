@@ -24,7 +24,7 @@ Navigate to a directory where you would like to install the zigzag repository th
 bash
 git clone https://github.com/ammonthompson/zigzag.git
 ```
-To install the R package, open an R terminal or in the console in Rstudio, type: (if your working directory is not where the zigzag package is, then include the path to zigzag). The package is a directory that contains the .Rproj and DESCRIPTION files.
+To install the R package, open an R terminal or in the console in Rstudio, type: (if your working directory is not where the zigzag package is, then include the path to zigzag). The package is a directory that contains the DESCRIPTION file.
 ```{r, eval=FALSE}
 R
 install.packages("zigzag", type = "source", repos = NULL)
@@ -102,7 +102,7 @@ my_zigzag$burnin(sample_frequency = 50, ngen=20000, write_to_files = TRUE)
 ```
 
 
-evaluate the burnin log files to determine if the chain has converged to the stationary distribution. The plot of sampled parameter values should randomly vary around a constant. If you don't want to wait for burnin to complete, you can look at output files for pre-made located in "example_zigzag_output":
+evaluate the burnin log files to determine if the chain has converged to the stationary distribution. The plot of sampled parameter values should randomly vary around a constant. If you don't want to wait for burnin to complete, you can look at output files for an mcmc I ran located in "example_zigzag_output":
 
 ```{r, eval = TRUE, echo = TRUE}
 
@@ -131,16 +131,16 @@ If satisfied all parameters have converged, proceed to run the mcmc. Type ?mcmc 
 To sample from the posterior distribution use the mcmc function. To run posterior predictive simulation during the mcmc set run_posterior_predictive = TRUE.
 
 ```{r,, eval = FALSE}
-my_zigzag$mcmc(sample_frequency = 50, ngen = 60000, run_posterior_predictive = TRUE, mcmcprefix = "my_lung")
+my_zigzag$mcmc(sample_frequency = 50, ngen = 50000, run_posterior_predictive = TRUE, mcmcprefix = "my_lung")
 ```
 
 
 
-### Output files
-MCMC posterior sample files and posterior predictive simulations are located in the directory: example_zigzag_output/example_lung_mcmc_output. 
+### Analyze output files
+MCMC posterior sample files and posterior predictive simulations from an MCMC I ran for 750,000 generations are located in the directory: example_zigzag_output/example_lung_mcmc_output. 
 
 Assess MCMC behavior.
-```{r, eval = FALSE, echo = TRUE}
+```{r, eval = TRUE, echo = TRUE}
 post = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung_model_parameters.log", 
                   header = T, row.names = 1)
 ```
@@ -157,6 +157,16 @@ For example, $s_0$ doesn't appear to shift or drift from a stable distribution a
 plot(post[,2], type = "l", main = colnames(post)[2])
 
 ```
+
+It is also important to explore sensitivity of the posterior distribution to model prior assumptions. For example, if you plot histogram of the posterior distribution of the inactive component variance parameter, you'll see there is a significant amount of sample near the upper bound of the variance prior distribution of 5.
+
+```{r, eval = TRUE, echo = TRUE}
+
+hist(post$inactive_variance, breaks = 100, xlim = c(0.01,5), main = "")
+
+```
+
+We recommend creating a new zigzag object, setting inactive_variances_prior_max to a number greater than 6 in this case, and rurunning the analysis.
 
 *Tracer is a good program for viewing mcmc files: [Tracer download page](http://tree.bio.ed.ac.uk/software/tracer/)
 
@@ -188,8 +198,28 @@ for(i in seq(ncol(expression_data))) lines(density(log(expression_data[,i])))
 
 
 
-### Assess Model Adequacy with Posterior Predictive Simulation...
-If run_posterior_predictive = TRUE, zigzag will will periodically sample from the mcmc chain and sample from the the posterior predictive distribution by simulating data given the posterior sample of model parameters. Zigzag measures three discrpency statistics...
+### Assess model adequacy with posterior predictive simulation
+If run_posterior_predictive = TRUE, zigzag will periodically sample from the mcmc chain and sample from the the posterior predictive distribution by simulating data given the posterior sample of model parameters. Zigzag measures three discrpency statistics:
+
+The lower level Wasserstein statistic measures the total distrance between the cumulative distribution of the discrepencay of the data from the model and the comulative distribution of the discrpency of simulated data from the model. 
+
+The upper level Wasserstein statistic measures the total distance between the cumulative distribution of the posterior sample of Yg for all genes from the model and the same discrepency between simulated data and the model. 
+
+Finally, the Rumsfeld statistics measures the discrpency between the number of zeros in the data and the simulated data.
+
+If the difference between simulated and real data is close to zero, then that is evidence that the data is plausible under the posterior model.
+
+Here is the location of zeror relative to the posterior predictive distributions of these three statistics for the example dataset:
+
+```{r,eval = TRUE, echo = TRUE}
+
+postpred = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung.post_predictive_output.log", header = T, row.names = 1)
+
+boxplot(postpred, outline = FALSE)
+abline(h=0, col = "Red")
+
+
+```
 
 
 
