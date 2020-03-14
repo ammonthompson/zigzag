@@ -1,7 +1,7 @@
 ---
-title: "$z^i_gz^a_g$ quick start guide"
+title: "$z^i_gz^a_g$ Tutorial"
 author: "Ammon Thompson"
-date: "July 9, 2019"
+date: "March 14, 2020"
 output:
 #  pdf_document: default
   html_document: default
@@ -15,16 +15,16 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, eval = FALSE, include=FALSE}
 options(tinytex.verbose = TRUE)
 ```
-I recommend you work this quick-start guide using Rstudio.
+I recommend using Rstudio for this tutorial.
 
 ### Install zigzag
-Navigate to a directory where you would like to install the zigzag repository that contains the R package, zigzag. 
+Navigate to a directory where you would like to install the zigzag repository. 
 
 ```{bash, eval = FALSE}
 bash
 git clone https://github.com/ammonthompson/zigzag.git
 ```
-To install the R package, open an R terminal or in the console in Rstudio, type: (if your working directory is not where the zigzag package is, then include the path to zigzag). The package is a directory that contains the DESCRIPTION file.
+To install the R package, open an R terminal or in the console in Rstudio. If your working directory is not where the zigzag package is, then include the path to zigzag. The package is a directory that contains the DESCRIPTION file.
 ```{r, eval=FALSE}
 R
 install.packages("zigzag", type = "source", repos = NULL)
@@ -197,7 +197,7 @@ hist(post$inactive_variance, breaks = 100, xlim = c(0.01,5), main = "")
 
 ```
 
-We recommend creating a new zigzag object, setting inactive_variances_prior_max to a number greater than 6 in this case, and rurunning the analysis.
+Unless you have good reason to believe this parameter is not $> 5$, we recommend creating a new zigzag object, setting inactive_variances_prior_max to a number greater than 6 in this case, and rurunning the analysis.
 
 *Tracer is a good program for viewing mcmc files: [Tracer download page](http://tree.bio.ed.ac.uk/software/tracer/)
 
@@ -213,7 +213,7 @@ head(round(cbind(expression_data, prob_active), digits = 3))
 
 ```
 
-Finally, you will want to create at least 2 zigzag objects and run independent MCMC's for each each. Confirm all MCMC's converge on the same stationary distribution for all parameters. MCMC files can be compared visually using [Tracer](http://tree.bio.ed.ac.uk/software/tracer/). Also, check that all runs produce the same estimates of the probability of active expression for all genes. If you see a signficant difference for some genes, that indicates those genes didn't converge. Check the mcmc traces for $Y_g$ and $\sigma^2_g$ for those genes. 
+
 
 The code below plots $P(z^a_g = 1 | X)$ of all 5000 genes (scaled by 0.25 for visualization) in relation to the empirical log-expression distributions.
 
@@ -227,7 +227,7 @@ for(i in seq(ncol(expression_data))) lines(density(log(expression_data[,i])))
 
 ```
 
-
+Finally, you will want to create at least 2 zigzag objects and run independent MCMC's for each each. Confirm all MCMC's converge on the same stationary distribution for all parameters. MCMC files can be compared visually using [Tracer](http://tree.bio.ed.ac.uk/software/tracer/). Also, check that all runs produce the same estimates of the probability of active expression for all genes. If you see a signficant difference for some genes, that indicates those genes didn't converge. Check the mcmc traces for $Y_g$ and $\sigma^2_g$ for those genes. 
 
 
 ### Assess model adequacy with posterior predictive simulation
@@ -240,7 +240,7 @@ If the difference between realized discrepancy of the simulated and real data is
 
 Here is the location of zero relative to the posterior predictive distributions of these three statistics for the example analysis:
 
-```{r,eval = TRUE, echo = TRUE}
+```{r,eval = TRUE, echo = TRUE, fig.height = 3, fig.width=5}
 postpred = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung.post_predictive_output.log", header = T, row.names = 1)
 
 boxplot(postpred, outline = FALSE)
@@ -249,5 +249,14 @@ abline(h=0, col = "Red")
 
 ```
 
+In contrast, a 1 component model is less consistent with data in the upper level of the model.
+
+```{r, eval = TRUE, echo = FALSE, fig.height = 3, fig.width = 5}
+post_1comp = read.table("example_zigzag_output/example_lung_mcmc_output/example_1comp_lung.post_predictive_output.log", header = T, row.names = 1)
+
+boxplot(post_1comp, outline = FALSE)
+abline(h=0, col = "red")
+
+```
 
 
