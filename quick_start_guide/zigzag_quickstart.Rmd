@@ -234,9 +234,9 @@ Finally, you will want to create at least 2 zigzag objects and run independent M
 
 Model-based inference is based on the premise that our inference model provides an adequate description of the process that gave rise to our observations. The Bayesian approach for assessing model adequacy is called posterior-predictive assessment ([Gelman et al. 1996](http://www.stat.columbia.edu/~gelman/research/published/A6n41.pdf)). This approach is based on the following idea: if the inference model provides an adequate description of the process that gave rise to our observed data, then we should be able to use that model to simulate datasets that resemble our original dataset. We use a summary statistic to quantify the resemblance between the original and simulated datasets. By repeatedly simulating datasets from the joint posterior distribution of the model parameters inferred from the observed data, we can construct a predictive distribution of summary statistics that characterize the resemblance between the simulated and observed data.
 
-If run_posterior_predictive = TRUE, zigzag will periodically sample from the mcmc chain to simulate data and measure three realized discrepency statistics: (1) the lower-level Wasserstein statistic, which measures the discrepancy between the observed expression levels for detected genes, $X$, and the expected expression levels for detected genes given the model parameters, $E[X|\theta]$; (2) the upper-level Wasserstein statistic, which measures the discrepancy between the sampled posterior true expression levels $Y$ and the parameters of the upper level of the mixture model, $\theta_2$, and; (3) the Rumsfeld statistic, which measures the discrepancy between the fraction of undetected transcripts in each library and the expected fraction of undetected transcripts in each library given the model parameters.
+If run_posterior_predictive = TRUE, zigzag will periodically sample from the mcmc chain to simulate data and measure three discrepency statistics: (1) the lower-level Wasserstein statistic, which measures the discrepancy between the observed expression levels for detected genes, $X$, and the expected expression levels for detected genes given the model parameters, $E[X|\theta]$; (2) the upper-level Wasserstein statistic, which measures the discrepancy between the sampled posterior true expression levels $Y$ and the parameters of the upper level of the mixture model, $\theta_2$, and; (3) the Rumsfeld statistic, which measures the discrepancy between the fraction of undetected transcripts in each library and the expected fraction of undetected transcripts in each library given the model parameters.
 
-If the difference between realized discrepancy of the simulated and real data is close to zero, then that is evidence the model can adequatly explain the data. Posterior predictive distributions of realized discrepancy statistics can be used to compare models with different numbers of active components.
+If the difference between the replicated discrepancy of the simulated and realized discrepancy of the real data is close to zero, then that is evidence the model can adequatly explain the data. Posterior predictive distributions of discrepancy statistics can be used to compare models with different numbers of active components.
 
 Here is the location of zero relative to the posterior predictive distributions of these three statistics for the example analysis:
 
@@ -249,7 +249,7 @@ abline(h=0, col = "Red")
 
 ```
 
-In contrast, a 1 component model is less consistent with data in the upper level of the model.
+In contrast, a one component model is less consistent with data in the upper level of the model.
 
 ```{r, eval = TRUE, echo = FALSE, fig.height = 3, fig.width = 5}
 post_1comp = read.table("example_zigzag_output/example_lung_mcmc_output/example_1comp_lung.post_predictive_output.log", header = T, row.names = 1)
