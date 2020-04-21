@@ -320,18 +320,20 @@ zigzag$methods(
 
     Lc_pc = Lc_pc + variance_g_probability[out_spike_idx]
 
+    ## Accept proposal
     R = temperature * (Lp_pp - Lc_pc)
 
     current_and_proposed <- cbind(Yg[out_spike_idx], Yg_proposed)
 
     current_and_proposed_likelihood <- cbind(XgLikelihood[out_spike_idx], proposed_XgLikelihood)
 
-    if(recover_x) recover()
-
-
     choice_idx <- 1 + (log(runif(num_choice)) < R)
 
     choice_matrix <- cbind(seq(num_choice), choice_idx)
+
+
+    if(recover_x) recover()
+
 
     Yg[out_spike_idx] <<- current_and_proposed[cbind(seq(num_choice), choice_idx)]
 
@@ -348,7 +350,6 @@ zigzag$methods(
     }
 
     ## update XgLikelihood, Sg and p_x
-
     XgLikelihood[out_spike_idx] <<- current_and_proposed_likelihood[choice_matrix]
 
     .self$set_sigmaX_pX()
@@ -359,33 +360,11 @@ zigzag$methods(
 
   },
 
-  gibbsMixtureWeights = function(recover_x = FALSE, tune = FALSE){
-    #Propose new weights for the vector: c(1 - omega^a, omega^a * c(omega^m_1/omega_a, omega^m_2, ...))
-
-    all_allocations = allocation_within_active[[1]] * allocation_active_inactive
-
-    num_in_components <- sapply(0:num_active_components, function(y){return(sum(all_allocations == y))}) * beta
-
-    new_weights <- r_dirichlet(c(weight_active_shape_2, weight_within_active_alpha) + num_in_components)
-
-    if(recover_x) recover()
-
-    if(! is.nan(new_weights[1])){
-
-      weight_active <<- 1 - new_weights[1]
-
-      weight_within_active <<- new_weights[-1]/sum(new_weights[-1]) #conditioned on omega^a (sum of the new_weights minus that of the inactive component)
-
-    }
-
-  },
-
   gibbsAllocationActiveInactive = function(recover_x = FALSE, tune = FALSE) {
 
     ### Gibbs move active/inactive component
 
     L_0 = exp(.self$computeInactiveLikelihood(Yg, spike_probability, inactive_means, inactive_variances, inactive_spike_allocation, all = TRUE))
-
     L_1 = 0
 
     for(k in seq(num_active_components)){
@@ -395,13 +374,15 @@ zigzag$methods(
     }
 
     prob_active <- weight_active * L_1 * (1-inactive_spike_allocation)/((1 - weight_active) * L_0 + weight_active * L_1 * (1-inactive_spike_allocation))
-
     prob_active[is.nan(prob_active)] <- weight_active
+
     allocation_active_inactive <<- rbinom(num_transcripts, 1, prob_active)
 
     if(!is.null(active_gene_set)) allocation_active_inactive[active_gene_set_idx] <<- as.integer(1)
 
     .self$setActiveInactive_idx()
+
+    .self$gibbsAllocationWithinActive()
 
   },
 
@@ -451,6 +432,27 @@ zigzag$methods(
     }
 
 
+
+  },
+
+  gibbsMixtureWeights = function(recover_x = FALSE, tune = FALSE){
+    #Propose new weights for the vector: c(1 - omega^a, omega^a * c(omega^m_1/omega_a, omega^m_2, ...))
+
+    all_allocations = allocation_within_active[[1]] * allocation_active_inactive
+
+    num_in_components <- sapply(0:num_active_components, function(y){return(sum(all_allocations == y))}) * beta
+
+    new_weights <- r_dirichlet(c(weight_active_shape_2, weight_within_active_alpha) + num_in_components)
+
+    if(recover_x) recover()
+
+    if(! is.nan(new_weights[1])){
+
+      weight_active <<- 1 - new_weights[1]
+
+      weight_within_active <<- new_weights[-1]/sum(new_weights[-1]) #conditioned on omega^a (sum of the new_weights minus that of the inactive component)
+
+    }
 
   },
 
