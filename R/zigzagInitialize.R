@@ -5,7 +5,7 @@ zigzag$methods(
   ###############
 
   initialize = function(data, gene_length = NULL, candidate_gene_list = "all",
-                        num_active_components = 1,
+                        num_active_components = "auto",
                         weight_active_shape_1 = 2,
                         weight_active_shape_2 = 2,
                         inactive_means_prior_shape = 1,
@@ -21,8 +21,8 @@ zigzag$methods(
                         shared_active_variances = TRUE,
                         output_directory = "output",
                         multi_ta = FALSE,
-                        threshold_a = 0,
-                        threshold_i = threshold_a[1],
+                        threshold_a = "auto",
+                        threshold_i = "auto",
                         beta = 1,
                         temperature = 1,
                         tau_shape = 1,
@@ -37,14 +37,147 @@ zigzag$methods(
                         active_gene_set = NULL,
                         ...) {
 
-    ##########################################
-    ## Set up data and general data params  ##
-    ##########################################
+    ############################
+    ## Set up data matrix, Xg ##
+    ############################
+
+    if(min(data) >= 0) Xg <<- log(as.matrix(data)) else Xg <<- as.matrix(data)
+
+    inf_tol         <<- -Inf
+
+    Xg[Xg == -Inf] <<- inf_tol
+
+
+    ########################################################
+    ## Set thresholds for component mean priors ############
+    ########################################################
+
+    multi_thresh_a <<- multi_ta
+
+    rmedians_noInf <- rowMedians(Xg)
+
+    rmedians_noInf <- rmedians_noInf[rmedians_noInf > -Inf]
+
+
+    #########
+
+    if(is.character(num_active_components) || num_active_components == "auto"){
+
+      auto_thresholds_list <- .self$findthresholds(rmedians_noInf)
+
+      num_acomps <- auto_thresholds_list[[1]]
+
+      num_active_components <<- num_acomps
+
+      thresh_a <- auto_thresholds_list[[2]]
+
+      thresh_i <- auto_thresholds_list[[2]][1]
+
+      threshold_a <<- thresh_a
+
+      threshold_i <<- thresh_i
+
+      multi_thresh_a <<- TRUE
+
+    }else{
+
+      num_active_components <<- num_active_components
+
+      num_acomps <- num_active_components
+
+      if(any(is.character(threshold_a)) || threshold_a == "auto"){
+
+        auto_thresholds_list <- .self$findthresholds(rmedians_noInf, num_acomps)
+
+        thresh_a <- auto_thresholds_list[[2]]
+
+        threshold_a <<- thresh_a
+
+      }else{
+
+        if(length(threshold_a) == num_active_components){
+
+          multi_thresh_a <<- TRUE
+
+          thresh_a <- threshold_a
+
+          threshold_a <<- threshold_a
+
+        }else{
+
+          thresh_a <- threshold_a[1]
+
+          threshold_a <<- thresh_a
+
+        }
+
+      }
+
+      if(any(is.character(threshold_i)) || threshold_i == "auto"){
+
+        auto_thresholds_list <- .self$findthresholds(rmedians_noInf, num_acomps)
+
+        thresh_i <- auto_thresholds_list[[2]][1]
+
+        threshold_i <<- thresh_i
+
+      }else{
+
+        thresh_i <- threshold_i
+
+        threshold_i <<- thresh_i
+
+      }
+
+    }
+
+
+
+    #######3
+
+#
+#     if(automatic){
+#
+#       auto_thresholds_list <- .self$findthresholds(rmedians_noInf)
+#
+#       num_acomps <- auto_thresholds_list[[1]]
+#
+#       num_active_components <<- num_acomps
+#
+#       threshold_a <<- auto_thresholds_list[[2]]
+#
+#       threshold_i <<- auto_thresholds_list[[2]][1]
+#
+#       thresh_a <- auto_thresholds_list[[2]]
+#
+#       thresh_i <- auto_thresholds_list[[2]][1]
+#
+#       multi_thresh_a <<- TRUE
+#
+#     }else{
+#
+#       if(length(threshold_a) == num_active_components){
+#
+#         multi_thresh_a <<- TRUE
+#         threshold_a <<- threshold_a
+#
+#       }else{
+#
+#         threshold_a <<- threshold_a[1]
+#
+#       }
+#
+#       threshold_i <<- threshold_i
+#
+#     }
+
+    #################################
+    ## Set up general data params  ##
+    #################################
 
     cat("Loading and log-transforming data...\n")
 
     sqrt2pi         <<- sqrt(2*pi)
-    inf_tol         <<- -Inf
     temperature     <<- temperature
     beta            <<- beta
     beta_oneLib     <<- 1
@@ -55,16 +188,10 @@ zigzag$methods(
 
     if(num_libraries < 2) stop("Data must have > 1 library.")
 
-    # Active sub-components
-    num_active_components <<- as.integer(num_active_components)
-    component_matrix      <<- matrix(rep(c(0,seq(num_active_components)), num_transcripts),
-                                ncol=num_active_components+1, byrow = T)
+    # components matrix
+    component_matrix      <<- matrix(rep(c(0,seq(num_acomps)), num_transcripts),
+                                ncol=num_acomps+1, byrow = T)
 
-
-    #Set up Xg
-    if(min(data) >= 0) Xg <<- log(as.matrix(data)) else Xg <<- as.matrix(data)
-
-    Xg[Xg == -Inf] <<- inf_tol
 
 
     # Gene lengths, scaled to have mean = 1
@@ -125,8 +252,8 @@ zigzag$methods(
     inactive_mean_tuningParam <<- 0.5
     inactive_variance_tuningParam <<- 0.5
     spike_probability_tuningParam <<- 1000
-    active_mean_tuningParam <<- rep(0.5, num_active_components)
-    active_variance_tuningParam <<- rep(0.5, num_active_components)
+    active_mean_tuningParam <<- rep(0.5, num_acomps)
+    active_variance_tuningParam <<- rep(0.5, num_acomps)
     mixture_weight_tuningParam <<- 1000
     tuningParam_s0     <<- 0.05
     tuningParam_s1     <<- 0.05
@@ -139,23 +266,6 @@ zigzag$methods(
     tuningParam_sigma_mu <<- 0.5
 
 
-    ########################################################
-    ## Set thresholds for component mean priors ############
-    ########################################################
-    multi_thresh_a <<- multi_ta
-
-    if(length(threshold_a) == num_active_components){
-
-      multi_thresh_a <<- TRUE
-      threshold_a <<- threshold_a
-
-    }else{
-
-      threshold_a <<- threshold_a[1]
-
-    }
-
-    threshold_i <<- threshold_i
 
     #############################################################
     ## Set up parameter proposal relative probabilities #########
@@ -225,7 +335,7 @@ zigzag$methods(
     # inactive means
     inactive_means_prior_shape <<- inactive_means_prior_shape
     inactive_means_prior_rate  <<- inactive_means_prior_rate
-    inactive_means <<- threshold_i - rgamma(1, shape = 1, rate = 1)
+    inactive_means <<- thresh_i - rgamma(1, shape = 1, rate = 1)
 
     inactive_means_proposed <<- inactive_means
     inactive_means_prob <<- .self$computeInactiveMeansPriorProbability(inactive_means)
@@ -255,12 +365,12 @@ zigzag$methods(
     # active means
     active_means_dif_prior_shape <<- active_means_dif_prior_shape
     active_means_dif_prior_rate  <<- active_means_dif_prior_rate
-    active_means_dif <<- rgamma(num_active_components, shape = active_means_dif_prior_rate, rate = active_means_dif_prior_rate)
+    active_means_dif <<- rgamma(num_acomps, shape = active_means_dif_prior_rate, rate = active_means_dif_prior_rate)
 
     active_means_dif_proposed <<- active_means_dif
     active_means_dif_prob <<- .self$computeActiveMeansDifPriorProbability(active_means_dif)
     active_means_dif_prob_proposed <<- .self$computeActiveMeansDifPriorProbability(active_means_dif_proposed)
-    active_means_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_active_components,function(y){return(c(rep(0,77),rep(1,23)))})))})
+    active_means_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_acomps,function(y){return(c(rep(0,77),rep(1,23)))})))})
     active_means <<- .self$calculate_active_means(active_means_dif, mt = multi_thresh_a)
 
     # active variances
@@ -272,23 +382,23 @@ zigzag$methods(
     shared_active_variances <<- shared_active_variances
     if(shared_active_variances){
 
-      active_variances <<- rep(10^(runif(1, active_variances_prior_log_min, active_variances_prior_log_max)), num_active_components)
+      active_variances <<- rep(10^(runif(1, active_variances_prior_log_min, active_variances_prior_log_max)), num_acomps)
       active_variances_proposed <<- active_variances
       active_variances_prob <<- .self$computeActiveVariancesPriorProbability(active_variances[1])
       active_variances_prob_proposed <<- .self$computeActiveVariancesPriorProbability(active_variances_proposed)
-      active_variances_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_active_components,function(y){return(c(rep(0,77),rep(1,23)))})))})
+      active_variances_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_acomps,function(y){return(c(rep(0,77),rep(1,23)))})))})
 
     }else{
 
-      active_variances <<- 10^(runif(num_active_components, active_variances_prior_log_min, active_variances_prior_log_max))
+      active_variances <<- 10^(runif(num_acomps, active_variances_prior_log_min, active_variances_prior_log_max))
       active_variances_proposed <<- active_variances
       active_variances_prob <<- .self$computeActiveVariancesPriorProbability(active_variances)
       active_variances_prob_proposed <<- .self$computeActiveVariancesPriorProbability(active_variances_proposed)
-      active_variances_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_active_components,function(y){return(c(rep(0,77),rep(1,23)))})))})
+      active_variances_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_acomps,function(y){return(c(rep(0,77),rep(1,23)))})))})
 
     }
 
-    weight_within_active_alpha <<- rep(weight_active_shape_1/num_active_components, num_active_components)
+    weight_within_active_alpha <<- rep(weight_active_shape_1/num_acomps, num_acomps)
 
     weight_within_active <<- .self$r_dirichlet(.self$weight_within_active_alpha)
     weight_within_active_proposed <<- weight_within_active
@@ -301,7 +411,7 @@ zigzag$methods(
     if(!is.null(active_gene_set)) allocation_active_inactive[active_gene_set_idx] <<- as.integer(1)
     allocation_active_inactive_proposed <<- allocation_active_inactive
 
-    allocation_within_active[[1]] <<- sample.int(num_active_components, size=num_transcripts, replace=TRUE, prob=weight_within_active)
+    allocation_within_active[[1]] <<- sample.int(num_acomps, size=num_transcripts, replace=TRUE, prob=weight_within_active)
     allocation_within_active_proposed <<- allocation_within_active
 
     all_allocation = allocation_active_inactive * allocation_within_active[[1]]
@@ -456,8 +566,8 @@ zigzag$methods(
               c(s0_mu, s0_sigma, s1_shape, s1_rate, tau_rate, tau_shape,  alpha_r_shape, alpha_r_rate,
                weight_active_shape_1, weight_active_shape_2, weight_within_active_alpha[1], spike_prior_shape_1, spike_prior_shape_2,
                active_means_dif_prior_shape, active_means_dif_prior_rate , active_variances_prior_min, active_variances_prior_max,
-               inactive_means_prior_shape, inactive_means_prior_rate, inactive_variances_prior_min, inactive_variances_prior_max,threshold_i,
-               paste(threshold_a, collapse=", ")))),
+               inactive_means_prior_shape, inactive_means_prior_rate, inactive_variances_prior_min, inactive_variances_prior_max,round(thresh_i, digits = 2),
+               paste(round(thresh_a, digits = 2), collapse=", ")))),
               file = paste0(output_directory, "/", "hyperparameter_settings.txt"), sep = "\t", row.names = F, quote = F, col.names = F)
 
 

@@ -3,7 +3,7 @@ title: "$z^i_gz^a_g$ Tutorial"
 author: "Ammon Thompson"
 date: "March 14, 2020"
 output:
-#  pdf_document: default
+# pdf_document: default
   html_document: default
 #  pdf_format: default
 ---
@@ -15,7 +15,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, eval = FALSE, include=FALSE}
 options(tinytex.verbose = TRUE)
 ```
-I recommend using Rstudio for this tutorial.
+This tutorial assumes the reader is familiar with the hierarchical mixture model that zigzag implements. If not, please see the original paper (in review: [preprint](https://www.biorxiv.org/content/10.1101/711630v2))
+I recommend using Rstudio for this tutorial. A typically sized dataset will take the MCMC about 10 hours on your average desktop computer to get a large enough sample from the posterior distribution, although this can vary quite a bit.
 
 ### Install zigzag
 Navigate to a directory where you would like to install the zigzag repository. 
@@ -37,7 +38,7 @@ Note, zigzag depends on R packages coda and matrixStats.
 ### Load Expression and Gene Length Data
 After cloning the zigzag repository and installing the zigzag R package, open R and set the quick_start_guide directory as your working directory.
 
-We have provided example data for this tutorial. These are subsets of genes used in the zigzag publication (in review: [preprint](https://www.biorxiv.org/content/10.1101/711630v2)). You can copy-and-paste the R code to run analyses. 
+We have provided example data for this tutorial. These are subsets of genes used in the zigzag publication. You can copy-and-paste the R code to run analyses. 
 
 The expression data is found in the quick_start_guide directory. These files contain the TPM levels of 5,000 genes estimated in 4 human lung RNA-seq libraries from the GTEx dataset. 
 
@@ -56,18 +57,33 @@ head(round(human_gene_lengths, digits = 1))
 
 
 
+### Model assumptions
+Zigzag assumes the data follows a finite mixture model consisting of one inactive distribution and one or more active distributions. Each mixture component follows a Normal distribution on a log-scale, i.e. symmetric, bell-shaped distributions with low-expressed genes displaying dropout from binomial sampling error.
 
-### Examine transcriptome distribution
-The model used by zigzag assumes the transcriptome distribution is an approximately bimodal mixture of Normal distributions on the log-scale, i.e. symmetric, bell-shaped distributions.
+Some data may significantly depart from the assumption of normality. For example, data that has been rounded to only a couple digits may significantly depart from a Normal distribution when log-transformed and lead to biased parameter estimates. Ways to check this are discussed below.
 
-It is a good idea to check the log-expression densities of all libraries to make sure all libraries conform to this assumption. Some data may significantly depart from this assumption. For example, data that has been rounded to only a couple digits may nolonger look normal for low expressed genes when log-transformed. 
+#### Specify mixture model
+In our experience two active components are often necessary and sufficient. However, this may vary among samples and species. We assume a single inactive distribution because expression is more variable among replicate libraries and thus carry less information for more complicated distributions. We describe here different approaches to determining how many mixture components should be specified to make reliable posterior inferences. 
 
-### Set empirical prior boundaries for mixture component means
-The vertical lines below indicate boundaries I have chosen where I am certain each mean is located above---or below in the case of the inactive mean (blue). 
+A nieve approach to selecting the number of active subcomponents is to first assume a simple, one active component mixture model and use posterior predictive simulation to assess the adequacy of this model. If determined to be inadequate, specify a more complex model by adding more mixture components and reanalyzing. Repeat this until an adequate model is found or you nolonger see improvement in model fit. 
 
-For example, in the plot below, the thick blue line on the left doubles as the upper boundary for the inactive mean prior distribution and the lower boundary for the first active mean prior distribution. The thin red line on the far right shows the chosen lower boundary for a possible cluster of outlier genes with very high expression in the right tail. The dashed lines show the default prior densities (scaled by 0.5 for visualization) for component means.
+To aid others as they interpret your results, include detailed reports of posterior sensitivity to prior assumptions and posterior predictive simulation (see sections below).  
 
-```{r, echo=1:2}
+#### Specify priors to impose identifiability constraints on component means
+Another well known challenge inherent to mixture model analysis, is the non-identifiability of mixture component parameters---means, variances and weights. This is often referred to as the label switching problem. When all mixture components have identical prior distributions, the marginal posterior distributions for component parameters are identical and multi-modal. This is because the likelihood is invariant to the index of the component parameters. This would result in every gene having a 0.5 probability of active expression. 
+
+To mitigate this problem, identifiability constraints on parameters are necessary. We find an effective way to impose identifiability constraints is to use truncated prior distributions that minimizes the overlap of the support of each mean. For each mean, an offset or threshold is set where the probability the mean is beyond the threshold is zero. In the case of the inactive mean, the threshold delimits the upper bound of its prior distribution.
+
+To aid in setting these thresholds, you can inspect the empirical distribution of the data to specify component mean prior distributions. It is usually readily apparent where the modes of the latent mixture components are approximately located. By selecting prior thresholds between those modes you can impose identifiability on on the model. This approach is called Empirical Bayes because the data is used to specify the prior distribution. 
+
+For example, in the plot below, the thick blue line on the left doubles as the upper boundary for the inactive mean prior distribution and the lower boundary for the first active mean prior distribution. The thin vertical red line on the far right shows the chosen lower boundary for a possible cluster of outlier genes with very high expression in the right tail. This is sometimes necessary because Normal distributions can be sensitive to outliers. The dashed lines show the default prior densities (scaled for visualization) for component means. 
+
+Zigzag, by default, uses kernel density estimation to automatically select a model with one or two active components and set prior offsets or thresholds for all component means. In our experience, the range of the posterior distribution of the inactive mean is consistently below 1 log TPM and that of the active mean(s) is(are) consistently greater than -1 log TPM. This is not necessarily always going to be true for all data sets. We find this works well as a starting point, but often a visual inspection of kernel density fits using basic R functions, such as density, can allow users to set less informative prior thresholds that yield more robust posterior inferences. 
+
+A fully Bayesian analysis would entail setting informative priors based on knowledge about the number of components and intervals that contain the inactive and active mixture component parameters. We expect such prior knowledge will rarely be detailed enough to be useful and that an empirical Bayesian approach with model refinement through model checking and sensitivity analysis would be an adequate approach.
+
+
+```{r figthresh, fig.width=5, fig.height=4,fig.align="center", echo=1:2}
 plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25))
 for(i in seq(ncol(expression_data))) lines(density(log(expression_data[,i])))
 
@@ -79,22 +95,31 @@ lines(seq(0, 10, by =.01)+4, dgamma(seq(0, 10, by =.01), 1, 1/3)/2, col = "red",
 
 ```
 
+### Load data and set hyperparameters in a zigzag object
+Once you have decided on a mixture model, create a zigzag object. This object contains all the parameters in the mixture model as well as the functions for generating and analyzing samples from the posterior distribution.
 
-
-### Load data and set priors in a zigzag object
 zigzag instances are Refclass objects. Their member variables and methods are called with the \$ symbol. Methods and variables are called with the following notation: object\$method(), or object\$variable. A new zigzag object is created this way:
 
 ```{r, eval=FALSE}
 my_zigzag =zigzag$new(data and hyperprior settings)
 ```
 
-We will now load the expression data and gene length data into a zigzag object. We will specify a mixture model that contains two subdistributions in the active expression component with \textit{lower} boundaries set at 1 and 4 by setting threshold_a = c(1, 4). The \textit{upper} boundary for the inactive mean prior is by default equal to the threshold_a[1], in this case, 1. For all other priors we will keep the default settings. Alternatively, ordered offsets for the means can be specified by only setting one lower boundary for the active compontnents: threshold_a = 1. Zigzag uses the output_directory variable to create a directory where all output files will be written. To see all zigzag variables and default settings including hyperpriors type ?zigzag in the Rstudio consol.
+Load the expression data and gene length data into a zigzag object. Specify a mixture model that contains two subdistributions in the active expression component with \textit{lower} boundaries set at 1 and 4 by setting threshold_a = c(1, 4). The \textit{upper} boundary for the inactive mean prior is by default equal to the threshold_a[1], in this case, 1. For all other priors we will keep the default settings. If num_active_components is not set, or set to "auto", zigzag will use kernel density estimation to determine whether one or two active subcomponents are detected in the data. 
+
+If threshold_a is not set, or is set to "auto", thresholds will be estimated from the data based on the number of active components specified. Zigzag uses the output_directory variable to create a directory where all output files will be written. To see all zigzag variables and default settings including hyperpriors type ?zigzag in the Rstudio console.
 
 ```{r, , eval=FALSE}
 my_zigzag = zigzag$new(data = expression_data, gene_length = human_gene_lengths, 
                        output_directory = "my_zigzag_output", 
                        num_active_components = 2, threshold_a = c(1, 4))
 ```
+
+The minimum command for making a zigzag object is:
+```{r, eval = F, echo = T}
+my_zigzag = zigzag$new(expression_data, human_gene_lengths)
+```
+WIth this command zigzag automatically uses the data to specify the mixture model and prior distributions.
+
 When the zigzag object is created, the hyperprior settings will be summarized in a file in your output_directory, in this case my_zigzag_output/hyperparameter_settings.txt
 
 
@@ -126,13 +151,15 @@ for(i in seq(ncol(burn))) plot(burn[,i], type = "l", main = colnames(burn)[i])
 ```
 For example, the variable $s_0$ appears to have converged on the stationary distribution around -2:
 
-```{r, echo = TRUE}
+```{r s0fig_burn, echo = TRUE, fig.width=5, fig.height=4,fig.align="center"}
 plot(burn[,2], type = "l", main = colnames(burn)[2])
 ```
 
-If satisfied all parameters have converged, proceed to run the mcmc. Type ?mcmc for more details.
+If the chain has not converged, then simply call burnin again setting ngen to a higher number. The burnin will proceed from the generation you left off. New log files will be created unless you set the append parameter = TRUE. 
 
-If the chain has not converged then simply call burnin again setting ngen to a higher number because when you call the burnin function again it will start from where you left off. New log files will be created unless you set the append parameter = TRUE. 
+If it becomes clear that some prior distributions are too informative and are having a strong influence on the posterior distribution, then increase the variance of the prior distribution and/or extend the boundaries of of the prior support to minimize its influence on the posterior distribution.
+
+If satisfied that all parameters have converged, proceed to run the mcmc. Type ?mcmc for more details.
 
 
 ### Run MCMC
@@ -161,7 +188,7 @@ for(i in seq(ncol(post))) plot(post[,i], type = "l", main = colnames(post)[i])
 ```
 
 For example, $s_0$ doesn't appear to shift or drift from a stable distribution around -2:
-```{r, eval = TRUE, echo = TRUE}
+```{r s0fig_post, eval = TRUE, echo = TRUE, fig.width=5, fig.height=4,fig.align="center"}
 
 plot(post$s0, type = "l", main = colnames(post)[2])
 
@@ -175,7 +202,7 @@ effectiveSize(post)[2]
 
 According to my zigzag analysis, here are the likely locations of the three component means (scaled by 0.02 for visualization) relative to the empirical distributions of log expression:
 
-```{r, eval = TRUE, echo = FALSE}
+```{r post_meansfig_overlay, fig.width = 6, fig.height = 4, fig.align="center", eval = TRUE, echo = FALSE}
 plot(NULL, main ="", xlab = "log Expression", xlim = c(-8, 12), ylim = c(0, 0.25))
 for(i in seq(ncol(expression_data))) lines(density(log(expression_data[,i])))
 
@@ -189,26 +216,201 @@ lines(da2$x, 0.02 * da2$y, type = "s", col = "red")
 ```
 
 
-It is also important to explore sensitivity of the posterior distribution to model prior assumptions. For example, if you plot the histogram of the posterior distribution of the inactive component variance, you'll see that the posterior distribution appears to be "cut off" at the upper boundary of the variance prior distribution of 5.
 
-```{r, eval = TRUE, echo = TRUE}
 
-hist(post$inactive_variance, breaks = 100, xlim = c(0.01,5), main = "")
+### Sensitivity Analysis: How sensitive is the posterior to the prior?
+
+Informative priors are often chosen out of practical necessity. It is important to choose priors that have a weak influence over the posterior distribution in these situations. Sensitivity analysis can reveal the influence of the prior on the posterior distribution. Sensitivity analysis explores the sensitivity of the posterior distribution to prior specification by comparing posterior distributions to the prior distributions and to posterior distributions under different priors. 
+
+The plots below show an example of an analysis exploring posterior sensitivity to the choice of component mean prior thresholds. For this tutorial, several different analyeses of the example dataset were done with different thresholds separating the prior distributions for the inactive mean and the first active component mean (blue vertical line; below).
+
+Thresholds targeting the region between the left shoulder and the central mode, ranging from -1 to 2 produce posterior distributions that are virtually identical and have little to no density at the prior threshold.
+```{r fig3, echo = F, fig.height = 5, fig.width = 8, fig.align = "center"}
+
+#Load posterior data
+i_post = read.table("threshold_sensitivity_results/inactiveMean_threshold_experiments.log", header = T, row.names = 1)
+a_post = read.table("threshold_sensitivity_results/activeMean_threshold_experiments.log", header = T, row.names = 1)
+
+
+
+opar = par("mai")
+
+par("mai" = opar * 0.35)
+
+breaks = seq(-2.5, 3.2, by = 0.05)
+
+# Intermediate prior threshold
+
+layout(matrix(seq(12), ncol = 3, byrow = T))
+
+tt = c(-1, 0, 1, 2)
+
+for(i in c(4:7)){
+  plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25))
+  for(j in seq(ncol(expression_data))) lines(density(log(expression_data[,j])))
+  
+  abline(v = c(tt[i-3]), lwd = 2, col = c("blue"))
+  
+  lines(seq(0, -10, by= -.01)+tt[i-3], dgamma(seq(0, 10, by = .01), 1, 1/3)/2, col = "blue", lty = 2)
+  lines(seq(0, 10, by =.01)+tt[i-3], dgamma(seq(0, 10, by =.01), 1, 1/3)/2, col = "red", lty = 2)
+  
+  
+  hist(i_post[,i], breaks = breaks, xlim = c(-2.5, 2), freq = F, border = "blue", main ="", xlab = "log Expression", axes = F)
+  axis(1)
+  abline(v=tt[i-3], lwd = 2, col = "blue")
+  lines(seq(0, -10, by= -.01)+tt[i-3], 5 * dgamma(seq(0, 10, by = .01), 1, 1/3)/2, col = "blue", lty = 2)
+  
+  hist(a_post[,i], breaks = breaks, xlim = c(-1,3.2), freq = F, border = "red", main ="", xlab = "log Expression", axes = F)
+  axis(1)
+  abline(v=tt[i-3], lwd = 2, col = "blue")
+  lines(seq(0, 10, by =.01)+tt[i-3], 20 * dgamma(seq(0, 10, by =.01), 1, 1/3)/2, col = "red", lty = 2)
+}
+
+par("mai" = opar)
 
 ```
 
-Unless you have good reason to believe this parameter is not $> 5$, we recommend creating a new zigzag object, setting inactive_variances_prior_max to a number greater than 6 in this case, and rurunning the analysis.
+When the prior threshold is set to a value above the observed posterior for the active component---around 3 log TPM---the posterior becomes very sensitive to the prior.  Below the prior threshold was set at a high value to the right of the distribution mode. Under this prior, the posterior distribution for the active mean is highly concentrated at the threshold (right; red histogram).
+```{r fig2, echo = F, fig.height = 1.25, fig.width = 8, fig.align = "center"}
+opar = par("mai")
+
+par("mai" = opar * 0.35)
+
+# extreme right prior threshold
+
+layout(matrix(seq(3), ncol = 3))
+plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25))
+for(i in seq(ncol(expression_data))) lines(density(log(expression_data[,i])))
+
+abline(v = 4, lwd = 2, col = c("blue"))
+
+lines(seq(0, -10, by= -.01)+4, dgamma(seq(0, 10, by = .01), 1, 1/3)/2, col = "blue", lty = 2)
+lines(seq(0, 10, by =.01)+4, dgamma(seq(0, 10, by =.01), 1, 1/3)/2, col = "red", lty = 2)
+
+
+hist(i_post[,9], breaks = 20, xlim = c(0.5, 4), freq = F, border = "blue", main ="", xlab = "log Expression", axes = F)
+axis(1)
+abline(v=4, lwd = 2, col = "blue")
+lines(seq(0, -10, by= -.01)+4, 20 * dgamma(seq(0, 10, by = .01), 1, 1/3)/2, col = "blue", lty = 2)
+
+hist(a_post[,9], breaks = 20, xlim = c(4, 4.05), freq = F, border = "red", main ="", xlab = "log Expression", axes = F)
+axis(1)
+abline(v=4, lwd = 2, col = "blue")
+lines(seq(0, 10, by =.01)+4, 500 * dgamma(seq(0, 10, by =.01), 1, 1/3)/2, col = "red", lty = 2)
+
+par("mai" = opar)
+```
+
+
+Likewise, when assuming a prior threshold to the left of the inactive mean posterior distribution all the posterior sample for the inactive mean is concentrated very close to the upper threshold for the inactive distribution (middle; blue historgram) indicating the data likelihood is pulling the posterior to values greater than the threshold at -3.
+```{r fig1, echo = F, fig.height = 1.25, fig.width = 8, fig.align = "center"}
+
+opar = par("mai")
+
+par("mai" = opar * 0.35)
+# Far left prior threshold
+
+layout(matrix(seq(3), ncol = 3))
+plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25))
+for(i in seq(ncol(expression_data))) lines(density(log(expression_data[,i])))
+
+abline(v = c(-3), lwd = 2, col = c("blue"))
+
+lines(seq(0, -10, by= -.01)-3, dgamma(seq(0, 10, by = .01), 1, 1/3)/2, col = "blue", lty = 2)
+lines(seq(0, 10, by =.01)-3, dgamma(seq(0, 10, by =.01), 1, 1/3)/2, col = "red", lty = 2)
+
+
+hist(i_post[,2], breaks = 20, xlim = c(-3.2, -2.99), freq = F, border = "blue", main ="", xlab = "log Expression", axes = F)
+axis(1)
+abline(v=-3, lwd = 2, col = "blue")
+lines(seq(0, -10, by= -.01)-3, 100 * dgamma(seq(0, 10, by = .01), 1, 1/3)/2, col = "blue", lty = 2)
+
+hist(a_post[,2], breaks = 20, xlim = c(-3, 3.2), freq = F, border = "red", main ="", xlab = "log Expression", axes = F)
+axis(1)
+abline(v=-3, lwd = 2, col = "blue")
+lines(seq(0, 10, by =.01)-3, 20 * dgamma(seq(0, 10, by =.01), 1, 1/3)/2, col = "red", lty = 2)
+par("mai" = opar)
+```
+
+For this dataset, any threshold between -0.5 log TPM and +2.5 log TPM yields the same posterior distribution because the data strongly suggest the inactive mean and first active mean lie on opposite ends of this interval (shaded in gray below). Any threshold placed within the gray interval will produce robust posterior inferences that are distant from the threshold. Zigzag's automatic threshold finding option often does a good job placing thresholds in this region when a new zigzag object is created.
+
+
+```{r fig4, echo = F, fig.height = 3, fig.width = 5, fig.align = "center"}
+layout(1)
+plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25))
+for(i in seq(ncol(expression_data))) lines(density(log(expression_data[,i])))
+
+polygon(c(-0.75,2.65,2.65,-0.75), c(-100,-100,100,100), col = rgb(0,0,0,0.1), border = NA)
+```
+
+Generally, when the boundary of a prior distribution is strongly influencing the posterior distribution, a significant amount of the posterior density will be concentrated at that boundary. Simply inspecting the posterior distribution will illuminate whether this is the case. Prior distributions with small variances or boundaries that conflict with the likelihood will lead to posterior distributions that are sensitive to changes in the prior distribution. 
 
 *Tracer is a good program for viewing mcmc files: [Tracer download page](http://tree.bio.ed.ac.uk/software/tracer/)
 
-### The posterior probability each gene is active
-This is found in the file: example_lung_probability_active.tab. If more than two active components are specified inthe model, then the file example_lung_probability_in_component.tab gives the probability each gene is in each of component in the model.
+
+### Assess model adequacy with posterior predictive simulation
+
+Model-based inference is based on the premise that our inference model provides an adequate description of the process that gave rise to our data. The Bayesian approach for assessing model adequacy is called posterior-predictive assessment ([Gelman et al. 1996](http://www.stat.columbia.edu/~gelman/research/published/A6n41.pdf)). This approach is based on the following idea: if the inference model is a good approximation of the process that gave rise to our observations, then we should be able to use the posterior distribution of that model to simulate datasets that resemble the dataset we used to infer the model posterior distribution. 
+
+To compare real data to simulated data we use a summary statistic to quantify the resemblance between the datasets. By repeatedly simulating datasets from the joint posterior distribution of the model parameters, we can construct a predictive distribution of summary statistics and compute the difference between the simulated and observed data. A difference close to zero indicate we are able to infer a model that generates similar data.
+
+When running the mcmc function, if run_posterior_predictive = TRUE, zigzag will periodically sample from the mcmc chain to simulate data and measure three discrepancy statistics: (1) the lower-level Wasserstein statistic, which measures the discrepancy between the observed expression levels for detected genes, $X$, and the expected expression levels for detected genes given the model parameters, $E[X|\theta]$; (2) the upper-level Wasserstein statistic, which measures the discrepancy between the sampled posterior true expression levels $Y$ and the parameters of the upper level of the mixture model, $\theta_2$, and; (3) the Rumsfeld statistic, which measures the discrepancy between the fraction of undetected transcripts in each library and the expected fraction of undetected transcripts in each library given the model parameters.
+
+Posterior predictive distributions of discrepancy statistics can be used to compare models with different prior thresholds for means and variance parameters and different numbers of active components. For example, posterior predictive simulations drawn during MCMC's for the prior threshold sensitivity analysis above show that the extreme thresholds that strongly influence the posterior distributions, also decrease the model fit to the data: the posterior predicitve distributions of the discrepency statistics tend to diverge from zero the more the proir thresholds move to the extreme tails of the empirical distributions.
+
+
+```{r fig5, echo = F, fig.height = 4, fig.width = 7, fig.align = "center"}
+layout(1)
+
+Wu = read.table("threshold_sensitivity_results/W_U_threshold_exp.log", header = T,row.names = 1)
+Wl = read.table("threshold_sensitivity_results/W_L_threshold_exp.log", header = T, row.names = 1)
+
+thresholds = c(-4, -3, -2, -1, 0, 1, 2, 3, 4, 5)
+
+layout(matrix(seq(2), ncol = 2))
+boxplot(Wu, names = thresholds, outline = F, main = "Upper-Level Wasserstein Dist.", xlab = "prior threshold position")
+abline(h=0, lty = 2)
+polygon(c(3.5, 7.5, 7.5, 3.5), c(-10,-10,10,10), col = rgb(0,0,0,0.1), border = NA)
+
+boxplot(Wl, names = thresholds, outline = F, main = "Lower-Level Wasserstein Dist.", xlab = "prior threshold position")
+abline(h=0, lty = 2)
+polygon(c(3.5, 7.5, 7.5, 3.5), c(-10,-10,10,10), col = rgb(0,0,0,0.1), border = NA)
+```
+
+
+Similarly, posterior predictive simulation can be used to assess the relative fit of models with different numbers of active mixture components. If we compare the posterior predictive distributions generated from a one component and two component posterior distribution, we see that the two component predictive interval is more centered on zero. This suggests a two-component model provides an improvement in fit for the example dataset:
+
+```{r ,eval = TRUE, echo = TRUE}
+post_2comp = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung.post_predictive_output.log", header = T, row.names = 1)
+
+post_1comp = read.table("example_zigzag_output/example_lung_mcmc_output/example_1comp_lung.post_predictive_output.log", header = T, row.names = 1)
+```
+
+```{r fig_pp1,eval = TRUE, echo = F, fig.height = 2.5, fig.width=6.5, fig.align="center"}
+
+layout(matrix(seq(2), ncol = 2))
+opar = par("mai")
+par("mai" = opar * 0.5)
+
+boxplot(post_1comp, outline = FALSE, main = "one-component", names = c("W_lower", "W_upper", "Rums"))
+abline(h=0, col = "red")
+
+boxplot(post_2comp, outline = FALSE, main = "two-component", names = c("W_lower", "W_upper", "Rums"))
+abline(h=0, col = "Red")
+
+par("mai" = opar)
+
+```
+
+
+
+### RESULTS: The posterior probability each gene is active
+This is found in the file: example_lung_probability_active.tab. If more than two active components are specified in the model, then the file example_lung_probability_in_component.tab gives the probability each gene is in each of component in the model.
 
 ```{r,,echo = TRUE}
 prob_active = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung_probability_active.tab",
                          header = T, row.names = 1)
 
-#head(round(prob_active, digits = 2))
 head(round(cbind(expression_data, prob_active), digits = 3))
 
 ```
@@ -217,7 +419,7 @@ head(round(cbind(expression_data, prob_active), digits = 3))
 
 The code below plots $P(z^a_g = 1 | X)$ of all 5000 genes (scaled by 0.25 for visualization) in relation to the empirical log-expression distributions.
 
-```{r, echo =TRUE}
+```{r, fig.width = 6, fig.height = 4, fig.align="center",echo =TRUE}
 plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25), axes = FALSE)
 axis(1)
 
@@ -227,36 +429,8 @@ for(i in seq(ncol(expression_data))) lines(density(log(expression_data[,i])))
 
 ```
 
-Finally, you will want to create at least 2 zigzag objects and run independent MCMC's for each each. Confirm all MCMC's converge on the same stationary distribution for all parameters. MCMC files can be compared visually using [Tracer](http://tree.bio.ed.ac.uk/software/tracer/). Also, check that all runs produce the same estimates of the probability of active expression for all genes. If you see a signficant difference for some genes, that indicates those genes didn't converge. Check the mcmc traces for $Y_g$ and $\sigma^2_g$ for those genes. 
+Finally, you will want to create at the very least 2 zigzag objects and run independent MCMC's for each. Confirm all MCMC's converge on the same stationary distribution for all parameters. MCMC files can be compared visually using [Tracer](http://tree.bio.ed.ac.uk/software/tracer/). Also, check that all runs produce the same estimates of the probability of active expression for all genes. If you see a significant difference for some genes, that indicates those genes didn't converge. Check the mcmc traces for $Y_g$ and $\sigma^2_g$ for those genes. 
 
 
-### Assess model adequacy with posterior predictive simulation
-
-Model-based inference is based on the premise that our inference model provides an adequate description of the process that gave rise to our observations. The Bayesian approach for assessing model adequacy is called posterior-predictive assessment ([Gelman et al. 1996](http://www.stat.columbia.edu/~gelman/research/published/A6n41.pdf)). This approach is based on the following idea: if the inference model provides an adequate description of the process that gave rise to our observed data, then we should be able to use that model to simulate datasets that resemble our original dataset. We use a summary statistic to quantify the resemblance between the original and simulated datasets. By repeatedly simulating datasets from the joint posterior distribution of the model parameters inferred from the observed data, we can construct a predictive distribution of summary statistics that characterize the resemblance between the simulated and observed data.
-
-If run_posterior_predictive = TRUE, zigzag will periodically sample from the mcmc chain to simulate data and measure three discrepency statistics: (1) the lower-level Wasserstein statistic, which measures the discrepancy between the observed expression levels for detected genes, $X$, and the expected expression levels for detected genes given the model parameters, $E[X|\theta]$; (2) the upper-level Wasserstein statistic, which measures the discrepancy between the sampled posterior true expression levels $Y$ and the parameters of the upper level of the mixture model, $\theta_2$, and; (3) the Rumsfeld statistic, which measures the discrepancy between the fraction of undetected transcripts in each library and the expected fraction of undetected transcripts in each library given the model parameters.
-
-If the difference between the replicated discrepancy of the simulated and realized discrepancy of the real data is close to zero, then that is evidence the model can adequatly explain the data. Posterior predictive distributions of discrepancy statistics can be used to compare models with different numbers of active components.
-
-Here is the location of zero relative to the posterior predictive distributions of these three statistics for the example analysis:
-
-```{r,eval = TRUE, echo = TRUE, fig.height = 3, fig.width=5}
-postpred = read.table("example_zigzag_output/example_lung_mcmc_output/example_lung.post_predictive_output.log", header = T, row.names = 1)
-
-boxplot(postpred, outline = FALSE)
-abline(h=0, col = "Red")
-
-
-```
-
-In contrast, a one component model is less consistent with data in the upper level of the model.
-
-```{r, eval = TRUE, echo = FALSE, fig.height = 3, fig.width = 5}
-post_1comp = read.table("example_zigzag_output/example_lung_mcmc_output/example_1comp_lung.post_predictive_output.log", header = T, row.names = 1)
-
-boxplot(post_1comp, outline = FALSE)
-abline(h=0, col = "red")
-
-```
 
 

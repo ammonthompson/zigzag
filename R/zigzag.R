@@ -136,7 +136,7 @@ zigzag <- setRefClass(
     output_directory = "character",
     gene_names = "character",
     num_libraries = "numeric",
-    num_active_components = "integer",
+    num_active_components = "vector",
     component_matrix = "matrix",
     num_transcripts = "integer",
     gene_lengths = "numeric",
