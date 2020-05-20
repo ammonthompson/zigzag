@@ -44,7 +44,9 @@ zigzag$methods(
                                   (run_posterior_predictive | run_posterior_predictive_and_plot))
 
 
-    }else if(append & !file.exists(paste0(output_directory, "/", mcmc_prefixdir, "/", prefix, "_model_parameters.log"))){
+    }else if(append & !file.exists(paste0(output_directory, "/",
+                                          mcmc_prefixdir, "/",
+                                          prefix, "_model_parameters.log"))){
 
       print("No file exists to append. Creating new files")
       print(paste0(output_directory, "/", mcmc_prefixdir, "/", prefix, "_model_parameters.log"))
@@ -54,7 +56,7 @@ zigzag$methods(
 
     }
 
-    if(length(dev.list()) == 0) dev.new()
+    if(length(dev.list()) == 0 & run_posterior_predictive_and_plot) dev.new()
 
 
     #########################################################
@@ -70,6 +72,7 @@ zigzag$methods(
     if(num_libs_plot_postpred > 25) num_libs_plot_postpred = 25
 
     plot_rows <- sqrt(num_libs_plot_postpred) - sqrt(num_libs_plot_postpred)%%1 + (sqrt(num_libs_plot_postpred)%%1 > 0)
+    # plot_rows <- ceiling(sqrt(nparams))
     plot_cols <- num_libs_plot_postpred/plot_rows - (num_libs_plot_postpred/plot_rows)%%1 + ((num_libs_plot_postpred/plot_rows)%%1 > 0)
 
     multi_plot_pars <- list()
@@ -241,6 +244,13 @@ zigzag$methods(
     #####################################
     if(compute_probs && write_to_files)
       .self$computeGeneExpressionProbs_writeToFile(paste0(mcmc_prefixdir,"/", prefix))
+
+
+    #####################################
+    # create MCMC diagnostic reports   ##
+    #####################################
+    .self$generate_MCMC_reports(paste0(output_directory, "/", mcmc_prefixdir), prefix)
+
 
     on.exit(if(length(dev.list()) > 2) dev.off(post_pred_multi_L1_plot_device))
     on.exit(if(length(dev.list()) > 2) dev.off(post_pred_L2_plot_device), add = TRUE)

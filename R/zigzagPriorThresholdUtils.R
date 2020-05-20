@@ -3,7 +3,7 @@ zigzag$methods(
   findthresholds = function(dat, K = "auto"){
 
     #get peaks and shoulders
-    ps <- get_curve_fitting_list(dat, s = 1)
+    ps <- .self$get_curve_fitting_list(dat, s = 1)
 
     if(any(is.na(ps$s))){ #need to fix this terrible code when you have the chance
       ps$s_idx <- c()
@@ -19,10 +19,10 @@ zigzag$methods(
     peaks_sorted_by_d2y <- ps$p[order(d2y_atpeaks)]
 
     # get noise peak: max(d2y at peaks/shoulders < 0)
-    inactive <- getInactiveThresh(peaks_sorted_by_d2y, shoulders_sorted_by_d2y)
+    inactive <- .self$getInactiveThresh(peaks_sorted_by_d2y, shoulders_sorted_by_d2y)
 
     #get all right peaks up to K number of peaks at log expression > max{0, inactive peak}
-    active <- getActiveThresh(peaks_sorted_by_d2y, shoulders_sorted_by_d2y, K)
+    active <- .self$getActiveThresh(peaks_sorted_by_d2y, shoulders_sorted_by_d2y, K)
 
     allcenters <- sort(c(inactive, active))
     threshes <- allcenters[-length(allcenters)] + diff(allcenters)/2
@@ -131,9 +131,9 @@ zigzag$methods(
     shoulders_idx <- shoulders_idx[rowMins(pairwise_shoulder_peak_dist) > 1]
 
     # collapse nearby shoulders and peaks to the lower value
-    shoulders_idx <- collapse(shoulders_idx, dens$x[shoulders_idx])
+    shoulders_idx <- .self$collapse(shoulders_idx, dens$x[shoulders_idx])
 
-    peaks_idx <- collapse(peaks_idx, dens$x[peaks_idx])
+    peaks_idx <- .self$collapse(peaks_idx, dens$x[peaks_idx])
 
     return(list(x = dens$x, y = dens$y, dy = smooth_dy, d2y = smooth_d2y,
                 s_idx = shoulders_idx, p_idx = peaks_idx,

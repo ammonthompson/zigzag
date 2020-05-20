@@ -52,8 +52,6 @@ zigzag$methods(
     ## Set thresholds for component mean priors ############
     ########################################################
 
-    multi_thresh_a <<- multi_ta
-
     rmedians_noInf <- rowMedians(Xg)
 
     rmedians_noInf <- rmedians_noInf[rmedians_noInf > -Inf]
@@ -77,7 +75,6 @@ zigzag$methods(
 
       threshold_i <<- thresh_i
 
-      multi_thresh_a <<- TRUE
 
     }else{
 
@@ -96,8 +93,6 @@ zigzag$methods(
       }else{
 
         if(length(threshold_a) == num_active_components){
-
-          multi_thresh_a <<- TRUE
 
           thresh_a <- threshold_a
 
@@ -131,45 +126,14 @@ zigzag$methods(
 
     }
 
+    if(length(thresh_a) == num_acomps){
+      multi_ta <- TRUE
+      multi_thresh_a <<- multi_ta
+    }else{
+      multi_thresh_a <<- multi_ta
+    }
 
 
-    #######3
-
-#
-#     if(automatic){
-#
-#       auto_thresholds_list <- .self$findthresholds(rmedians_noInf)
-#
-#       num_acomps <- auto_thresholds_list[[1]]
-#
-#       num_active_components <<- num_acomps
-#
-#       threshold_a <<- auto_thresholds_list[[2]]
-#
-#       threshold_i <<- auto_thresholds_list[[2]][1]
-#
-#       thresh_a <- auto_thresholds_list[[2]]
-#
-#       thresh_i <- auto_thresholds_list[[2]][1]
-#
-#       multi_thresh_a <<- TRUE
-#
-#     }else{
-#
-#       if(length(threshold_a) == num_active_components){
-#
-#         multi_thresh_a <<- TRUE
-#         threshold_a <<- threshold_a
-#
-#       }else{
-#
-#         threshold_a <<- threshold_a[1]
-#
-#       }
-#
-#       threshold_i <<- threshold_i
-#
-#     }
 
     #################################
     ## Set up general data params  ##
@@ -371,7 +335,7 @@ zigzag$methods(
     active_means_dif_prob <<- .self$computeActiveMeansDifPriorProbability(active_means_dif)
     active_means_dif_prob_proposed <<- .self$computeActiveMeansDifPriorProbability(active_means_dif_proposed)
     active_means_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_acomps,function(y){return(c(rep(0,77),rep(1,23)))})))})
-    active_means <<- .self$calculate_active_means(active_means_dif, mt = multi_thresh_a)
+    active_means <<- .self$calculate_active_means(active_means_dif, mt = multi_ta)
 
     # active variances
     active_variances_prior_min <<- active_variances_prior_min
@@ -565,8 +529,8 @@ zigzag$methods(
                "inactive_means_prior_shape", "inactive_means_prior_rate", "inactive_variances_prior_min", "inactive_variances_prior_max", "threshold_i", "threshold_a"),
               c(s0_mu, s0_sigma, s1_shape, s1_rate, tau_rate, tau_shape,  alpha_r_shape, alpha_r_rate,
                weight_active_shape_1, weight_active_shape_2, weight_within_active_alpha[1], spike_prior_shape_1, spike_prior_shape_2,
-               active_means_dif_prior_shape, active_means_dif_prior_rate , active_variances_prior_min, active_variances_prior_max,
-               inactive_means_prior_shape, inactive_means_prior_rate, inactive_variances_prior_min, inactive_variances_prior_max,round(thresh_i, digits = 2),
+               active_means_dif_prior_shape, round(active_means_dif_prior_rate, digits = 3) , active_variances_prior_min, active_variances_prior_max,
+               inactive_means_prior_shape, round(inactive_means_prior_rate, digits = 3), inactive_variances_prior_min, inactive_variances_prior_max,round(thresh_i, digits = 2),
                paste(round(thresh_a, digits = 2), collapse=", ")))),
               file = paste0(output_directory, "/", "hyperparameter_settings.txt"), sep = "\t", row.names = F, quote = F, col.names = F)
 

@@ -32,7 +32,8 @@ zigzag$methods(
     ## posterior for Yg of candidate genes
 
     write.table(matrix(c("gen", candidate_gene_list), nrow = 1),
-                file=paste0(output_directory, "/", prefix, "_yg_candidate_genes.log"), col.names = F, row.names = F, sep = "\t", quote = F)
+                file=paste0(output_directory, "/", prefix, "_yg_candidate_genes.log"),
+                col.names = F, row.names = F, sep = "\t", quote = F)
 
     ## posterior for variance_g of candidate genes
 

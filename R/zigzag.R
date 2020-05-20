@@ -5,7 +5,7 @@
 #' hyperparameters and initializes all model parameters.
 #'
 #' @usage zigzag$new(data, gene_length = NULL, candidate_gene_list = "all",
-#' num_active_components = 1,
+#' num_active_components = "auto",
 #' weight_active_shape_1 = 2,
 #' weight_active_shape_2 = 2,
 #' inactive_means_prior_shape = 1,
@@ -20,8 +20,8 @@
 #' active_variances_prior_max = 5,
 #' shared_active_variances = TRUE,
 #' output_directory = "output",
-#' threshold_a = 0,
-#' threshold_i = threshold_a[1],
+#' threshold_a = "auto",
+#' threshold_i = "auto": threshold_a[1],
 #' variance_g_upper_bound = Inf,
 #' beta = 1,
 #' tau_shape = 1,
