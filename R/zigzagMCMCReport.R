@@ -53,13 +53,13 @@ zigzag$methods(
 
     warn <- c(paramESS[which(paramESS < 200)], ygESS[which(ygESS < 100)], vargESS[vargESS < 100])
 
-    write.table(matrix(c("param", "ESS"), nrow = 1), file = paste0(essPrefix, "_model_ess.txt"),
+    write.table(matrix(c("param", "ESS"), nrow = 1), file = paste0(essPrefix, "_model_ess.tsv"),
                 row.names = F, col.names = F, quote = F, sep = "\t")
     write.table(paramESS, file = paste0(essPrefix, "_model_ess.tsv"),
                 row.names = names(paramESS), col.names = F, append = TRUE,
                 sep = "\t", quote = F)
 
-    write.table(matrix(c("gene", "yg_ESS", "varg_ESS"), nrow = 1), file = paste0(essPrefix, "_Yg_varg_ess.txt"),
+    write.table(matrix(c("gene", "yg_ESS", "varg_ESS"), nrow = 1), file = paste0(essPrefix, "_Yg_varg_ess.tsv"),
                 row.names = F, col.names = F, quote = F, sep = "\t")
     write.table(cbind(ygESS, vargESS), file = paste0(essPrefix, "_Yg_varg_ess.tsv"),
                 row.names = names(ygESS), col.names = F, quote = F, sep = "\t", append = TRUE)
