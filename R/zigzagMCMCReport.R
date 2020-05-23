@@ -2,44 +2,30 @@ zigzag$methods(
 
   #Utilities for assessing and graphing mcmc output files
 
-  #this will call the rest of the functions in this list
   generate_MCMC_reports = function(mcmc_dir, mcmc_file_prefix){
 
     mcmcReport_output_directory <- "mcmc_report"
 
     dir.create(paste0(mcmc_dir, "/", mcmcReport_output_directory))
 
+    prfx <- paste0(mcmc_dir, "/", mcmc_file_prefix)
+
     cat("Analyzing MCMC files. Writing to files located in: ", mcmcReport_output_directory, "...\n")
 
-
-    model_log <- read.table(paste0(mcmc_dir, "/",
-                                  mcmc_file_prefix,
-                              "_model_parameters.log"),
-                           header = T, row.names = 1)
-
-    yg_log <- read.table(paste0(mcmc_dir, "/",
-                               mcmc_file_prefix,
-                               "_yg_candidate_genes.log"),
-                        header = T, row.names = 1)
-
-    varg_log <- read.table(paste0(mcmc_dir, "/",
-                                 mcmc_file_prefix,
-                               "_varianceg_candidate_genes.log"),
-                          header = T, row.names = 1)
-
+    #load mcmc log files
+    model_log <- read.table(paste0(prfx, "_model_parameters.log"), header = T, row.names = 1)
+    yg_log <- read.table(paste0(prfx, "_yg_candidate_genes.log"), header = T, row.names = 1)
+    varg_log <- read.table(paste0(prfx, "_varianceg_candidate_genes.log"), header = T, row.names = 1)
 
     mcmc_report_prefix = paste0(mcmc_dir, "/", mcmcReport_output_directory, "/", mcmc_file_prefix)
 
     alpha_r_idx <- grep(pattern = "library", colnames(model_log), value = FALSE)
 
+    #create reports and plots
     .self$makeMCMCplots(model_log[,-alpha_r_idx], paste0(mcmc_report_prefix, "_model_params_trace.pdf"))
-
     .self$makeMCMCplots(model_log[,alpha_r_idx], paste0(mcmc_report_prefix, "_library_params_trace.pdf"))
-
     .self$makePosteriorPriorPlots(model_log, paste0(mcmc_report_prefix, "_posterior_distributions.pdf"))
-
     .self$makeEssReport(model_log, yg_log, varg_log, mcmc_report_prefix)
-
 
   },
 
@@ -134,7 +120,6 @@ zigzag$methods(
       range = c(min(post[,k]) - (max(post[,k]) - min(post[,k])),
                 max(post[,k]) + (max(post[,k]) - min(post[,k])))
       post_density = density(post[,k], from = range[1], to = range[2], cut = 0)
-      if(range[1] < tt) range[1] = tt
       prior_xx = seq(range[1], range[2], by = abs(diff(range))/100)
       prior_density = dgamma(prior_xx - tt, active_means_dif_prior_shape, active_means_dif_prior_rate)
       # scale prior
@@ -148,8 +133,6 @@ zigzag$methods(
     post = mcmc_df[,grepl(pattern = "inactive_variance", x = colnames(mcmc_df))]
     range = c(min(post) - (max(post) - min(post)),
               max(post) + (max(post) - min(post)))
-    if(range[1] < 0) range[1] = 0
-    if(range[2] > 10^inactive_variances_prior_log_max) range[2] = 10^inactive_variances_prior_log_max
     post_density = density(post, from = range[1], to = range[2], cut = 0)
 
     prior_xx = seq(range[1], range[2], by = abs(diff(range))/100)
@@ -167,8 +150,6 @@ zigzag$methods(
     for(k in seq(free_variables)){
       range = c(min(post[,k]) - (max(post[,k]) - min(post[,k])),
                 max(post[,k]) + (max(post[,k]) - min(post[,k])))
-      if(range[1] < 0) range[1] = 0
-      if(range[2] > 10^active_variances_prior_log_max) range[2] = 10^active_variances_prior_log_max
       post_density = density(post[,k], from = range[1], to = range[2], cut = 0)
       prior_xx = seq(range[1], range[2], by = abs(diff(range))/100)
       prior_density = 1/((active_variances_prior_log_max - active_variances_prior_log_min) * prior_xx)
