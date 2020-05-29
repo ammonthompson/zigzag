@@ -23,7 +23,7 @@ zigzag$methods(
 #' \dontrun{mcmc(sample_frequency = 100, ngen = 50000, mcmcprefix = "organ_x_posterior_sample")}
 #' }
 #'
-  mcmc = function(sample_frequency = 10, ngen = 10000, target_ESS = NULL,
+  mcmc = function(sample_frequency = 100, ngen = 10000, target_ESS = NULL,
                   write_to_files = TRUE, mcmcprefix = "out", compute_probs = TRUE,
                   run_posterior_predictive = FALSE, run_posterior_predictive_and_plot = FALSE,
                   append = FALSE){
