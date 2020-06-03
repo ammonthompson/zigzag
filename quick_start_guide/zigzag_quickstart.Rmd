@@ -260,7 +260,7 @@ layout(matrix(seq(12), ncol = 3, byrow = T))
 tt = c(-1, 0, 1, 2)
 
 for(i in c(4:7)){
-  plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25))
+  plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", xlim = c(-6, 8), ylim = c(0, 0.25))
   for(j in seq(ncol(expression_data))) lines(density(log(expression_data[,j])))
   
   abline(v = c(tt[i-3]), lwd = 2, col = c("blue"))
@@ -293,7 +293,7 @@ par("mai" = opar * 0.35)
 # extreme right prior threshold
 
 layout(matrix(seq(3), ncol = 3))
-plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25))
+plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25), xlim = c(-6,8))
 for(i in seq(ncol(expression_data))) lines(density(log(expression_data[,i])))
 
 abline(v = 4, lwd = 2, col = c("blue"))
@@ -325,7 +325,7 @@ par("mai" = opar * 0.35)
 # Far left prior threshold
 
 layout(matrix(seq(3), ncol = 3))
-plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25))
+plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25), xlim = c(-6,8))
 for(i in seq(ncol(expression_data))) lines(density(log(expression_data[,i])))
 
 abline(v = c(-3), lwd = 2, col = c("blue"))
@@ -351,7 +351,7 @@ For this dataset, any threshold between -0.5 log TPM and +2.5 log TPM yields the
 
 ```{r fig4, echo = F, fig.height = 3, fig.width = 5, fig.align = "center"}
 layout(1)
-plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25))
+plot(density(log(expression_data[,1])), main ="", xlab = "log Expression", ylim = c(0, 0.25), xlim = c(-6,8))
 for(i in seq(ncol(expression_data))) lines(density(log(expression_data[,i])))
 
 polygon(c(-0.75,2.65,2.65,-0.75), c(-100,-100,100,100), col = rgb(0,0,0,0.1), border = NA)
