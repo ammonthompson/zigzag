@@ -4,7 +4,7 @@
 \alias{mcmc}
 \title{mcmc}
 \usage{
-my_zigzag_object$mcmc(sample_frequency = 10, ngen = 10000, target_ESS = NULL,
+my_zigzag_object$mcmc(sample_frequency = 100, ngen = 10000, target_ESS = NULL,
 progress_plot = FALSE, write_to_files = TRUE, mcmcprefix = "out",
 compute_probs = TRUE, run_posterior_predictive = TRUE, append = FALSE)
 }

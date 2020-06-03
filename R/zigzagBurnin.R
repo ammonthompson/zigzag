@@ -3,8 +3,8 @@ zigzag$methods(
 #' burnin
 #' @name burnin
 #' @description Run burnin and tune proposal size parameters for hieararchical bayesian mixture model
-#' @usage burnin(sample_frequency = 10, ngen = 1000, burnin_target_acceptance_rate=0.23,
-#' threads = 1, target_ESS = NULL, progress_plot = FALSE, write_to_files = TRUE,
+#' @usage burnin(sample_frequency = 100, ngen = 1000, burnin_target_acceptance_rate=0.44,
+#' target_ESS = NULL, progress_plot = FALSE, write_to_files = TRUE,
 #' burninprefix = "burnin", append = FALSE)
 #' @param sample_frequency Number of generations between samples from the chain
 #' @param ngen Number of generations to run the chain
