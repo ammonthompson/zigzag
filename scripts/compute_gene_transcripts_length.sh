@@ -34,21 +34,22 @@ rm reduced_${filename}.temp
 
 echo "Making transcript gene length file"
 echo gene_id$'\t'transcript_id$'\t'transcript_length > transcript_lengths_$filename
+# Function for computing transcript lengths from input transcript file with one line per transcript
 get_transcript_lengths () {
 
-transcript_array=($(cat $1))
-for gene_transcript in ${transcript_array[@]};do
+	transcript_array=($(cat $1))
+	for gene_transcript in ${transcript_array[@]};do
 
-	transcript=$(echo $gene_transcript |cut -d ':' -f 2|sed -r 's/[ ]+//g')
+		transcript=$(echo $gene_transcript |cut -d ':' -f 2|sed -r 's/[ ]+//g')
 
-	if [[ ${#transcript} -eq 0 ]];then
-		transcript=$(echo $gene_transcript|cut -d ':' -f 1)
-	fi
+		if [[ ${#transcript} -eq 0 ]];then
+			transcript=$(echo $gene_transcript|cut -d ':' -f 1)
+		fi
 
 	
-	echo $gene_transcript$'\t'$(echo $(grep -E $transcript[^A-Z,a-z,0-9\.]+ gene_transcript_exonLengths_$filename |cut -f 3) |sed 's/ /+/g' |bc )|sed 's/:/\t/g' >> ${1}_$filename
+		echo $gene_transcript$'\t'$(echo $(grep -E $transcript[^A-Z,a-z,0-9\.]+ gene_transcript_exonLengths_$filename |cut -f 3) |sed 's/ /+/g' |bc )|sed 's/:/\t/g' >> ${1}_$filename
         
-done
+	done
 }
 
 cut -f 1,2 gene_transcript_exonLengths_$filename | sed 's/\t/:/g' |sort -V |uniq  > transcript_list.text
