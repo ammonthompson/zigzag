@@ -1,11 +1,61 @@
 #!/bin/bash
 
-# assumes gtf format with 
+#type compute_gene_transcripts_length.sh -h (--help) for more info
 
-gene_id=$1
-transcript_id=$2
-gtf_file=$3
-threads=$4
+### ALGORITHM:
+### Extract exons, transcript id and gene id from columns 4, 5, and 9
+### only exons that belong to transcripts which belong to genes will be extracted
+### Be careful that all exon lines have a gene and a transcript id
+
+gene_id="gene_id"
+transcript_id="transcript_id"
+threads=1
+
+while [[ -n $1 ]];do
+	case $1 in
+		-g|--gene_id)
+		shift
+		gene_id=$1
+		;;
+		-t|--transcript_id)
+		shift
+		transcript_id=$1
+		;;
+		-f|--gtf_file)
+		shift
+		gtf_file=$1
+		;;
+		-c|--threads)
+		shift
+		threads=$1
+		;;
+		-h|--help)
+		shift
+		echo  ' '-g, --gene_id [tag identifier for gene id\'s in column 12] default: \"gene_id\" $'\n' \
+		 -t, --transcript_id [tag identifier for transcript id\'s in column 12] default: \"transcript_id\"$'\n' \
+		 -f, --gtf_file [annotation file]$'\n' \
+		 -c, --threads [number of parallel threads] default: 1
+		exit 1
+		;;
+		*)
+		echo -e '\033[0;31m'Error: \"$1\" isnt a recognized parameter
+                echo Use:
+		echo  ' '-g, --gene_id [tag identifier for gene id\'s in column 12]$'\n' \
+                 -t, --transcript_id [tag identifier for transcript id\'s in column 12]$'\n' \
+                 -f, --gtf_file [annotation file]$'\n' \
+                 -c, --threads [number of parallel threads]
+		exit 1
+		;;
+	esac
+	shift
+done
+	
+if [[ ! -n $gtf_file ]];then
+	echo -e '\033[0;31m'"You forgot to include the --gtf_file"
+	exit 1
+fi
+	
+
 
 filename=$(echo $gtf_file |rev |cut -d '/' -f 1 |rev)
 
@@ -28,13 +78,10 @@ fi
 
 rm reduced_${filename}.temp
 
-#transcript set to sort through
-#transcript_array=($(cut -f 1,2 gene_transcript_exonLengths_$filename | sed 's/\t/:/g' |sort -V |uniq ))
-
-
-echo "Making transcript gene length file"
 echo gene_id$'\t'transcript_id$'\t'transcript_length > transcript_lengths_$filename
-# Function for computing transcript lengths from input transcript file with one line per transcript
+
+# Function for computing transcript lengths from input transcript intermediate file with one line per transcript
+
 get_transcript_lengths () {
 
 	transcript_array=($(cat $1))
@@ -45,13 +92,15 @@ get_transcript_lengths () {
 		if [[ ${#transcript} -eq 0 ]];then
 			transcript=$(echo $gene_transcript|cut -d ':' -f 1)
 		fi
-
 	
 		echo $gene_transcript$'\t'$(echo $(grep -E $transcript[^A-Z,a-z,0-9\.]+ gene_transcript_exonLengths_$filename |cut -f 3) |sed 's/ /+/g' |bc )|sed 's/:/\t/g' >> ${1}_$filename
         
 	done
 }
 
+# Make transcript length files
+
+echo "Making transcript length file"
 cut -f 1,2 gene_transcript_exonLengths_$filename | sed 's/\t/:/g' |sort -V |uniq  > transcript_list.text
 split -d -n l/$threads transcript_list.text temp_tscript
 
@@ -65,6 +114,7 @@ wait
 cat temp_tscript*_$filename >> transcript_lengths_$filename
 rm temp_tscript* transcript_list.text
 
+# make mean gene length file
 
 echo "Making average gene transcript length file"
 echo gene_id$'\t'mean_length > gene_meanLengths_$filename
@@ -76,4 +126,6 @@ for gene in $(cut -f 1 transcript_lengths_$filename |sort -V|uniq);do
 done
 
 
-rm gene_transcript_exonLengths_$filename 
+rm gene_transcript_exonLengths_$filename
+
+echo Finished
