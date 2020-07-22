@@ -170,7 +170,7 @@ When the zigzag object is created, the hyperprior settings will be summarized in
 You should create at the very least two zigzag objects and run independent MCMCs for each. 
 
 
-### Run Burnin and assess convergence with log files
+### Run burnin and assess convergence with log files
 Use the burnin function to run an initial burnin. Here we will run the analysis for 20,000 generations sampling every 50 generations of the chain.
 If write_to_files = TRUE, the burnin sample will, by default, be written to files in a directory called my_zigzag_output/output_burnin. Type ?burnin for more details.
 

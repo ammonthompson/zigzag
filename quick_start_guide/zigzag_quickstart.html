@@ -469,7 +469,7 @@ for(i in seq(ncol(expression_data))) lines(density(log(expression_data[,i])))</c
 <p>You should create at the very least two zigzag objects and run independent MCMCs for each.</p>
 </div>
 <div id="run-burnin-and-assess-convergence-with-log-files" class="section level3">
-<h3>Run Burnin and assess convergence with log files</h3>
+<h3>Run burnin and assess convergence with log files</h3>
 <p>Use the burnin function to run an initial burnin. Here we will run the analysis for 20,000 generations sampling every 50 generations of the chain. If write_to_files = TRUE, the burnin sample will, by default, be written to files in a directory called my_zigzag_output/output_burnin. Type ?burnin for more details.</p>
 <pre class="r"><code>my_zigzag$burnin(sample_frequency = 50, ngen=20000, write_to_files = TRUE)</code></pre>
 <p>Evaluate the burnin log files to determine if the chain has converged to the stationary distribution. The plot of sampled parameter values should randomly vary around a constant. You can look at output files for a burnin I ran located in “example_zigzag_output”:</p>
