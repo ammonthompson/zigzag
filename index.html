@@ -406,11 +406,10 @@ summary {
 <p>Navigate to a directory where you would like to install the zigzag repository.</p>
 <pre class="bash"><code>bash
 git clone https://github.com/ammonthompson/zigzag.git</code></pre>
-<p>To install the R package, open an R terminal or in the console in Rstudio. If your working directory is not where the zigzag package is, then include the path to zigzag. The package is a directory that contains the DESCRIPTION file.</p>
+<p>To install the R package, open an R terminal or in the console in Rstudio. If your working directory is not where the zigzag package is, then include the path to zigzag. The package is a directory that contains the DESCRIPTION file. Note: zigzag depends on R packages <em>coda</em> and <em>matrixStats</em>.</p>
 <pre class="r"><code>R
 install.packages(&quot;zigzag&quot;, type = &quot;source&quot;, repos = NULL)
 library(zigzag)</code></pre>
-<p>Note, zigzag depends on R packages coda and matrixStats.</p>
 </div>
 <div id="load-expression-and-gene-length-data-into-r" class="section level3">
 <h3>Load Expression and Gene Length Data into R</h3>
