@@ -21,7 +21,7 @@ zigzag$methods(
 #'
 # @examples
 #'
-  burnin = function(sample_frequency = 100, ngen = 1000, burnin_target_acceptance_rate=0.44,
+  burnin = function(sample_frequency = 100, ngen = 10000, burnin_target_acceptance_rate=0.44,
                  threads = 1, target_ESS = NULL, progress_plot = FALSE, write_to_files = TRUE,
                  burninprefix = "output", append = FALSE){
 
