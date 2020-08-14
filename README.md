@@ -3,4 +3,4 @@ R package for computing the posterior probability genes are actively expressed g
 
 For tutorial visit: https://ammonthompson.github.io/zigzag/
 
-(in press, PNAS)
+Cite: https://doi.org/10.1073/pnas.1919748117
