@@ -128,7 +128,7 @@ zigzag$methods(
     # remove shoulders near peaks
     pairwise_shoulder_peak_dist <- outer(dens$x[shoulders_idx], dens$x[peaks_idx],
                                          FUN = function(X, Y){abs(Y - X)})
-    shoulders_idx <- shoulders_idx[rowMins(pairwise_shoulder_peak_dist) > 1]
+    shoulders_idx <- shoulders_idx[matrixStats::rowMins(pairwise_shoulder_peak_dist) > 1]
 
     # collapse nearby shoulders and peaks to the lower value
     shoulders_idx <- .self$collapse(shoulders_idx, dens$x[shoulders_idx])

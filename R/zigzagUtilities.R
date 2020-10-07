@@ -88,7 +88,7 @@ zigzag$methods(
 
     lnltrace = unlist(lnl_trace)[-1]
 
-    ess <- as.numeric(effectiveSize(as.mcmc(lnltrace)))
+    ess <- as.numeric(coda::effectiveSize(as.mcmc(lnltrace)))
 
     if(ess < length(lnltrace)){
 

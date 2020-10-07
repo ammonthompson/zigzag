@@ -31,11 +31,11 @@ zigzag$methods(
 
   makeEssReport = function(param_mcmc_output, yg_mcmc_output, varg_mcmc_output, essPrefix){
 
-    paramESS <- round(effectiveSize(param_mcmc_output), digits = 2)
+    paramESS <- round(coda::effectiveSize(param_mcmc_output), digits = 2)
 
-    ygESS <- round(effectiveSize(yg_mcmc_output), digits = 2)
+    ygESS <- round(coda::effectiveSize(yg_mcmc_output), digits = 2)
 
-    vargESS <- round(effectiveSize(varg_mcmc_output), digits = 2)
+    vargESS <- round(coda::effectiveSize(varg_mcmc_output), digits = 2)
 
     warn <- c(paramESS[which(paramESS < 200)], ygESS[which(ygESS < 100)], vargESS[vargESS < 100])
 

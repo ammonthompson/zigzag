@@ -76,7 +76,7 @@ zigzag$methods(
     xdat = xdat[-zeroIdx]
 
     F = c()
-    for( x in xbins ) F = c( F, count( xdat <= x )/(num_transcripts - num_zeros))
+    for( x in xbins ) F = c( F, matrixStats::count( xdat <= x )/(num_transcripts - num_zeros))
 
     return( c(p_zeros, F) )
 
@@ -100,7 +100,7 @@ zigzag$methods(
     })
 
 
-    norm_factor = colMaxs(model_cum)
+    norm_factor = matrixStats::colMaxs(model_cum)
 
     model_cum = t(t(model_cum)/norm_factor)
 

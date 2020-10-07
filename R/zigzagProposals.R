@@ -422,7 +422,7 @@ zigzag$methods(
       # L_k[which(is.na(L_k), arr.ind=T)]=0
 
       probs = L_k/rowSums(L_k)
-      cumprobs = rowCumsums(probs)
+      cumprobs = matrixStats::rowCumsums(probs)
       randsamp = floor(cumprobs/runif(nrow(probs)))
       zeros = matrix(0, nrow(probs), num_active_components)
       new_allocation <- rowSums(randsamp==zeros) + 1

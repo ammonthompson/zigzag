@@ -52,7 +52,7 @@ zigzag$methods(
     ## Set thresholds for component mean priors ############
     ########################################################
 
-    rmedians_noInf <- rowMedians(Xg)
+    rmedians_noInf <- matrixStats::rowMedians(Xg)
 
     rmedians_noInf <- rmedians_noInf[rmedians_noInf > -Inf]
 
@@ -435,7 +435,7 @@ zigzag$methods(
 
       #Yg from Xg means
       rwm <<- sapply(seq(num_transcripts), function(x){
-        if(count(Xg[x,], value = -Inf) < num_libraries){
+        if(matrixStats::count(Xg[x,], value = -Inf) < num_libraries){
           v = Xg[x,]
           mean(v[v > -Inf])
         }else{
@@ -445,11 +445,11 @@ zigzag$methods(
 
       #Yg from Xg variances
       rwv <<- sapply(seq(num_transcripts), function(x){
-        if(count(Xg[x,], value = -Inf) < (num_libraries - 1)){
+        if(matrixStats::count(Xg[x,], value = -Inf) < (num_libraries - 1)){
           v = Xg[x,]
           var(v[v > -Inf])
         }else{
-          rlnorm(1, log(mean(rowVars(Xg), na.rm = T)), sqrt(var(rowVars(Xg), na.rm = T)))
+          rlnorm(1, log(mean(matrixStats::rowVars(Xg), na.rm = T)), sqrt(var(matrixStats::rowVars(Xg), na.rm = T)))
         }
       })
 
@@ -489,7 +489,7 @@ zigzag$methods(
 
       counter = 0
 
-      while(count(XgLikelihood, value = -Inf) > 0){
+      while(matrixStats::count(XgLikelihood, value = -Inf) > 0){
 
         Yg[which(XgLikelihood == -Inf)] <<- rnorm(length(which(XgLikelihood == -Inf)),
                                                   inactive_means, sqrt(inactive_variances))
