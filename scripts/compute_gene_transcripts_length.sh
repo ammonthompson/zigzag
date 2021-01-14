@@ -70,7 +70,9 @@ grep $'\t'exon$'\t' $gtf_file |cut -f 4,5,9 | grep $gene_id |grep $transcript_id
 # and is assumed to be ; delimmited according to gtf,gff,gff3 format
 if [[ ! -f gene_transcript_exonLengths_$filename ]];then
 
-paste <(grep -Eo "${gene_id}[^;]+;?" reduced_${filename}.temp |sed -r "s/${gene_id}[ ,=,\"]+//g" |sed 's/;//g'|sed 's/\"//g') <(grep -Eo "${transcript_id}[^;]+;?" reduced_${filename}.temp |sed -r "s/${transcript_id}[ ,=,\"]+//g" |sed 's/;//g'|sed 's/\"//g') <(Rscript <(cut -f 1,2 reduced_${filename}.temp| sed 's/\t/-/g'|sed 's/^/abs(/g'|sed 's/$/)/g' | sed 's/^/1+/g')|sed 's/\[1\] //g') > gene_transcript_exonLengths_$filename
+paste <(grep -Eo "${gene_id}[^;]+;?" reduced_${filename}.temp |sed -r "s/${gene_id}[ ,=,\"]+//g" |sed 's/;//g'|sed 's/\"//g')\
+       	<(grep -Eo "${transcript_id}[^;]+;?" reduced_${filename}.temp |sed -r "s/${transcript_id}[ ,=,\"]+//g" |sed 's/;//g'|sed 's/\"//g') \
+	<(Rscript <(cut -f 1,2 reduced_${filename}.temp| sed 's/\t/-/g'|sed 's/^/abs(/g'|sed 's/$/)/g' | sed 's/^/1+/g')|sed 's/\[1\] //g') > gene_transcript_exonLengths_$filename
 
 fi
 
