@@ -77,6 +77,7 @@ zigzag$methods(
 
     multi_plot_pars <- list()
 
+    postpred_plotfeq <- floor(ngen/(50 * 4 * sample_frequency))
 
     if(run_posterior_predictive_and_plot){
 
@@ -138,8 +139,8 @@ zigzag$methods(
 
     plist_length <- length(proposal_list)
 
-    yg_varg_subsample_frequence <- floor(ngen/(sample_frequency * 500))
-    if(yg_varg_subsample_frequence == 0) yg_varg_subsample_frequence <- 1
+    yg_varg_subsample_frequency <- floor(ngen/(sample_frequency * 500))
+    if(yg_varg_subsample_frequency == 0) yg_varg_subsample_frequency <- 1
 
     if(write_to_files) write_yg_varg = TRUE
 
@@ -182,9 +183,9 @@ zigzag$methods(
           .self$writeToOutputFiles(paste0(mcmc_prefixdir,"/", mcmcprefix), gen = i)
 
           # if((i / sample_frequency) %% 4 == 0)
-          if((i / sample_frequency) %% yg_varg_subsample_frequence == 0)
+          if((i / sample_frequency) %% yg_varg_subsample_frequency == 0)
               .self$writeToYgVariancegOutputFiles(paste0(mcmc_prefixdir,"/", mcmcprefix), gen = i)
-              if((i - starting_gen) / (yg_varg_subsample_frequence * sample_frequency) > 500) write_yg_varg = FALSE
+              if((i - starting_gen) / (yg_varg_subsample_frequency * sample_frequency) > 500) write_yg_varg = FALSE
         }
 
         if(!is.null(target_ESS) & length(lnl_trace) > 100){
@@ -206,7 +207,8 @@ zigzag$methods(
 
         post_pred_instance <- .self$posteriorPredictiveSimulation(prefix = mcmcprefix)
 
-        if((i / (4 * 4 * sample_frequency)) %% 1 == 0 & run_posterior_predictive_and_plot){
+        # if((i / (4 * 4 * sample_frequency)) %% 1 == 0 & run_posterior_predictive_and_plot){
+        if( run_posterior_predictive_and_plot & (i / (4 * postpred_plotfeq * sample_frequency)) %% 1 == 0){
 
           .self$update_postPredPlots(post_pred_instance, multi_plot_pars,
                                      post_pred_multi_L1_plot_device,

@@ -1,11 +1,14 @@
 Package: zigzag
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Compute the posterior probability of active gene expression
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Authors@R: c(
+    person("Ammon", "Thompson", email = "ammonthompson@gmail.com", role = c("aut", "cre")),
+    person("Michael", "May", role = c("aut")),
+    person("Brian", "Moore", role = c("aut")))
+Description: Compute the posterior probability of active gene expression 
+    given a set of relative expression estimates from a set of
+    RNA-seq libraries.
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
