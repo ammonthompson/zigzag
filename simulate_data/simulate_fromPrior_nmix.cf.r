@@ -6,11 +6,11 @@
 
 file_prefix = "sim"
 num_yg = 200
-df = read.table("../simulate_data/sim_control_file.template.cf",header = F, row.names = 1)
+df = read.table("sim_control_file.template.cf",header = F, row.names = 1)
 
 simulated_gene_lengths  = rlnorm(df$V2[5], log(2000), 0.5)
 
-output_dir = "../simulate_data/simulated_data/"
+output_dir = "simulated_data/"
 params = as.numeric(df[,1])
 
 num_libs = params[4]
