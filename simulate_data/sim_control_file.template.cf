@@ -2,7 +2,7 @@ sigmag_tau	0.5
 sigmax_s0	-1
 sigmax_s1	-0.25
 num_libs	4
-num_genes	8000
+num_genes	5000
 lambda_c	20
 ymeans_i	-2
 ymeans_a1	2

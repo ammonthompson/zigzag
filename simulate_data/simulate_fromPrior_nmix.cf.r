@@ -145,7 +145,7 @@ for(i in seq(params[17])){
 	# gene length file
   write.table(cbind(row.names(sim_xg), sim_gl),
               file = paste0(output_dir, "sim", i, "_", file_prefix, "_gene_length.tsv"),
-              quote=FALSE, row.names = FALSE, col.names=FALSE, sep = "\t")
+              quote=FALSE, row.names = FALSE, col.names=c("gene_name", "gene_length"), sep = "\t")
 
   # yg and simga_g of interest data
 	write.table(cbind("gene", "Yg", "sigma_g"),
