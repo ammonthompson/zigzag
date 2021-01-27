@@ -6,7 +6,7 @@
 \usage{
 my_zigzag_object$mcmc(sample_frequency = 100, ngen = 10000, target_ESS = NULL,
 progress_plot = FALSE, write_to_files = TRUE, mcmcprefix = "out",
-compute_probs = TRUE, run_posterior_predictive = TRUE, append = FALSE)
+compute_probs = TRUE, run_posterior_predictive = FALSE, append = FALSE)
 }
 \arguments{
 \item{sample_frequency}{Number of generations between samples from the chain}
@@ -21,14 +21,14 @@ compute_probs = TRUE, run_posterior_predictive = TRUE, append = FALSE)
 
 \item{compute_probs}{compute probabilities of activity for each gene. Default is TRUE.}
 
-\item{run_posterior_predictive}{run posterior predictive simulation for every other sample from the chain.}
+\item{run_posterior_predictive}{run 500 posterior predictive simulation using parameters sampled from the chain.}
 
-\item{run_posterior_predictive_and_plot}{run posterior predictive simulation and plot simulated densities over observed densities.}
+\item{run_posterior_predictive_and_plot}{run posterior predictive simulation and plot 50 simulated densities over observed densities.}
 
 \item{append}{If posterior sample log files in mcmcprefix_mcmc_ouput already exists, then append samples to those files. Default is FALSE.}
 }
 \value{
-blorb
+Posterior log files including probability of active expression and MCMC diagnostics in mcmc_report directory.
 }
 \description{
 MCMC sampling from hieararchical bayesian mixture model
