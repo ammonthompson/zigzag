@@ -22,10 +22,10 @@ zigzag$methods(
     alpha_r_idx <- grep(pattern = "library", colnames(model_log), value = FALSE)
 
     #create reports and plots
-    .self$makeMCMCplots(model_log[,-alpha_r_idx], paste0(mcmc_report_prefix, "_model_params_trace.pdf"))
-    .self$makeMCMCplots(model_log[,alpha_r_idx], paste0(mcmc_report_prefix, "_library_params_trace.pdf"))
     .self$makePosteriorPriorPlots(model_log, paste0(mcmc_report_prefix, "_posterior_distributions.pdf"))
     .self$makeEssReport(model_log, yg_log, varg_log, mcmc_report_prefix)
+    .self$makeMCMCplots(model_log[,-alpha_r_idx], paste0(mcmc_report_prefix, "_model_params_trace.pdf"))
+    .self$makeMCMCplots(model_log[,alpha_r_idx], paste0(mcmc_report_prefix, "_library_params_trace.pdf"))
 
   },
 
@@ -72,7 +72,13 @@ zigzag$methods(
 
     nparams <- ncol(mcmc_trace_df)
 
-    if(nparams > 50) stop("too many parameters for plotting")
+    # if(nparams > 50) stop("too many parameters for plotting")
+    if(nparams > 25){
+
+      cat("too many parameters for plotting. Plotting first 25 parameters...\n")
+      nparams <- 25
+
+    }
 
     plot_rows <- ceiling(sqrt(nparams))
     plot_cols <- nparams/plot_rows - (nparams/plot_rows)%%1 + ((nparams/plot_rows)%%1 > 0)
