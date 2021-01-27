@@ -24,8 +24,8 @@ zigzag$methods(
     # p detect
     sim_xg = sapply(1:num_libraries, function(lib){
 
-      temp_sim_xg = sim_xg[,lib]
-      not_detected = (runif(length(Yg)) < (1 - p_x[,lib]))
+      temp_sim_xg <- sim_xg[,lib]
+      not_detected <- (runif(length(Yg)) < (1 - p_x[,lib]))
       temp_sim_xg[not_detected] <- -Inf
 
       return(temp_sim_xg)
@@ -33,34 +33,57 @@ zigzag$methods(
     })
 
     ### simulate spike p( spike | inactive )
-    sim_xg[in_spike_idx,] = rep(-Inf, num_libraries)
+    sim_xg[in_spike_idx,] <- rep(-Inf, num_libraries)
 
-    sim_xg = as.data.frame(sim_xg)
+    sim_xg <- as.data.frame(sim_xg)
 
     # lower level discrepencies, zeros and non-zero Xg distros
-    W_L = .self$get_lowerLevel_wasserstein(Xg, bins, yg_lessThan_bin) -
-      .self$get_lowerLevel_wasserstein(sim_xg, bins, yg_lessThan_bin)
+    W_L <- .self$get_lowerLevel_wasserstein(Xg, bins, yg_lessThan_bin) -
+           .self$get_lowerLevel_wasserstein(sim_xg, bins, yg_lessThan_bin)
 
-    B_rumsfeld = .self$get_rumsfeld(Xg) - .self$get_rumsfeld(sim_xg)
+    B_rumsfeld <- .self$get_rumsfeld(Xg) - .self$get_rumsfeld(sim_xg)
+
+
+    if(recover_x) recover()
+
+    # scaled library-specific wasserstein discrepancies. Xg scaled by common mean
+    # so the discrepancy ignores library-specific scaling factor differences
+    # which are captured by the gene-wise variance model.
+    lib_means_xg <- apply(Xg, 2, function(sx) mean(sx[sx > -Inf]))
+    grand_mean_xg <- mean(lib_means_xg)
+    scaled_xg <- sapply(seq(num_libraries), function(sx) Xg[,sx] - lib_means_xg[sx] + grand_mean_xg)
+
+    lib_means_sim_xg <- apply(sim_xg, 2, function(sx) mean(sx[sx > -Inf]))
+    grand_mean_sim_xg <- mean(lib_means_sim_xg)
+    scaled_sim_xg <- sapply(seq(num_libraries), function(sx) sim_xg[,sx] - lib_means_sim_xg[sx] + grand_mean_sim_xg)
+
+    W_L_r <- sapply(seq(ncol(scaled_xg)), function(sxg){
+
+      .self$get_lowerLevel_wasserstein(scaled_xg[,sxg, drop = F], bins, yg_lessThan_bin, p_x[,sxg, drop = F]) -
+        .self$get_lowerLevel_wasserstein(scaled_sim_xg[,sxg, drop = F], bins, yg_lessThan_bin, p_x[,sxg, drop = F])
+
+    })
 
 
     ### upper level discrepency simulating Yg
     #simulate Yg
-    sim_yg = NULL
-    sim_yg[inactive_idx] = rnorm(length(inactive_idx), inactive_means, sqrt(inactive_variances))
-    sim_yg[active_idx] = rnorm(length(active_idx), active_means[allocation_within_active[[1]][active_idx]],
+    sim_yg <- NULL
+    sim_yg[inactive_idx] <- rnorm(length(inactive_idx), inactive_means, sqrt(inactive_variances))
+    sim_yg[active_idx] <- rnorm(length(active_idx), active_means[allocation_within_active[[1]][active_idx]],
                                sqrt(active_variances[allocation_within_active[[1]][active_idx]]))
 
 
-    W_U = .self$get_upperLevel_wasserstein(Yg, bins) -
-      .self$get_upperLevel_wasserstein(sim_yg, bins)
+    W_U <- .self$get_upperLevel_wasserstein(Yg, bins) -
+           .self$get_upperLevel_wasserstein(sim_yg, bins)
 
     cat("W_L: ",W_L, "  W_U: ", W_U, '\n')
 
-    if(recover_x) recover()
-
-    write.table(matrix(c(gen, W_L, W_U, B_rumsfeld), nrow = 1),
+    write.table(matrix(c(gen, W_L, W_U, B_rumsfeld[1]), nrow = 1),
                 file = paste0(pp_prefix, ".post_predictive_output.log"),
+                append=T, sep="\t", row.names=F, col.names=F)
+
+    write.table(matrix(c(gen, W_L_r, B_rumsfeld[-1]), nrow = 1),
+                file = paste0(pp_prefix, ".library_specific_post_predictive_output.log"),
                 append=T, sep="\t", row.names=F, col.names=F)
 
     return(list(sim_xg, sim_yg))
@@ -89,14 +112,18 @@ zigzag$methods(
 
     xdat_Br = sapply(seq(num_libraries), function(r) sum(xdat[,r] == -Inf)/num_transcripts)
 
-    return(mean(abs(xdat_Br - model_Br)))
+    delta_Br <- abs(xdat_Br - model_Br)
+
+    return(c(mean(delta_Br), delta_Br))
 
   },
 
-  get_lowerLevel_wasserstein = function(xdat, xbins, yg_lessThan_bin_infun){
+  get_lowerLevel_wasserstein = function(xdat, xbins, yg_lessThan_bin_infun, xp_x = p_x){
 
-    model_cum = sapply(seq(num_libraries), function(r){
-      colMeans(p_x[out_spike_idx, r] * yg_lessThan_bin_infun[out_spike_idx, ])
+    xdat_num_libs <- ncol(xdat)
+
+    model_cum = sapply(seq(xdat_num_libs), function(r){
+      colMeans(xp_x[out_spike_idx, r] * yg_lessThan_bin_infun[out_spike_idx, ])
     })
 
 
@@ -104,7 +131,7 @@ zigzag$methods(
 
     model_cum = t(t(model_cum)/norm_factor)
 
-    xdat_cum = sapply(seq(num_libraries), function(r){
+    xdat_cum = sapply(seq(xdat_num_libs), function(r){
       sapply(xbins, function(y) mean(xdat[xdat[,r] > -Inf, r] < y))
     })
 
@@ -112,7 +139,6 @@ zigzag$methods(
     mean_xdat_cum = rowMeans(xdat_cum)
     mean_model_cum = rowMeans(model_cum)
     Wass_means = trapz_integration(xbins, abs(mean_xdat_cum - mean_model_cum))
-
     return(c(Wass_means))
 
   },

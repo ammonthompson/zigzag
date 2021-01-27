@@ -47,6 +47,12 @@ zigzag$methods(
                   file = paste0(output_directory, "/", prefix, ".post_predictive_output.log"),
                   col.names = F, row.names = F, sep = "\t", quote = F)
 
+      write.table(matrix(c("gen", paste0("Scaled_Wass_Lower_library_",seq(num_libraries)),
+                           paste0("Rums_library_", seq(num_libraries))), nrow = 1),
+                  file = paste0(output_directory, "/", prefix, ".library_specific_post_predictive_output.log"),
+                  col.names = F, row.names = F, sep = "\t", quote = F)
+
+
     }
 
   },

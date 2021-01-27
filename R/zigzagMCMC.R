@@ -5,18 +5,18 @@ zigzag$methods(
 #' @description MCMC sampling from hieararchical bayesian mixture model
 #' @usage my_zigzag_object$mcmc(sample_frequency = 100, ngen = 10000, target_ESS = NULL,
 #' progress_plot = FALSE, write_to_files = TRUE, mcmcprefix = "out",
-#' compute_probs = TRUE, run_posterior_predictive = TRUE, append = FALSE)
+#' compute_probs = TRUE, run_posterior_predictive = FALSE, append = FALSE)
 #' @param sample_frequency Number of generations between samples from the chain
 #' @param ngen Number of generations to run the chain
 #' @param target_ESS Run chain until the target effective sample size is achieved for the likelihood
 #' @param write_to_files Write posterior samples to output files located in mcmcprefix_mcmc_ouput directory
 #' @param mcmcprefix prefix for mcmc output directory as well as the output files within.
 #' @param compute_probs compute probabilities of activity for each gene. Default is TRUE.
-#' @param run_posterior_predictive run posterior predictive simulation for every other sample from the chain.
-#' @param run_posterior_predictive_and_plot run posterior predictive simulation and plot simulated densities over observed densities.
+#' @param run_posterior_predictive run 500 posterior predictive simulation using parameters sampled from the chain.
+#' @param run_posterior_predictive_and_plot run posterior predictive simulation and plot 50 simulated densities over observed densities.
 #' @param append If posterior sample log files in mcmcprefix_mcmc_ouput already exists, then append samples to those files. Default is FALSE.
 #'
-#' @return blorb
+#' @return Posterior log files including probability of active expression and MCMC diagnostics in mcmc_report directory.
 #' @export
 #'
 #' @examples{
@@ -25,7 +25,8 @@ zigzag$methods(
 #'
   mcmc = function(sample_frequency = 100, ngen = 10000, target_ESS = NULL,
                   write_to_files = TRUE, mcmcprefix = "out", compute_probs = TRUE,
-                  run_posterior_predictive = FALSE, run_posterior_predictive_and_plot = FALSE,
+                  run_posterior_predictive = FALSE,
+                  run_posterior_predictive_and_plot = run_posterior_predictive,
                   append = FALSE){
 
 
@@ -72,12 +73,14 @@ zigzag$methods(
     if(num_libs_plot_postpred > 25) num_libs_plot_postpred = 25
 
     plot_rows <- sqrt(num_libs_plot_postpred) - sqrt(num_libs_plot_postpred)%%1 + (sqrt(num_libs_plot_postpred)%%1 > 0)
-    # plot_rows <- ceiling(sqrt(nparams))
     plot_cols <- num_libs_plot_postpred/plot_rows - (num_libs_plot_postpred/plot_rows)%%1 + ((num_libs_plot_postpred/plot_rows)%%1 > 0)
-
     multi_plot_pars <- list()
 
-    postpred_plotfeq <- floor(ngen/(50 * 4 * sample_frequency))
+    # Set a maximum of 500 posterior predictive simulations, and 50 post. pred. density plots
+    postpred_freq <- round(ngen/(500 * sample_frequency))
+    if(postpred_freq == 0) postpred_freq <- 1
+    postpred_plotfeq <- round(ngen/(50 * postpred_freq * sample_frequency))
+    if(postpred_plotfeq == 0) postpred_plotfeq <- 1
 
     if(run_posterior_predictive_and_plot){
 
@@ -203,12 +206,11 @@ zigzag$methods(
       # Run posterior predictive simulation #
       #######################################
 
-      if((run_posterior_predictive | run_posterior_predictive_and_plot) & (i / (4 * sample_frequency)) %% 1 == 0){
+      if((run_posterior_predictive | run_posterior_predictive_and_plot) & (i / (postpred_freq * sample_frequency)) %% 1 == 0){
 
         post_pred_instance <- .self$posteriorPredictiveSimulation(prefix = mcmcprefix)
 
-        # if((i / (4 * 4 * sample_frequency)) %% 1 == 0 & run_posterior_predictive_and_plot){
-        if( run_posterior_predictive_and_plot & (i / (4 * postpred_plotfeq * sample_frequency)) %% 1 == 0){
+        if( run_posterior_predictive_and_plot & (i / (postpred_freq * postpred_plotfeq * sample_frequency)) %% 1 == 0){
 
           .self$update_postPredPlots(post_pred_instance, multi_plot_pars,
                                      post_pred_multi_L1_plot_device,
