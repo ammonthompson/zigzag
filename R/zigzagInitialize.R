@@ -264,7 +264,7 @@ zigzag$methods(
                            5, 10,                                                          ### spike prob, spike alloc
                            c(2, 2) + is2Libs + 1 * (num_transcripts < 15000),              ### Yg, sigm_g
                            c(6, 6, 6),                                                     ### tau, Sg, s0tau
-                           num_libraries * 0.75)                                           ### p_x
+                           num_libraries * 1.25)                                           ### p_x
 
     }else{
 
