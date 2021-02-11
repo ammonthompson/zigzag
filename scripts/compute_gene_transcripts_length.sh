@@ -101,10 +101,10 @@ get_transcript_lengths () {
 # Make transcript length files
 
 echo "Making transcript length file"
-cut -f 1,2 gene_transcript_exonLengths_$filename | sed 's/\t/:/g' |sort -V |uniq  > transcript_list.text
-split -d -n l/$threads transcript_list.text temp_tscript
+cut -f 1,2 gene_transcript_exonLengths_$filename | sed 's/\t/:/g' |sort -V |uniq  > transcript_list.text_$filename
+split -d -n l/$threads transcript_list.text_$filename temp_tscript_${filename}_
 
-for tt in temp_tscript*;do
+for tt in temp_tscript_${filename}_*;do
 
 	get_transcript_lengths $tt &
 
@@ -112,20 +112,42 @@ done
 wait
 
 cat temp_tscript*_$filename >> transcript_lengths_$filename
-rm temp_tscript* transcript_list.text
+rm temp_tscript_${filename}_* transcript_list.text_$filename
+
+
 
 # make mean gene length file
 
 echo "Making average gene transcript length file"
 echo gene_id$'\t'mean_length > gene_meanLengths_$filename
-for gene in $(cut -f 1 transcript_lengths_$filename |sort -V|uniq);do
 
-	mean_length=$(echo \( $(echo $(grep ${gene}$'\t' transcript_lengths_$filename | cut -f 3) |sed 's/ /+/g') \) / $(grep -c ${gene}$'\t' transcript_lengths_$filename) |bc -l | sed -r 's/([0-9]+\.[0-9]{3})[0-9]+$/\1/g')	
-	echo $gene$'\t'$mean_length >> gene_meanLengths_$filename
+# Function for computing mean transcript lengths for each gene
+get_mean_transcript_lengths () {
+# $1 is a file that contains a list of gene names 
+# $2 is the transcript length file
+  for gene in $(cut -f 1 $1);do
+
+	  mean_length=$(echo \( $(echo $(grep ${gene}$'\t' $2 | cut -f 3) |sed 's/ /+/g') \) / $(grep -c ${gene}$'\t' $2) |bc -l | sed -r 's/([0-9]+\.[0-9]{3})[0-9]+$/\1/g')	
+	  echo $gene$'\t'$mean_length >> temp_meanLengths_$1
+
+  done
+  
+}
+
+# make gene list file and split into $threads separate files
+cut -f 1 transcript_lengths_$filename |sort -V|uniq > temp_geneid_list323_$filename
+split -d -n l/$threads temp_geneid_list323_$filename subtemp_geneid_list323_${filename}_
+
+for genelist_file in subtemp_geneid_list323_${filename}_*;do
+
+  get_mean_transcript_lengths $genelist_file transcript_lengths_$filename &
 
 done
+wait
 
+cat temp_meanLengths_subtemp_geneid_list323_${filename}_* >> gene_meanLengths_$filename
 
-rm gene_transcript_exonLengths_$filename
+rm gene_transcript_exonLengths_$filename temp_geneid_list323_$filename subtemp_geneid_list323_${filename}_*
+rm temp_meanLengths_subtemp_geneid_list323_${filename}_*
 
 echo Finished
