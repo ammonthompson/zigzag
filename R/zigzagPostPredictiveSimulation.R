@@ -179,7 +179,13 @@ zigzag$methods(
         par("usr" = multi_plot_pars_f[[lib_plot]]$usr)
         par("plt" = multi_plot_pars_f[[lib_plot]]$plt)
         par("mfg" = multi_plot_pars_f[[lib_plot]]$mfg)
-        lines(density(scaled_sim_xg[,lib_plot]), col = "tomato", lwd = 0.25)
+        lines(density(scaled_sim_xg[,lib_plot]), col = "chartreuse3", lwd = 0.25)
+
+        d_inactive = density(scaled_sim_xg[inactive_idx,lib_plot])
+        lines(d_inactive$x, d_inactive$y * (length(inactive_idx) - length(in_spike_idx))/length(scaled_sim_xg[,1]),
+              col = "dodgerblue", lwd = 0.5)
+        d_active = density(scaled_sim_xg[active_idx,lib_plot])
+        lines(d_active$x, d_active$y * length(active_idx)/length(scaled_sim_xg[,1]), col = "tomato", lwd = 0.5)
       }
 
       ### Upper level plot ###
@@ -208,7 +214,7 @@ zigzag$methods(
       par("usr" = multi_plot_pars_f[[i]]$usr)
       par("plt" = multi_plot_pars_f[[i]]$plt)
       par("mfg" = multi_plot_pars_f[[i]]$mfg)
-      lines(density(scaled_xg_f[,i]), lwd = 0.75)
+      lines(density(scaled_xg_f[,i]), lwd = 1)
     }
 
     #Upper level (2)
