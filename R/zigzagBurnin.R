@@ -58,6 +58,9 @@ zigzag$methods(
   ################
 
   while(j <= ngen ){
+    .self$mhInactiveBias() ## TESTING
+    .self$mhActiveBias() ## TESTING
+
    end = FALSE
    for(p in sample(seq(plist_length), plist_length, replace = TRUE, prob = proposal_probs)){
      proposal_list[[p]](tune = TRUE);

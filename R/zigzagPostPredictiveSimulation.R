@@ -19,7 +19,7 @@ zigzag$methods(
 
     #### Simulate data from posterior and compute realized discrepancy statstics
 
-    sim_xg = sapply(1:num_libraries, function(x){return(rnorm(length(Yg), Yg, sqrt(variance_g)))})
+    sim_xg = sapply(1:num_libraries, function(x){return(rnorm(length(Yg), Yg + lib_bias_matrix[,x], sqrt(variance_g)))})
 
     # p detect
     sim_xg = sapply(1:num_libraries, function(lib){
@@ -171,9 +171,10 @@ zigzag$methods(
 
       dev.set(multiL1PlotDevice)
 
-      lib_means_sim_xg = apply(post_pred_instance_f[[1]], 2, function(sx) mean(sx[sx > -Inf]))
-      grand_mean_sim_xg = mean(lib_means_sim_xg)
-      scaled_sim_xg = sapply(seq(num_libraries), function(sx) post_pred_instance_f[[1]][,sx] - lib_means_sim_xg[sx] + grand_mean_sim_xg)
+      # lib_means_sim_xg = apply(post_pred_instance_f[[1]], 2, function(sx) mean(sx[sx > -Inf]))
+      # grand_mean_sim_xg = mean(lib_means_sim_xg)
+      # scaled_sim_xg = sapply(seq(num_libraries), function(sx) post_pred_instance_f[[1]][,sx] - lib_means_sim_xg[sx] + grand_mean_sim_xg)
+scaled_sim_xg = post_pred_instance_f[[1]]
 
       for(lib_plot in seq(num_libs_plot_postpred)){
         par("usr" = multi_plot_pars_f[[lib_plot]]$usr)

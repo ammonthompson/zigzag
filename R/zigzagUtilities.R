@@ -1,5 +1,17 @@
 zigzag$methods(
 
+  get_lib_bias_matrix = function(ib = inactive_bias, ab = active_bias){
+
+    lb_matrix <- matrix(0, nrow = num_transcripts, ncol = num_libraries)
+    for(lib in seq(num_libraries)){
+      lb_matrix[inactive_idx,lib] <- ib[lib]
+      lb_matrix[active_idx,lib] <- ab[lib]
+     }
+
+    return(lb_matrix)
+
+  },
+
   trapz_integration = function(x, y){
 
     n = length(x)

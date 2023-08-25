@@ -228,6 +228,8 @@ zigzag$methods(
     tuningParam_variance_g <<- rep(0.5, num_transcripts)
     tuningParam_multi_sigma <<- 0.5
     tuningParam_sigma_mu <<- 0.5
+    tuningParam_inactive_bias <<- rep(0.5, num_libraries)
+    tuningParam_active_bias <<- rep(0.1, num_libraries)
 
 
 
@@ -250,7 +252,7 @@ zigzag$methods(
                            .self$mhTau,
                            .self$mhSg,
                            .self$mhS0Tau,
-                           .self$mhP_x )
+                           .self$mhP_x)
 
 
     is2Libs <- (num_libraries == 2) * 0.5 # use this variable to upweight probability of proposing L1 variance params
@@ -400,6 +402,14 @@ zigzag$methods(
     alpha_r <<- rgamma(num_libraries, 1, 1)
     alpha_r_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_libraries,function(y){return(c(rep(0,77),rep(1,23)))})))})
     alpha_r_max = max(alpha_r)
+
+    # library biases
+    inactive_bias <<- rep(0, num_libraries)
+    inactive_bias_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_libraries,function(y){return(c(rep(0,77),rep(1,23)))})))})
+    active_bias <<- rep(0, num_libraries)
+    active_bias_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_libraries,function(y){return(c(rep(0,77),rep(1,23)))})))})
+    lib_bias_matrix <<- matrix(0, nrow = num_transcripts, ncol = num_libraries)
+
 
     # gene-wise variance
     s0_mu <<- s0_mu

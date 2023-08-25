@@ -54,11 +54,29 @@ zigzag$methods(
 
   },
 
+  computeInactiveBiasProbability = function(x){
+
+    lnp <- sum(dnorm(x, 0, 1, log = TRUE))
+
+    return(lnp)
+
+  },
+
+  computeActiveBiasProbability = function(x){
+
+    lnp <- sum(dnorm(x, 0, 1, log = TRUE))
+
+    return(lnp)
+
+  },
+
+
   computeXgLikelihood = function(xg, yg, sx, px,
                                  spike_allocation = inactive_spike_allocation,
                                  spike_prob = spike_probability,
                                  nd_spike = no_detect_spike,
-                                 recover_x = FALSE) { # returns a vecor of log-likelihoods, one for each gene x given y and Sg and p_x
+                                 recover_x = FALSE,
+                                 bias_matrix = lib_bias_matrix) { # returns a vecor of log-likelihoods, one for each gene x given y and Sg and p_x
 
     xg <- as.matrix(xg)
     px <- as.matrix(px)
@@ -78,11 +96,11 @@ zigzag$methods(
 
         detected_idx <- which(xg[outspike_idx, lib] != inf_tol)
 
-
         ll[not_detected_idx] <- log(1 - px[outspike_idx,lib][not_detected_idx])
 
         ll[detected_idx] <- log(px[outspike_idx,lib][detected_idx]) +
-          dnorm(xg[outspike_idx,lib][detected_idx], yg[outspike_idx][detected_idx], sqrt(sx[outspike_idx][detected_idx]), log=TRUE)
+          dnorm(xg[outspike_idx,lib][detected_idx], yg[outspike_idx][detected_idx] + bias_matrix[outspike_idx,lib][detected_idx],
+                sqrt(sx[outspike_idx][detected_idx]), log=TRUE)
 
 
         return(ll)
@@ -105,7 +123,8 @@ zigzag$methods(
         ll[not_detected_idx] <- log(1 - px[outspike_idx,lib][not_detected_idx])
 
         ll[detected_idx] <- log(px[outspike_idx,lib][detected_idx]) +
-          dnorm(xg[outspike_idx,lib][detected_idx], yg[outspike_idx][detected_idx], sqrt(sx[outspike_idx][detected_idx]), log=TRUE)
+          dnorm(xg[outspike_idx,lib][detected_idx], yg[outspike_idx][detected_idx] + bias_matrix[outspike_idx,lib][detected_idx],
+                sqrt(sx[outspike_idx][detected_idx]), log=TRUE)
 
         return(ll)
 

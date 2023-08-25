@@ -236,8 +236,9 @@ zigzag$methods(
 
     if(num_libraries > 2){
 
-      proposed_xgLikelihood <- XgLikelihood + .self$computeXgLikelihood(Xg[,randlib], Yg, variance_g, proposed_p_x[,randlib]) -
-        .self$computeXgLikelihood(Xg[,randlib], Yg, variance_g, p_x[,randlib])
+      proposed_xgLikelihood <- XgLikelihood +
+        .self$computeXgLikelihood(Xg[,randlib], Yg, variance_g, proposed_p_x[,randlib], bias_matrix = lib_bias_matrix[,randlib, drop = F]) -
+        .self$computeXgLikelihood(Xg[,randlib], Yg, variance_g, p_x[,randlib], bias_matrix = lib_bias_matrix[,randlib, drop = F])
 
     }else{
 
@@ -790,6 +791,123 @@ zigzag$methods(
     }
 
   },
+
+  mhInactiveBias = function(recover_x = FALSE, tune = FALSE){
+    ### for each distribution parameter: propose and accept new value with MH algo
+
+    rand_lib <- sample(seq(num_libraries), 1)
+
+    inactive_bias_proposed <- inactive_bias
+
+    # joint slide constraining the sum of biases to = 0 (the mean of the biases is non-identifiable with the mean of Yg)
+    shift = rnorm(1, 0, tuningParam_inactive_bias[rand_lib])
+
+    inactive_bias_proposed[rand_lib] <- inactive_bias[rand_lib] + shift
+
+    inactive_bias_proposed[-rand_lib] <- inactive_bias_proposed[-rand_lib] - shift/(num_libraries - 1)
+
+    lib_bias_matrix_proposed <- .self$get_lib_bias_matrix(ib = inactive_bias_proposed, ab = active_bias)
+
+    pp = .self$computeInactiveBiasProbability(inactive_bias_proposed)
+
+    pc = .self$computeInactiveBiasProbability(inactive_bias)
+
+    if(length(inactive_idx) > 0){
+
+      Lp = sum(.self$computeXgLikelihood(Xg[out_spike_idx,], Yg[out_spike_idx], variance_g, p_x[out_spike_idx,],
+                                         spike_allocation = inactive_spike_allocation[out_spike_idx],
+                                         nd_spike = no_detect_spike[out_spike_idx],
+                                         bias_matrix = lib_bias_matrix_proposed[out_spike_idx,]))
+      Lc = sum(.self$computeXgLikelihood(Xg[out_spike_idx,], Yg[out_spike_idx], variance_g, p_x[out_spike_idx,],
+                                         spike_allocation = inactive_spike_allocation[out_spike_idx],
+                                         nd_spike = no_detect_spike[out_spike_idx],
+                                         bias_matrix = lib_bias_matrix[out_spike_idx,]))
+
+    }else{
+
+      Lp = 0
+      Lc = 0
+
+    }
+
+    R = temperature * (Lp - Lc + pp - pc)
+
+
+    if(tune) inactive_bias_trace[[1]][[rand_lib]] <<- c(inactive_bias_trace[[1]][[rand_lib]][-1],0)
+
+    if(recover_x) recover()
+
+    if(log(runif(1)) < R){
+
+      inactive_bias <<- inactive_bias_proposed
+
+      lib_bias_matrix <<- lib_bias_matrix_proposed
+
+      if(tune) inactive_bias_trace[[1]][[rand_lib]][100] <<- 1
+
+    }
+
+  },
+
+  mhActiveBias = function(recover_x = FALSE, tune = FALSE){
+    ### for each distribution parameter: propose and accept new value with MH algo
+
+    rand_lib <- sample(seq(num_libraries), 1)
+
+    active_bias_proposed <- active_bias
+
+    shift = rnorm(1, 0, tuningParam_inactive_bias[rand_lib])
+
+    active_bias_proposed[rand_lib] <- active_bias[rand_lib] + shift
+
+    active_bias_proposed[-rand_lib] <- active_bias_proposed[-rand_lib] - shift/(num_libraries - 1)
+
+    lib_bias_matrix_proposed <- .self$get_lib_bias_matrix(ib = inactive_bias, ab = active_bias_proposed)
+
+    pp = .self$computeActiveBiasProbability(active_bias_proposed)
+
+    pc = .self$computeActiveBiasProbability(active_bias)
+
+    if(length(inactive_idx) > 0){
+
+      Lp = sum(.self$computeXgLikelihood(Xg[out_spike_idx,], Yg[out_spike_idx], variance_g, p_x[out_spike_idx,],
+                                         spike_allocation = inactive_spike_allocation[out_spike_idx],
+                                         nd_spike = no_detect_spike[out_spike_idx],
+                                         bias_matrix = lib_bias_matrix_proposed[out_spike_idx,]))
+      Lc = sum(.self$computeXgLikelihood(Xg[out_spike_idx,], Yg[out_spike_idx], variance_g, p_x[out_spike_idx,],
+                                         spike_allocation = inactive_spike_allocation[out_spike_idx],
+                                         nd_spike = no_detect_spike[out_spike_idx],
+                                         bias_matrix = lib_bias_matrix[out_spike_idx,]))
+
+    }else{
+
+      Lp = 0
+      Lc = 0
+
+    }
+
+    R = temperature * (Lp - Lc + pp - pc)
+
+
+    if(tune) active_bias_trace[[1]][[rand_lib]] <<- c(active_bias_trace[[1]][[rand_lib]][-1],0)
+
+    if(recover_x) recover()
+
+    if(log(runif(1)) < R){
+
+      active_bias <<- active_bias_proposed
+
+      lib_bias_matrix <<- lib_bias_matrix_proposed
+
+      if(tune) active_bias_trace[[1]][[rand_lib]][100] <<- 1
+
+    }
+
+  },
+
+
+
+
 
 
   ###################
