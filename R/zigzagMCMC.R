@@ -65,10 +65,13 @@ zigzag$methods(
     # Xg level 1 (lower level) and Yg level 2 (upper level) #
     #########################################################
     posXg_rowMeans <- apply(Xg, 1, function(g) if(max(g) > -Inf) mean(g[g > -Inf]) else -Inf)
-    xg_colmeans <- apply(Xg, 2, function(x) mean(x[x > -Inf]))
-    grandmean_xg_colmeans <- mean(xg_colmeans)
-    scaled_xg <- sapply(seq(num_libraries), function(lib) Xg[,lib] - xg_colmeans[lib] + grandmean_xg_colmeans)
-
+    if(library_bias){
+      scaled_xg = Xg
+    }else{
+      xg_colmeans <- apply(Xg, 2, function(x) mean(x[x > -Inf]))
+      grandmean_xg_colmeans <- mean(xg_colmeans)
+      scaled_xg <- sapply(seq(num_libraries), function(lib) Xg[,lib] - xg_colmeans[lib] + grandmean_xg_colmeans)
+    }
     num_libs_plot_postpred <- num_libraries
     if(num_libs_plot_postpred > 25) num_libs_plot_postpred = 25
 
@@ -106,23 +109,29 @@ zigzag$methods(
       d_posXg_rowMeans = density(posXg_rowMeans)
       d_posYg_rowMeans = density(Yg[out_spike_idx])
 
-      post_pred_plot_xlims = c(min(posXg_rowMeans[posXg_rowMeans > -Inf]) - 1, max(posXg_rowMeans) + 1)
+      post_pred_plot_xlims = c(min(Yg[out_spike_idx]) - 1, max(Yg[out_spike_idx]) + 1)
 
       pdf(file = paste0(output_directory, "/", mcmc_prefixdir, "/", prefix, ".L2_post_pred.pdf"))
 
-      y_max =  max(c(d_posXg_rowMeans$y, d_posYg_rowMeans$y))
+      y_max =  max(d_posYg_rowMeans$y)
 
+      layout(matrix(seq(2),nrow=2))
       plot(NULL, xlim = post_pred_plot_xlims, main = "Upper level",
-           ylim = c(-1.2 * y_max, 1.2 * y_max),
+           ylim = c(0, 1.2 * y_max),
            xlab = "log Expression", ylab = "density")
-      abline(h=0, lwd = 2)
 
       legend(post_pred_plot_xlims[1], 1.2 * y_max, legend = c("Post. Y", "Sim. Y"),
              col = c("orange", "green"), lty = 1, lwd = 3)
-      legend(post_pred_plot_xlims[1],  -y_max, legend = c("Post.Y - Sim.Y"),
-             col = c("red"), lty = 1, lwd = 3)
-
       post_pred_L2_plot_device = dev.cur()
+
+      plot(NULL, xlim = post_pred_plot_xlims, main = "Upper level",
+           ylim = c(0, 1.2 * y_max),
+           xlab = "log Expression", ylab = "density")
+      legend(post_pred_plot_xlims[1], 1.2 * y_max, legend = c("Post. inactive Y", "Post. active Y"),
+             col = c("dodgerblue", "tomato"), lty = 1, lwd = 3)
+      post_L2_plot_device = dev.cur()
+
+
 
     } # end post predictive plotting setup
 
