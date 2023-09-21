@@ -66,7 +66,9 @@ zigzag$methods(
 
     dir_val = x/bias_scalor + 1/num_libraries
 
-    lnp = log(d_dirichlet(dir_val, rep(bias_alpha, num_libraries)))
+    log_jacobian = -num_libraries * log(bias_scalor)
+
+    lnp = log(d_dirichlet(dir_val, rep(bias_alpha, num_libraries))) + log_jacobian
 
     return(lnp)
 
