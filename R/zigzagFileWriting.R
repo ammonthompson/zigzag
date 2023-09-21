@@ -28,17 +28,18 @@ zigzag$methods(
     }
 
     # library inactive and active biases
-    for(param in seq(num_libraries)){
+    if(library_bias){
+      for(param in seq(num_libraries)){
 
-      model_paramlist[length(model_paramlist)+1] <<- paste0("inactive_bias_library_", param)
+        model_paramlist[length(model_paramlist)+1] <<- paste0("inactive_bias_library_", param)
 
+      }
+      for(param in seq(num_libraries)){
+
+        model_paramlist[length(model_paramlist)+1] <<- paste0("active_bias_library_", param)
+
+      }
     }
-    for(param in seq(num_libraries)){
-
-      model_paramlist[length(model_paramlist)+1] <<- paste0("active_bias_library_", param)
-
-    }
-
 
     write.table(matrix(model_paramlist,nrow=1),
                 file=paste0(output_directory, "/", prefix,"_model_parameters.log"), col.names = F, row.names = F, sep="\t", quote = F)
@@ -92,7 +93,7 @@ zigzag$methods(
       Ygrow[length(Ygrow)+1] <- weight_within_active[k]
     }
 
-    Ygrow <- c(Ygrow, inactive_bias, active_bias)
+    if(library_bias) Ygrow <- c(Ygrow, inactive_bias, active_bias)
 
     Ygrow=round(as.numeric(Ygrow),digits=4)
     write.table(matrix(c(gen, Ygrow),nrow=1),

@@ -1,11 +1,11 @@
 zigzag$methods(
 
-  get_lib_bias_matrix = function(ib = inactive_bias, ab = active_bias){
+  get_lib_bias_matrix = function(ib = inactive_bias, ab = active_bias, i_idx = inactive_idx, a_idx = active_idx){
 
     lb_matrix <- matrix(0, nrow = num_transcripts, ncol = num_libraries)
     for(lib in seq(num_libraries)){
-      lb_matrix[inactive_idx,lib] <- ib[lib]
-      lb_matrix[active_idx,lib] <- ab[lib]
+      lb_matrix[i_idx,lib] <- ib[lib]
+      lb_matrix[a_idx,lib] <- ab[lib]
      }
 
     return(lb_matrix)
@@ -148,7 +148,8 @@ zigzag$methods(
 
     # p_x <<- matrix(sapply(1:num_libraries, function(lib){return(1 - exp(-alpha_r[lib] * gene_lengths * exp(Yg)))}),
     #                nrow = num_transcripts)
-    p_x <<- 1 - exp(-outer((gene_lengths * exp(Yg)), alpha_r))
+    # p_x <<- 1 - exp(-outer((gene_lengths * exp(Yg)), alpha_r))
+    p_x <<- .self$get_px()
 
   },
 
@@ -158,14 +159,11 @@ zigzag$methods(
 
   },
 
-  get_px = function(falpha_r = alpha_r, yy = Yg, gl = gene_lengths, recover_x = F){
-
-    #num_libs = length(falpha_r)
+  get_px = function(falpha_r = alpha_r, yy = Yg, gl = gene_lengths, recover_x = F, bias_m = lib_bias_matrix){
 
     if(recover_x) recover()
-    #return(matrix(sapply(1:num_libs, function(lib){return(1 - exp(-falpha_r[lib] * gl * exp(yy)))}), nrow = length(yy)))
-    #return(sapply(1:num_libs, function(lib){return(1 - exp(-falpha_r[lib] * gl * exp(yy)))}))
-    return(1 - exp(-outer((gl * exp(yy)), falpha_r)))
+    # return(1 - exp(-outer((gl * exp(yy)), falpha_r)))
+    return(1 - exp(-(gl * exp(yy + bias_m)) * matrix(falpha_r, nrow = length(yy), ncol = length(falpha_r), byrow = T)))
 
   },
 
@@ -212,9 +210,9 @@ zigzag$methods(
                                        mintuningParam = 0.0001, maxtuningParam = 5)
     tuningParam_variance_g <<- .self$x_tune(variance_g_trace, tuningParam_variance_g,
                                          burnin_target_acceptance_rate,
-                                         mintuningParam = 0.0001, maxtuningParam = 10)
+                                         mintuningParam = 0.0001, maxtuningParam = 100)
     tuningParam_yg <<- .self$x_tune(Yg_trace, tuningParam_yg, burnin_target_acceptance_rate,
-                                    mintuningParam = 0.0001, maxtuningParam = 10)
+                                    mintuningParam = 0.0001, maxtuningParam = 100)
 
     tuningParam_multi_sigma <<- .self$x_tune(multi_sigma_trace[[1]][[1]], tuningParam_multi_sigma,
                                              burnin_target_acceptance_rate,
@@ -245,8 +243,17 @@ zigzag$methods(
 
     }
 
-    spike_probability_tuningParam <<- 1/.self$x_tune(spike_probability_trace[[1]][[1]], 1/spike_probability_tuningParam, burnin_target_acceptance_rate, maxtuningParam = 1/10, mintuningParam = 1/100000)
-    mixture_weight_tuningParam <<- 1/.self$x_tune(mixture_weight_trace[[1]][[1]], 1/mixture_weight_tuningParam, burnin_target_acceptance_rate, maxtuningParam = 1/10, mintuningParam = 1/1000000)
+    spike_probability_tuningParam <<- 1/.self$x_tune(spike_probability_trace[[1]][[1]], 1/spike_probability_tuningParam, burnin_target_acceptance_rate, maxtuningParam = 1/10, mintuningParam = 1/10000000)
+    mixture_weight_tuningParam <<- 1/.self$x_tune(mixture_weight_trace[[1]][[1]], 1/mixture_weight_tuningParam, burnin_target_acceptance_rate, maxtuningParam = 1/10, mintuningParam = 1/100000000)
+
+    tuningParam_inactive_bias <<- 1/.self$x_tune(inactive_bias_trace[[1]][[1]], 1/tuningParam_inactive_bias, target_rate = burnin_target_acceptance_rate/2,
+                                                 maxtuningParam = 1/10, mintuningParam = 1/1000000000)
+    tuningParam_active_bias <<- 1/.self$x_tune(active_bias_trace[[1]][[1]], 1/tuningParam_active_bias, target_rate = burnin_target_acceptance_rate/2,
+                                               maxtuningParam = 1/10, mintuningParam = 1/1000000000)
+
+#
+#     # print(tuningParam_variance_g[1:10])
+#     write.table(matrix(tuningParam_variance_g, nrow = 1), file = "check_variance_g_tuningparams.txt", sep = "\t", quote = F, append = T, row.names = F, col.names = F )
 
   },
 

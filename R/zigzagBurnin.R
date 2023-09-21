@@ -58,12 +58,12 @@ zigzag$methods(
   ################
 
   while(j <= ngen ){
-    .self$mhInactiveBias() ## TESTING
-    .self$mhActiveBias() ## TESTING
 
    end = FALSE
    for(p in sample(seq(plist_length), plist_length, replace = TRUE, prob = proposal_probs)){
      proposal_list[[p]](tune = TRUE);
+
+     if(min(XgLikelihood) == -Inf){print(p); recover()}
 
      if(is.na(sum(Yg)) || is.na(sum(variance_g)) ||is.na(sum(tuningParam_yg)) || is.na(sum(inactive_spike_allocation)) ||
         is.nan(sum(inactive_spike_allocation)) || is.na(sum(allocation_active_inactive))||

@@ -157,8 +157,10 @@ zigzag$methods(
     lines(plotdx, exp(s0 + s1*plotdx),lwd = 2, col="red")
 
     #plot prob detection curves
-    plot(seq(-10,10,by=0.1), .self$get_px(yy = seq(-10,10,by=0.1), gl = 1)[,1],type="l",ylim=c(0,1), ylab = "prob. detection", xlab = "log expression", col=rgb(0,0,0,0.1))
-    sapply(1:num_libraries,function(x){lines(seq(-10,10,by=0.1), .self$get_px(yy = seq(-10,10,by=0.1), gl = 1)[,x])})
+    yyplotvals = seq(-10,10,by=0.1)
+    plot(yyplotvals, .self$get_px(yy = yyplotvals, gl = 1, bias_m = matrix(0, nrow = length(yyplotvals), ncol = num_libraries) )[,1],
+         type="l",ylim=c(0,1), ylab = "prob. detection", xlab = "log expression", col=rgb(0,0,0,0.1))
+    sapply(1:num_libraries,function(x){lines(yyplotvals, .self$get_px(yy = yyplotvals, gl = 1, bias_m = matrix(0, nrow = length(yyplotvals), ncol = num_libraries) )[,x])})
 
     #plot(mean Xg, Yg relationship)
     rawdat<-Xg; rawdat[rawdat == -Inf] <- -15

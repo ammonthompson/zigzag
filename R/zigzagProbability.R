@@ -54,22 +54,23 @@ zigzag$methods(
 
   },
 
-  computeInactiveBiasProbability = function(x){
+  computeBiasMatrixProbability = function(i_idx, a_idx){
+    lnp <- c()
+    lnp[i_idx] <- computeBiasProbability(inactive_bias)
+    lnp[a_idx] <- computeBiasProbability(active_bias)
 
-    lnp <- sum(dnorm(x, 0, 1, log = TRUE))
+    return(lnp)
+  },
+
+  computeBiasProbability = function(x){
+
+    dir_val = x/bias_scalor + 1/num_libraries
+
+    lnp = log(d_dirichlet(dir_val, rep(bias_alpha, num_libraries)))
 
     return(lnp)
 
   },
-
-  computeActiveBiasProbability = function(x){
-
-    lnp <- sum(dnorm(x, 0, 1, log = TRUE))
-
-    return(lnp)
-
-  },
-
 
   computeXgLikelihood = function(xg, yg, sx, px,
                                  spike_allocation = inactive_spike_allocation,
@@ -80,6 +81,7 @@ zigzag$methods(
 
     xg <- as.matrix(xg)
     px <- as.matrix(px)
+    bias_matrix <- as.matrix(bias_matrix)
 
     inspike_idx <- which(spike_allocation == 1)
     outspike_idx <- which(spike_allocation == 0)

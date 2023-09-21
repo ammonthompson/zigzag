@@ -254,6 +254,9 @@ zigzag <- setRefClass(
     alpha_r_trace = "list",
 
     library_bias = "logical",
+    bias_alpha = "numeric",
+    bias_scalor = "numeric",
+    bias_var = "numeric",
     inactive_bias = "numeric",
     inactive_bias_trace = "list",
     active_bias = "numeric",

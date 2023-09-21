@@ -101,7 +101,7 @@ zigzag$methods(
     par("mai" = 0.5 * opar)
     nparams <- ncol(mcmc_df) - num_libraries + 1 -
       (shared_active_variances) * (num_active_components - 1) -
-      1 - (num_active_components == 1)
+      1 - (num_active_components == 1) - ifelse(library_bias, 2 * (num_libraries - 1), 0)
     plot_rows <- ceiling(sqrt(nparams))
     plot_cols <- nparams/plot_rows - (nparams/plot_rows)%%1 + ((nparams/plot_rows)%%1 > 0)
     layout(matrix(seq(plot_cols * plot_rows), ncol = plot_cols, nrow = plot_rows, byrow = T))
@@ -272,8 +272,6 @@ zigzag$methods(
       ddd <- density(post[,k])
       density_list_x[[k]] <- ddd$x
       density_list_y[[k]] <- ddd$y
-
-
     }
 
     range = c(min(post) - (max(post) - min(post)),
@@ -293,6 +291,64 @@ zigzag$methods(
     # scale prior
     prior_sf = max(maxDensity_amongLibs) * 0.25 / max(prior_density)
     lines(prior_xx, prior_density * prior_sf, type = "l", lty = 2)
+
+
+    # inactive and active library bias
+    if(library_bias){
+      # inactive bias
+      post = mcmc_df[,grepl(pattern = "inactive_bias", x = colnames(mcmc_df)), drop = F]
+      density_list_x = vector(mode = "list", length = num_libraries)
+      density_list_y = vector(mode = "list", length = num_libraries)
+      for(k in seq(num_libraries)){
+        ddd <- density(post[,k])
+        density_list_x[[k]] <- ddd$x
+        density_list_y[[k]] <- ddd$y
+      }
+      range = c(min(post) - (max(post) - min(post)),
+                max(post) + (max(post) - min(post)))
+
+      maxDensity_amongLibs <- max(unlist(density_list_y))
+
+      plot(density_list_x[[1]], density_list_y[[1]], type = "l",
+           xlim = range, ylim = c(0, maxDensity_amongLibs),
+           xlab = "", ylab = "", main = "inactive_bias", cex.main = 0.75)
+
+      for(k in c(2:num_libraries))
+        lines(density_list_x[[k]], density_list_y[[k]])
+
+      prior_xx = seq(range[1], range[2], by = abs(diff(range))/100)
+      prior_density = dbeta(prior_xx/bias_scalor + 1/num_libraries, 100, (num_libraries - 1) * 100)
+      # scale prior
+      prior_sf = max(maxDensity_amongLibs) * 0.25 / max(prior_density)
+      lines(prior_xx, prior_density * prior_sf, type = "l", lty = 2)
+
+      # active bias
+      post = mcmc_df[,grepl(pattern = "^active_bias", x = colnames(mcmc_df)), drop = F]
+      density_list_x = vector(mode = "list", length = num_libraries)
+      density_list_y = vector(mode = "list", length = num_libraries)
+      for(k in seq(num_libraries)){
+        ddd <- density(post[,k])
+        density_list_x[[k]] <- ddd$x
+        density_list_y[[k]] <- ddd$y
+      }
+      range = c(min(post) - (max(post) - min(post)),
+                max(post) + (max(post) - min(post)))
+
+      maxDensity_amongLibs <- max(unlist(density_list_y))
+
+      plot(density_list_x[[1]], density_list_y[[1]], type = "l",
+           xlim = range, ylim = c(0, maxDensity_amongLibs),
+           xlab = "", ylab = "", main = "active_bias", cex.main = 0.75)
+
+      for(k in c(2:num_libraries))
+        lines(density_list_x[[k]], density_list_y[[k]])
+
+      prior_xx = seq(range[1], range[2], by = abs(diff(range))/100)
+      prior_density = dbeta(prior_xx/bias_scalor + 1/num_libraries, 100, (num_libraries - 1) * 100)
+      # scale prior
+      prior_sf = max(maxDensity_amongLibs) * 0.25 / max(prior_density)
+      lines(prior_xx, prior_density * prior_sf, type = "l", lty = 2)
+    }
 
 
     par("mai" = opar)
