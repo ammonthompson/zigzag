@@ -15,6 +15,13 @@ params = as.numeric(df[,1])
 
 num_libs = params[4]
 
+
+# lib bias testing
+inactive_bias_x <- c(2.03, -0.5, -0.73, -0.8) * 0
+active_bias_x <- c(-2.1, 2.5, -1.2, 0.8) * 0
+# inactive_bias_x <- rep(0,4)
+# active_bias_x <- rep(0,4)
+
 #### Functions
 get_sigma2_g = function(gene){
 
@@ -25,10 +32,10 @@ get_sigma2_g = function(gene){
 }
 
 
-get_p_x = function(gene, lib, gl){
+get_p_x = function(gene, lib, gl, bias){
 
-  return(1 - exp(-alpha_rx[lib] * gl * exp(gene)))
-
+  # return(1 - exp(-alpha_rx[lib] * gl * exp(gene)))
+  return(1 - exp(-alpha_rx[lib] * gl * exp(gene + bias)))
 }
 
 prior_settings_file = paste0(output_dir, file_prefix, ".parameterValues")
@@ -105,13 +112,15 @@ for(i in seq(params[17])){
 	### simulate Xg
 	sigma_gx <- get_sigma2_g(sim_yg)
 
-	sim_xg = sapply(1:num_libs, function(x){return(rnorm(length(sim_yg), sim_yg, sqrt(sigma_gx)))})
-	#one lib is an outlier for many genes
-	# sim_xg[sample(seq(nrow(sim_xg)), 2000, replace = F),1] = rnorm(2000, 4, 2)
+	### library biases
+	lib_bias_matrix <- rbind(matrix(inactive_bias_x, nrow = num_inactive - num_spike, ncol = num_libs, byrow = T),
+	                         matrix(active_bias_x, nrow = num_a1 + num_a2, ncol = num_libs, byrow = T))
+
+	sim_xg = sapply(1:num_libs, function(x){return(rnorm(length(sim_yg), sim_yg, sqrt(sigma_gx)))}) + lib_bias_matrix
 
 	sapply(1:num_libs, function(lib){
 
-	  p_x = get_p_x(sim_yg, lib, sim_rel_gl[(num_spike + 1):total])
+	  p_x = get_p_x(sim_yg, lib, sim_rel_gl[(num_spike + 1):total], lib_bias_matrix[,lib])
 
 	  sim_xg[(runif(length(sim_yg)) < (1 - p_x)), lib] <<- -Inf  #because the in-spike genes will be place at the beginning of sim_xg/yg
 

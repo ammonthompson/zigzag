@@ -242,7 +242,7 @@ zigzag$methods(
 
     }else{
 
-      proposed_xgLikelihood <- .self$computeXgLikelihood(Xg, Yg, variance_g, proposed_p_x)
+      proposed_xgLikelihood <- .self$computeXgLikelihood(Xg, Yg, variance_g, proposed_p_x, bias_matrix = lib_bias_matrix)
 
     }
 
@@ -980,7 +980,43 @@ zigzag$methods(
 
   },
 
+  mhSharedActiveInactiveVariance = function(recover_x = FALSE, tune = FALSE){
 
+    # inactive and active components share variance. Propose new active variance and set inactive equal
+
+    active_variances_proposed <<- rep(10^(.self$two_boundary_slide_move(
+      log(active_variances[1], 10), active_variances_prior_log_min, active_variances_prior_log_max, active_variance_tuningParam[1])),
+      num_active_components)
+
+    if(tune) active_variances_trace[[1]][[1]][1,] <<- c(active_variances_trace[[1]][[1]][1,-1],0)
+
+    active_Lp = sum(.self$computeActiveLikelihood(Yg[active_idx], allocation_within_active[[1]][active_idx], active_means, active_variances_proposed, inactive_spike_allocation[active_idx]))
+    active_Lc = sum(.self$computeActiveLikelihood(Yg[active_idx], allocation_within_active[[1]][active_idx], active_means, active_variances, inactive_spike_allocation[active_idx]))
+
+    inactive_Lp = sum(.self$computeInactiveLikelihood(Yg[inactive_idx], spike_probability, inactive_means, active_variances_proposed[1], inactive_spike_allocation[inactive_idx]))
+    inactive_Lc = sum(.self$computeInactiveLikelihood(Yg[inactive_idx], spike_probability, inactive_means, inactive_variances, inactive_spike_allocation[inactive_idx]))
+
+    active_pp = .self$computeActiveVariancesPriorProbability(active_variances_proposed)
+    active_pc = .self$computeActiveVariancesPriorProbability(active_variances)
+
+    inactive_pp = .self$computeActiveVariancesPriorProbability(active_variances_proposed)
+    inactive_pc = .self$computeActiveVariancesPriorProbability(active_variances)
+
+    R = temperature * (active_Lp + inactive_Lp + active_pp + inactive_pp - active_Lc - inactive_Lc - active_pc - inactive_pc)
+
+    if(recover_x) recover()
+
+
+    if(log(runif(1)) < R){
+
+        active_variances <<- rep(active_variances_proposed[1], num_active_components)
+
+        inactive_variances <<- active_variances_proposed[1]
+
+        if(tune) active_variances_trace[[1]][[1]][1,100] <<- 1
+
+    }
+  },
 
 
 

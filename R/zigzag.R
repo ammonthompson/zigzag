@@ -313,6 +313,7 @@ zigzag <- setRefClass(
     active_means = "numeric",
 
     shared_active_variances = "logical",
+    shared_active_inactive_variances = "logical",
     active_variances = "numeric",
     active_variances_proposed = "numeric",
     active_variances_trace = "list",
