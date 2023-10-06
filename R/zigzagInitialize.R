@@ -19,6 +19,7 @@ zigzag$methods(
                         active_variances_prior_min = 0.01,
                         active_variances_prior_max = 5,
                         shared_active_variances = TRUE,
+                        shared_active_inactive_variances = TRUE,
                         output_directory = "output",
                         multi_ta = FALSE,
                         threshold_a = "auto",
@@ -35,8 +36,16 @@ zigzag$methods(
                         alpha_r_shape = 1,
                         alpha_r_rate = 1/10,
                         active_gene_set = NULL,
+                        library_bias = FALSE,
+                        bias_var = 1,
                         ...) {
 
+    shared_active_inactive_variances <<- shared_active_inactive_variances
+    if(shared_active_inactive_variances){
+      shared_active_variances <<- TRUE
+    }else{
+      shared_active_variances <<- shared_active_variances
+    }
     ############################
     ## Set up data matrix, Xg ##
     ############################
@@ -82,7 +91,7 @@ zigzag$methods(
 
       num_acomps <- num_active_components
 
-      if(any(is.character(threshold_a)) || threshold_a == "auto"){
+      if(any(is.character(threshold_a), threshold_a == "auto")){
 
         auto_thresholds_list <- .self$findthresholds(rmedians_noInf, num_acomps)
 
@@ -108,7 +117,7 @@ zigzag$methods(
 
       }
 
-      if(any(is.character(threshold_i)) || threshold_i == "auto"){
+      if(any(is.character(threshold_i), threshold_i == "auto")){
 
         auto_thresholds_list <- .self$findthresholds(rmedians_noInf, num_acomps)
 
@@ -228,13 +237,14 @@ zigzag$methods(
     tuningParam_variance_g <<- rep(0.5, num_transcripts)
     tuningParam_multi_sigma <<- 0.5
     tuningParam_sigma_mu <<- 0.5
+    tuningParam_inactive_bias <<- 10000
+    tuningParam_active_bias <<- 10000
 
 
 
     #############################################################
     ## Set up parameter proposal relative probabilities #########
     #############################################################
-
 
     proposal_list <<- list(.self$gibbsMixtureWeights,
                            .self$gibbsAllocationActiveInactive,
@@ -250,27 +260,32 @@ zigzag$methods(
                            .self$mhTau,
                            .self$mhSg,
                            .self$mhS0Tau,
-                           .self$mhP_x )
+                           .self$mhP_x,
+                           .self$mhInactiveBias,
+                           .self$mhActiveBias)
 
+    if(library_bias) proposal_list[[2]]                      <<- .self$gibbsAllocationActiveInactiveLibBias
+    if(shared_active_inactive_variances) proposal_list[[7]]  <<- .self$mhSharedActiveInactiveVariance
 
     is2Libs <- (num_libraries == 2) * 0.5 # use this variable to upweight probability of proposing L1 variance params
 
     if(num_libraries > 1 ){
 
       proposal_probs <<- c(8, 60, 10,                                                      ### weights, alloc active_inactive, alloc within_active
-                           12, 15,                                                         ### i_mean, i_var
-                           10,                                                              ### a_mean
+                           12, 15 * (1 - shared_active_inactive_variances),                ### i_mean, i_var
+                           10,                                                             ### a_mean
                            8 + 4 * (1 - shared_active_variances),                          ### a_var
                            5, 10,                                                          ### spike prob, spike alloc
                            c(2, 2) + is2Libs + 1 * (num_transcripts < 15000),              ### Yg, sigm_g
                            c(6, 6, 6),                                                     ### tau, Sg, s0tau
-                           num_libraries * 1.25)                                           ### p_x
+                           num_libraries * 1.25,                                           ### p_x
+                           c(10,10) * library_bias)                                        ### library bias
 
     }else{
-
+      # not implemented yet
       proposal_probs <<- c(8, 60,10,                                                      ### weights, alloc active_inactive, alloc within_active
-                           12, 15,                                                         ### i_mean, i_var
-                           8,                                                           ### a_mean
+                           12, 15 * (1 - shared_active_inactive_variances),               ### i_mean, i_var
+                           8,                                                             ### a_mean
                            4 + 4 * (1 - shared_active_variances),                         ### a_var
                            5, 0,                                                          ### spike prob, spike alloc
                            c(1, 1) * 0,                                                   ### Yg, sigm_g
@@ -296,26 +311,6 @@ zigzag$methods(
     weight_active_prob <<- .self$computeActiveWeightPriorProbability(weight_active)
     weight_active_prob_proposed <<- .self$computeActiveWeightPriorProbability(weight_active_proposed)
 
-    # inactive means
-    inactive_means_prior_shape <<- inactive_means_prior_shape
-    inactive_means_prior_rate  <<- inactive_means_prior_rate
-    inactive_means <<- thresh_i - rgamma(1, shape = 1, rate = 1)
-
-    inactive_means_proposed <<- inactive_means
-    inactive_means_prob <<- .self$computeInactiveMeansPriorProbability(inactive_means)
-    inactive_means_prob_proposed <<- .self$computeInactiveMeansPriorProbability(inactive_means_proposed)
-    inactive_means_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
-
-    # inactive variances
-    inactive_variances_prior_min <<- inactive_variances_prior_min
-    inactive_variances_prior_max <<- inactive_variances_prior_max
-    inactive_variances_prior_log_min <<- log(inactive_variances_prior_min, 10)
-    inactive_variances_prior_log_max <<- log(inactive_variances_prior_max, 10)
-    inactive_variances <<- 10^(runif(1, inactive_variances_prior_log_min, inactive_variances_prior_log_max))
-    inactive_variances_proposed <<- inactive_variances
-    inactive_variances_prob <<- .self$computeInactiveVariancesPriorProbability(inactive_variances)
-    inactive_variances_prob_proposed <<- .self$computeInactiveVariancesPriorProbability(inactive_variances_proposed)
-    inactive_variances_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
 
     # spike priors
     spike_prior_shape_1 <<- spike_prior_shape_1
@@ -343,7 +338,6 @@ zigzag$methods(
     active_variances_prior_log_min <<- log(active_variances_prior_min, 10)
     active_variances_prior_log_max <<- log(active_variances_prior_max, 10)
 
-    shared_active_variances <<- shared_active_variances
     if(shared_active_variances){
 
       active_variances <<- rep(10^(runif(1, active_variances_prior_log_min, active_variances_prior_log_max)), num_acomps)
@@ -362,6 +356,33 @@ zigzag$methods(
 
     }
 
+    # inactive means
+    inactive_means_prior_shape <<- inactive_means_prior_shape
+    inactive_means_prior_rate  <<- inactive_means_prior_rate
+    inactive_means <<- thresh_i - rgamma(1, shape = 1, rate = 1)
+
+    inactive_means_proposed <<- inactive_means
+    inactive_means_prob <<- .self$computeInactiveMeansPriorProbability(inactive_means)
+    inactive_means_prob_proposed <<- .self$computeInactiveMeansPriorProbability(inactive_means_proposed)
+    inactive_means_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
+
+    # inactive variances
+    inactive_variances_prior_min <<- inactive_variances_prior_min
+    inactive_variances_prior_max <<- inactive_variances_prior_max
+    inactive_variances_prior_log_min <<- log(inactive_variances_prior_min, 10)
+    inactive_variances_prior_log_max <<- log(inactive_variances_prior_max, 10)
+    if(shared_active_inactive_variances){
+      inactive_variances <<- active_variances[1]
+    }else{
+      inactive_variances <<- 10^(runif(1, inactive_variances_prior_log_min, inactive_variances_prior_log_max))
+    }
+    inactive_variances_proposed <<- inactive_variances
+    inactive_variances_prob <<- .self$computeInactiveVariancesPriorProbability(inactive_variances)
+    inactive_variances_prob_proposed <<- .self$computeInactiveVariancesPriorProbability(inactive_variances_proposed)
+    inactive_variances_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
+
+
+    # mixture weights within active component
     weight_within_active_alpha <<- rep(weight_active_shape_1/num_acomps, num_acomps)
 
     weight_within_active <<- .self$r_dirichlet(.self$weight_within_active_alpha)
@@ -372,6 +393,7 @@ zigzag$methods(
 
     # initialize the allocations
     allocation_active_inactive <<- rbinom(num_transcripts, size=1, p=weight_active)
+
     if(!is.null(active_gene_set)) allocation_active_inactive[active_gene_set_idx] <<- as.integer(1)
     allocation_active_inactive_proposed <<- allocation_active_inactive
 
@@ -400,6 +422,20 @@ zigzag$methods(
     alpha_r <<- rgamma(num_libraries, 1, 1)
     alpha_r_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_libraries,function(y){return(c(rep(0,77),rep(1,23)))})))})
     alpha_r_max = max(alpha_r)
+
+    # library biases
+    library_bias <<- library_bias
+    bias_var <<- bias_var
+    bias_alpha <<- 10
+    bias_scalor <<- sqrt((bias_var * bias_alpha * num_libraries^2 + bias_var * num_libraries)/(1 - 1/num_libraries))
+
+    inactive_bias <<- rep(0, num_libraries)
+    active_bias <<- rep(0, num_libraries)
+    lib_bias_matrix <<- .self$get_lib_bias_matrix()
+
+    inactive_bias_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
+    active_bias_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
+
 
     # gene-wise variance
     s0_mu <<- s0_mu
@@ -523,11 +559,12 @@ zigzag$methods(
 
 
     ## write user specified prior parameter values to file
-    write.table(data.frame(cbind(c("s0_mu", "s0_sigma", "s1_shape", "s1_rate", "tau_rate", "tau_shape", "alpha_r_shape", "alpha_r_rate",
+    write.table(data.frame(cbind(c(ifelse(library_bias, c("bias_alpha", "s0_mu"), "s0_mu"), "s0_sigma", "s1_shape", "s1_rate", "tau_rate", "tau_shape", "alpha_r_shape", "alpha_r_rate",
                "weight_active_shape_1", "weight_active_shape_2", "weight_within_active_alpha", "spike_prior_shape_1", "spike_prior_shape_2",
                "active_means_dif_prior_shape", "active_meaans_dif_prior_rate", "active_variances_prior_min", "active_variances_prior_max",
-               "inactive_means_prior_shape", "inactive_means_prior_rate", "inactive_variances_prior_min", "inactive_variances_prior_max", "threshold_i", "threshold_a"),
-              c(s0_mu, s0_sigma, s1_shape, s1_rate, tau_rate, tau_shape,  alpha_r_shape, alpha_r_rate,
+               "inactive_means_prior_shape", "inactive_means_prior_rate", "inactive_variances_prior_min", "inactive_variances_prior_max",
+               "threshold_i", "threshold_a"),
+              c(ifelse(library_bias, c(bias_alpha, s0_mu), s0_mu), s0_sigma, s1_shape, s1_rate, tau_rate, tau_shape,  alpha_r_shape, alpha_r_rate,
                weight_active_shape_1, weight_active_shape_2, weight_within_active_alpha[1], spike_prior_shape_1, spike_prior_shape_2,
                active_means_dif_prior_shape, round(active_means_dif_prior_rate, digits = 3) , active_variances_prior_min, active_variances_prior_max,
                inactive_means_prior_shape, round(inactive_means_prior_rate, digits = 3), inactive_variances_prior_min, inactive_variances_prior_max,round(thresh_i, digits = 2),
@@ -563,14 +600,4 @@ zigzag$methods(
   }
 
 )
-
-
-
-
-
-
-
-
-
-
 

@@ -14,7 +14,6 @@ output_dir = "simulated_data/"
 params = as.numeric(df[,1])
 
 num_libs = params[4]
-
 #### Functions
 get_sigma2_g = function(gene){
 
@@ -28,7 +27,6 @@ get_sigma2_g = function(gene){
 get_p_x = function(gene, lib, gl){
 
   return(1 - exp(-alpha_rx[lib] * gl * exp(gene)))
-
 }
 
 prior_settings_file = paste0(output_dir, file_prefix, ".parameterValues")
