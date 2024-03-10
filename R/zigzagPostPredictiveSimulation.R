@@ -95,6 +95,12 @@ zigzag$methods(
                 file = paste0(pp_prefix, ".library_specific_post_predictive_output.log"),
                 append=T, sep="\t", row.names=F, col.names=F)
 
+    # for(i in seq(num_libraries)){
+    #   write.table(matrix(c(gen, round(sim_xg[,i], digits = 6)), nrow = 1),
+    #               file = paste0(pp_prefix, "_Xg_lib_", i, ".post_predictive_output.log"),
+    #               append=T, col.names = F, row.names = F, sep = "\t", quote = F)
+    # }
+
     return(list(sim_xg, sim_yg))
 
   },
