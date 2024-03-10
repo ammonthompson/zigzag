@@ -57,7 +57,7 @@ zigzag$methods(
 
     }
 
-    if(length(dev.list()) == 0 & run_posterior_predictive_and_plot) dev.new()
+    # if(length(dev.list()) == 0 & run_posterior_predictive_and_plot) dev.new()
 
 
     #########################################################
@@ -263,6 +263,11 @@ zigzag$methods(
 
     on.exit(if(length(dev.list()) > 2) dev.off(post_pred_multi_L1_plot_device))
     on.exit(if(length(dev.list()) > 2) dev.off(post_pred_L2_plot_device), add = TRUE)
+
+    # get the rest of em!
+    while(dev.cur() > 1) {
+      dev.off()
+    }
 
   }
 
