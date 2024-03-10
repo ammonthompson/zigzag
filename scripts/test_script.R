@@ -11,17 +11,25 @@ gl = read.table("../quick_start_guide/example_gene_length.txt", row.names = 1, h
 sq=rbind(c(1,2),c(3,4)); layout(sq)
 
 # assumes 2 active and 1 inactive component and that all 3 components share same variance parameter
-mm <- zigzag$new(data = dat[,c(1,2,3,4)], gene_length = gl, threshold_i = -1,
+mm <- zigzag$new(data = dat[1:5000,c(1,2,3,4)], gene_length = gl[1:5000,], threshold_i = -1, shared_active_inactive_variances = F,
                  output_directory = "lung_test", num_active_components = 2, threshold_a = c(1,5))
 
-
 mm$burnin(sample_frequency = 10, burnin_target_acceptance_rate=0.44,
-          write_to_files = T, ngen=3000, progress_plot = T)
+          write_to_files = T, ngen=10000, progress_plot = T)
+
+start_time = Sys.time()
+mm$mcmc(sample_frequency = 5, write_to_files = T, ngen=10000, append = F,
+        run_posterior_predictive = T, mcmcprefix = "Test")
+mir_runtime = Sys.time() - start_time
 
 
-mm$mcmc(sample_frequency = 50, write_to_files = T, ngen=20000, append = F,
-        run_posterior_predictive = T, mcmcprefix = "lung_Test")
-
+mm$mirror_moves = F
+start_time = Sys.time()
+mm$mcmc(sample_frequency = 2, write_to_files = T, ngen=10000, append = F,
+        run_posterior_predictive = F, mcmcprefix = "lung_Test_nomirror")
+nomir_runtime = Sys.time() - start_time
+print(mir_runtime)
+print(nomir_runtime)
 
 
 ########################################
