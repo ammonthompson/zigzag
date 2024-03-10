@@ -963,7 +963,7 @@ zigzag$methods(
 
     .self$set_sigmaX_pX()
 
-    if(tune) Yg_trace[all_zero_idx,] <<- cbind(Yg_trace[all_zero_idx,-1], choice_idx - 1)
+    if(tune) Yg_trace[[1]][all_zero_idx,] <<- cbind(Yg_trace[[1]][all_zero_idx,-1], choice_idx - 1)
 
   },
 
@@ -1371,11 +1371,11 @@ zigzag$methods(
 
       if(length(out_spike_idx) < 2){
 
-        Yg_trace[out_spike_idx,] <<- cbind(matrix(Yg_trace[out_spike_idx,-1], nrow = length(out_spike_idx)), choice_idx[out_spike_idx] - 1)
+        Yg_trace[[1]][out_spike_idx,] <<- cbind(matrix(Yg_trace[[1]][out_spike_idx,-1], nrow = length(out_spike_idx)), choice_idx[out_spike_idx] - 1)
 
       }else{
 
-        Yg_trace[out_spike_idx,] <<- cbind(Yg_trace[out_spike_idx,-1], choice_idx[out_spike_idx] - 1)
+        Yg_trace[[1]][out_spike_idx,] <<- cbind(Yg_trace[[1]][out_spike_idx,-1], choice_idx[out_spike_idx] - 1)
       }
     }
 
