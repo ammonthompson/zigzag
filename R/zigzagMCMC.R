@@ -65,13 +65,9 @@ zigzag$methods(
     # Xg level 1 (lower level) and Yg level 2 (upper level) #
     #########################################################
     posXg_rowMeans <- apply(Xg, 1, function(g) if(max(g) > -Inf) mean(g[g > -Inf]) else -Inf)
-    if(library_bias){
-      scaled_xg = Xg
-    }else{
-      xg_colmeans <- apply(Xg, 2, function(x) mean(x[x > -Inf]))
-      grandmean_xg_colmeans <- mean(xg_colmeans)
-      scaled_xg <- sapply(seq(num_libraries), function(lib) Xg[,lib] - xg_colmeans[lib] + grandmean_xg_colmeans)
-    }
+    xg_colmeans <- apply(Xg, 2, function(x) mean(x[x > -Inf]))
+    grandmean_xg_colmeans <- mean(xg_colmeans)
+    scaled_xg <- sapply(seq(num_libraries), function(lib) Xg[,lib] - xg_colmeans[lib] + grandmean_xg_colmeans)
     num_libs_plot_postpred <- num_libraries
     if(num_libs_plot_postpred > 25) num_libs_plot_postpred = 25
 

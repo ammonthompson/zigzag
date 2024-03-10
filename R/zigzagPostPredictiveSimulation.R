@@ -49,22 +49,14 @@ zigzag$methods(
     # scaled library-specific wasserstein discrepancies. Xg scaled by common mean
     # so the discrepancy ignores library-specific scaling factor differences
     # which are captured by the gene-wise variance model.
-    # if the model estimate library-specific biases for inactive and active components
-    # then do not rescale real and simulated data
-    if(library_bias){
-      scaled_xg = Xg
-    }else{
-      lib_means_xg <- apply(Xg, 2, function(sx) mean(sx[sx > -Inf]))
-      grand_mean_xg <- mean(lib_means_xg)
-      scaled_xg <- sapply(seq(num_libraries), function(sx) Xg[,sx] - lib_means_xg[sx] + grand_mean_xg)
-    }
-    if(library_bias){
-      scaled_sim_xg <- sim_xg
-    }else{
-      lib_means_sim_xg <- apply(sim_xg, 2, function(sx) mean(sx[sx > -Inf]))
-      grand_mean_sim_xg <- mean(lib_means_sim_xg)
-      scaled_sim_xg <- sapply(seq(num_libraries), function(sx) sim_xg[,sx] - lib_means_sim_xg[sx] + grand_mean_sim_xg)
-    }
+    lib_means_xg <- apply(Xg, 2, function(sx) mean(sx[sx > -Inf]))
+    grand_mean_xg <- mean(lib_means_xg)
+    scaled_xg <- sapply(seq(num_libraries), function(sx) Xg[,sx] - lib_means_xg[sx] + grand_mean_xg)
+
+    lib_means_sim_xg <- apply(sim_xg, 2, function(sx) mean(sx[sx > -Inf]))
+    grand_mean_sim_xg <- mean(lib_means_sim_xg)
+    scaled_sim_xg <- sapply(seq(num_libraries), function(sx) sim_xg[,sx] - lib_means_sim_xg[sx] + grand_mean_sim_xg)
+
 
     W_L_r <- sapply(seq(ncol(scaled_xg)), function(sxg){
 
