@@ -71,32 +71,22 @@ zigzag$methods(
     if(is.character(num_active_components) || num_active_components == "auto"){
 
       auto_thresholds_list <- .self$findthresholds(rmedians_noInf)
-
       num_acomps <- auto_thresholds_list[[1]]
-
       num_active_components <<- num_acomps
-
       thresh_a <- auto_thresholds_list[[2]]
-
       thresh_i <- auto_thresholds_list[[2]][1]
-
       threshold_a <<- thresh_a
-
       threshold_i <<- thresh_i
-
 
     }else{
 
       num_active_components <<- num_active_components
-
       num_acomps <- num_active_components
 
       if(any(is.character(threshold_a), threshold_a == "auto")){
 
         auto_thresholds_list <- .self$findthresholds(rmedians_noInf, num_acomps)
-
         thresh_a <- auto_thresholds_list[[2]]
-
         threshold_a <<- thresh_a
 
       }else{
@@ -104,13 +94,11 @@ zigzag$methods(
         if(length(threshold_a) == num_active_components){
 
           thresh_a <- threshold_a
-
           threshold_a <<- threshold_a
 
         }else{
 
           thresh_a <- threshold_a[1]
-
           threshold_a <<- thresh_a
 
         }
@@ -120,15 +108,12 @@ zigzag$methods(
       if(any(is.character(threshold_i), threshold_i == "auto")){
 
         auto_thresholds_list <- .self$findthresholds(rmedians_noInf, num_acomps)
-
         thresh_i <- auto_thresholds_list[[2]][1]
-
         threshold_i <<- thresh_i
 
       }else{
 
         thresh_i <- threshold_i
-
         threshold_i <<- thresh_i
 
       }
@@ -136,10 +121,14 @@ zigzag$methods(
     }
 
     if(length(thresh_a) == num_acomps){
+
       multi_ta <- TRUE
       multi_thresh_a <<- multi_ta
+
     }else{
+
       multi_thresh_a <<- multi_ta
+
     }
 
 
@@ -150,6 +139,7 @@ zigzag$methods(
 
     cat("Loading and log-transforming data...\n")
 
+    mirror_moves    <<- FALSE
     sqrt2pi         <<- sqrt(2*pi)
     temperature     <<- temperature
     beta            <<- beta
@@ -271,13 +261,13 @@ zigzag$methods(
 
     if(num_libraries > 1 ){
 
-      proposal_probs <<- c(8, 60, 10,                                                      ### weights, alloc active_inactive, alloc within_active
-                           12, 15 * (1 - shared_active_inactive_variances),                ### i_mean, i_var
-                           10,                                                             ### a_mean
+      proposal_probs <<- c(8, 40, 10,                                                      ### weights, alloc active_inactive, alloc within_active
+                           15, 15 * (1 - shared_active_inactive_variances),                ### i_mean, i_var
+                           12,                                                             ### a_mean
                            8 + 4 * (1 - shared_active_variances),                          ### a_var
                            5, 10,                                                          ### spike prob, spike alloc
-                           c(2, 2) + is2Libs + 1 * (num_transcripts < 15000),              ### Yg, sigm_g
-                           c(6, 6, 6),                                                     ### tau, Sg, s0tau
+                           c(4, 4) + is2Libs + 1 * (num_transcripts < 15000),              ### Yg, sigm_g
+                           c(10, 10, 10),                                                     ### tau, Sg, s0tau
                            num_libraries * 1.25,                                           ### p_x
                            c(10,10) * library_bias)                                        ### library bias
 
@@ -329,8 +319,10 @@ zigzag$methods(
     active_means_dif_proposed <<- active_means_dif
     active_means_dif_prob <<- .self$computeActiveMeansDifPriorProbability(active_means_dif)
     active_means_dif_prob_proposed <<- .self$computeActiveMeansDifPriorProbability(active_means_dif_proposed)
-    active_means_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_acomps,function(y){return(c(rep(0,77),rep(1,23)))})))})
     active_means <<- .self$calculate_active_means(active_means_dif, mt = multi_ta)
+    active_means_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_acomps,function(y){return(c(rep(0,77),rep(1,23)))})))})
+    active_means_trace[[2]] <<- active_means
+    active_means_trace[[3]] <<- c()
 
     # active variances
     active_variances_prior_min <<- active_variances_prior_min
@@ -344,17 +336,16 @@ zigzag$methods(
       active_variances_proposed <<- active_variances
       active_variances_prob <<- .self$computeActiveVariancesPriorProbability(active_variances[1])
       active_variances_prob_proposed <<- .self$computeActiveVariancesPriorProbability(active_variances_proposed)
-      active_variances_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_acomps,function(y){return(c(rep(0,77),rep(1,23)))})))})
-
     }else{
-
       active_variances <<- 10^(runif(num_acomps, active_variances_prior_log_min, active_variances_prior_log_max))
       active_variances_proposed <<- active_variances
       active_variances_prob <<- .self$computeActiveVariancesPriorProbability(active_variances)
       active_variances_prob_proposed <<- .self$computeActiveVariancesPriorProbability(active_variances_proposed)
-      active_variances_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_acomps,function(y){return(c(rep(0,77),rep(1,23)))})))})
-
     }
+    active_variances_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_acomps,function(y){return(c(rep(0,77),rep(1,23)))})))})
+    active_variances_trace[[2]] <<- active_variances
+    active_variances_trace[[3]] <<- c()
+
 
     # inactive means
     inactive_means_prior_shape <<- inactive_means_prior_shape
@@ -365,6 +356,8 @@ zigzag$methods(
     inactive_means_prob <<- .self$computeInactiveMeansPriorProbability(inactive_means)
     inactive_means_prob_proposed <<- .self$computeInactiveMeansPriorProbability(inactive_means_proposed)
     inactive_means_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
+    inactive_means_trace[[2]] <<- inactive_means
+    inactive_means_trace[[3]] <<- c()
 
     # inactive variances
     inactive_variances_prior_min <<- inactive_variances_prior_min
@@ -380,11 +373,11 @@ zigzag$methods(
     inactive_variances_prob <<- .self$computeInactiveVariancesPriorProbability(inactive_variances)
     inactive_variances_prob_proposed <<- .self$computeInactiveVariancesPriorProbability(inactive_variances_proposed)
     inactive_variances_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
-
+    inactive_variances_trace[[2]] <<- inactive_variances
+    inactive_variances_trace[[3]] <<- c()
 
     # mixture weights within active component
     weight_within_active_alpha <<- rep(weight_active_shape_1/num_acomps, num_acomps)
-
     weight_within_active <<- .self$r_dirichlet(.self$weight_within_active_alpha)
     weight_within_active_proposed <<- weight_within_active
     weight_within_active_prob <<- .self$computeWithinActiveWeightPriorProbability(weight_within_active)
@@ -393,15 +386,11 @@ zigzag$methods(
 
     # initialize the allocations
     allocation_active_inactive <<- rbinom(num_transcripts, size=1, p=weight_active)
-
     if(!is.null(active_gene_set)) allocation_active_inactive[active_gene_set_idx] <<- as.integer(1)
     allocation_active_inactive_proposed <<- allocation_active_inactive
-
     allocation_within_active[[1]] <<- sample.int(num_acomps, size=num_transcripts, replace=TRUE, prob=weight_within_active)
     allocation_within_active_proposed <<- allocation_within_active
-
     all_allocation = allocation_active_inactive * allocation_within_active[[1]]
-
     allocation_trace <<- matrix(apply(component_matrix, 2, function(comp_matrix_col) 1 *
                                            (comp_matrix_col == all_allocation)), nrow = num_transcripts)
 
@@ -421,6 +410,8 @@ zigzag$methods(
     alpha_r_rate <<- alpha_r_rate
     alpha_r <<- rgamma(num_libraries, 1, 1)
     alpha_r_trace[[1]] <<- lapply(1,function(x){return(t(sapply(1:num_libraries,function(y){return(c(rep(0,77),rep(1,23)))})))})
+    alpha_r_trace[[2]] <<- alpha_r
+    alpha_r_trace[[3]] <<- rbind(rep(0, num_libraries), rep(0, num_libraries))
     alpha_r_max = max(alpha_r)
 
     # library biases
@@ -450,8 +441,14 @@ zigzag$methods(
     tau <<- rgamma(1, 2, 5)
 
     s0_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
+    s0_trace[[2]] <<- s0
+    s0_trace[[3]] <<- c(0,0) # mean and std. dev. for mirror moves
     s1_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
+    s1_trace[[2]] <<- s1
+    s1_trace[[3]] <<- c(0,0)
     tau_trace[[1]] <<- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
+    tau_trace[[2]] <<- tau
+    tau_trace[[3]] <<- c(0,0)
     s0tau_trace[[1]] <<- lapply(1, function(x){return(c(rep(0,77), rep(1,23)))})
 
     ## Yg initialize
@@ -501,15 +498,19 @@ zigzag$methods(
 
     Yg_proposed <<- Yg
 
-    Yg_trace <<- t(sapply(seq(num_transcripts), function(g){return(c(rep(0,77),rep(1,23)))}))
+    Yg_trace <<- list(t(sapply(seq(num_transcripts), function(g){return(c(rep(0,77),rep(1,23)))})))
+    Yg_trace[[2]] <<- Yg
+    Yg_trace[[3]] <<- c()
 
 
     ## Initialize Sigma_x and Variance_g gene variance and shrinkage prior parameters
     Sg <<- exp(s0 + s1 * Yg)
     variance_g <<- rlnorm(num_transcripts, 1/2, 1/5)
-    variance_g_trace <<- t(sapply(seq(num_transcripts), function(g){return(c(rep(0,77),rep(1,23)))}))
     variance_g_upper_bound <<- variance_g_upper_bound
     variance_g[which(variance_g > variance_g_upper_bound)] <<- variance_g_upper_bound
+    variance_g_trace <<- list(t(sapply(seq(num_transcripts), function(g){return(c(rep(0,77),rep(1,23)))})))
+    variance_g_trace[[2]] <<- variance_g
+    variance_g_trace[[3]] <<- c()
 
     p_x <<- .self$get_px()
 
