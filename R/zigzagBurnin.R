@@ -67,7 +67,7 @@ zigzag$methods(
 
      if(is.na(sum(Yg)) || is.na(sum(variance_g)) ||is.na(sum(tuningParam_yg)) || is.na(sum(inactive_spike_allocation)) ||
         is.nan(sum(inactive_spike_allocation)) || is.na(sum(allocation_active_inactive))||
-        is.nan(sum(allocation_active_inactive)) || is.na(sum(variance_g_trace)) || is.na(sum(Yg_trace))){
+        is.nan(sum(allocation_active_inactive)) || is.na(sum(variance_g_trace[[1]])) || is.na(sum(Yg_trace[[1]]))){
 
        print("an NA or NaN somewhere!")
        print(p)
@@ -98,15 +98,18 @@ zigzag$methods(
      ## Important in case user interrupts the burnin)                   ##
      #####################################################################
 
-     s0_trace[[2]] <<- s0
-     s1_trace[[2]] <<- s1
-     alpha_r_trace[[2]] <<- alpha_r
+     s0_trace[[2]] <<- c(s0_trace[[2]], s0)
+     s1_trace[[2]] <<- c(s1_trace[[2]], s1)
+     tau_trace[[2]] <<- c(tau_trace[[2]], tau)
+     alpha_r_trace[[2]] <<- rbind(alpha_r_trace[[2]], alpha_r)
+     Yg_trace[[2]] <<- rbind(Yg_trace[[2]], Yg)
+     variance_g_trace[[2]] <<- rbind(variance_g_trace[[2]], variance_g)
 
-     inactive_means_trace[[2]] <<- inactive_means
-     inactive_variances_trace[[2]] <<- inactive_variances
+     inactive_means_trace[[2]] <<- c(inactive_means_trace[[2]], inactive_means)
+     inactive_variances_trace[[2]] <<- c(inactive_variances_trace[[2]], inactive_variances)
      spike_probability_trace[[2]] <<- spike_probability
-     active_means_trace[[2]] <<- active_means
-     active_variances_trace[[2]] <<- active_variances
+     active_means_trace[[2]] <<- rbind(active_means_trace[[2]], active_means)
+     active_variances_trace[[2]] <<- rbind( active_variances_trace[[2]], active_variances)
      weight_active_trace[[2]] <<- weight_active
      weight_within_active_trace[[2]] <<- weight_within_active
 
@@ -153,6 +156,34 @@ zigzag$methods(
   } #end mcmc
 
   lnl_trace <<- list(lnl_trace[[length(lnl_trace)]])
+
+  ####################
+  # set mirror moves #
+  ####################
+  mirror_moves <<- TRUE
+  ntraceidx <- ceiling(0.75 * length(s0_trace[[2]])):length(s0_trace[[2]])
+
+  s0_trace[[3]] <<- c(mean(s0_trace[[2]][ntraceidx]),
+                     sd(s0_trace[[2]][ntraceidx]))
+  s1_trace[[3]] <<- c(mean(log(-s1_trace[[2]])[ntraceidx]),
+                      sd(log(-s1_trace[[2]])[ntraceidx]))
+  tau_trace[[3]] <<- c(mean(log(tau_trace[[2]])[ntraceidx]),
+                       sd(log(tau_trace[[2]])[ntraceidx]))
+  alpha_r_trace[[3]] <<- rbind(colMeans(log(alpha_r_trace[[2]])[ntraceidx,]),
+                               colSds(log(alpha_r_trace[[2]])[ntraceidx,]))
+  Yg_trace[[3]] <<- cbind(colMeans(Yg_trace[[2]][ntraceidx,]), colSds(Yg_trace[[2]][ntraceidx,]))
+  variance_g_trace[[3]] <<- cbind(colMeans(log(variance_g_trace[[2]][ntraceidx,])), colSds(log(variance_g_trace[[2]][ntraceidx,])))
+
+  inactive_means_trace[[3]] <<- c(mean(log(-inactive_means_trace[[2]][ntraceidx])),
+                                  sd(log(-inactive_means_trace[[2]][ntraceidx])))
+  inactive_variances_trace[[3]] <<- c(mean(log(inactive_variances_trace[[2]][ntraceidx])),
+                                            sd(log(inactive_variances_trace[[2]][ntraceidx])))
+
+  active_means_dif_trace <- t(t(active_means_trace[[2]][ntraceidx,]) - threshold_a)
+  active_means_trace[[3]] <<- rbind(colMeans(log(active_means_dif_trace)),
+                                    colSds(log(active_means_dif_trace)))
+  active_variances_trace[[3]] <<- rbind(colMeans(log(active_variances_trace[[2]][ntraceidx,])),
+                                    colSds(log(active_variances_trace[[2]][ntraceidx,])))
 
   }
 

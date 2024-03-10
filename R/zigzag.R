@@ -132,7 +132,7 @@ zigzag <- setRefClass(
 
     Yg = "numeric",
     Yg_proposed = "numeric",
-    Yg_trace = "matrix",
+    Yg_trace = "list",
 
     output_directory = "character",
     gene_names = "character",
@@ -150,6 +150,7 @@ zigzag <- setRefClass(
     model_paramlist = "character",
     lnl_trace = "list",
 
+    mirror_moves = "logical",
     inactive_mean_tuningParam = "numeric",
     inactive_variance_tuningParam = "numeric",
     spike_probability_tuningParam = "numeric",
@@ -242,7 +243,7 @@ zigzag <- setRefClass(
     tau = "numeric",
     tau_trace = "list",
     variance_g = "numeric",
-    variance_g_trace = "matrix",
+    variance_g_trace = "list",
     variance_g_upper_bound = "numeric",
 
     s0tau_trace = "list",

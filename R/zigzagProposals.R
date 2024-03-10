@@ -8,8 +8,12 @@ zigzag$methods(
 
     HR = 0
 
-    proposal <- .self$scale_move(variance_g[out_spike_idx], tuningParam_variance_g[out_spike_idx])
-
+    if(rbinom(1, 1, 0.5) < ifelse(mirror_moves, 0.0, 0)){
+      proposal <- .self$mirrorN(variance_g[out_spike_idx], variance_g_trace[[3]][out_spike_idx, 1],
+                                0.5 * variance_g_trace[[3]][out_spike_idx, 2], support = c(0, variance_g_upper_bound))
+    }else{
+      proposal <- .self$scale_move(variance_g[out_spike_idx], tuningParam_variance_g[out_spike_idx])
+    }
     variance_g_proposed <- proposal[[1]]
 
     HR <- log(proposal[[2]])
@@ -47,11 +51,11 @@ zigzag$methods(
 
       if(length(out_spike_idx) < 2){
 
-        variance_g_trace[out_spike_idx,] <<- cbind(matrix(variance_g_trace[out_spike_idx,-1], nrow = length(out_spike_idx)), choice_idx - 1)
+        variance_g_trace[[1]][out_spike_idx,] <<- cbind(matrix(variance_g_trace[[1]][out_spike_idx,-1], nrow = length(out_spike_idx)), choice_idx - 1)
 
       }else{
 
-        variance_g_trace[out_spike_idx,] <<- cbind(variance_g_trace[out_spike_idx,-1], choice_idx - 1)
+        variance_g_trace[[1]][out_spike_idx,] <<- cbind(variance_g_trace[[1]][out_spike_idx,-1], choice_idx - 1)
       }
     }
 
@@ -64,36 +68,57 @@ zigzag$methods(
 
   },
 
-  mhSg = function(recover_x = FALSE, tune = FALSE){
+  mhS0 = function(recover_x = FALSE, tune = FALSE){
 
-    HR = 0
-
-    selection = sample(seq(2), 1, prob = c(1,1))
-
-
-    if( selection == 1){
-
-      proposed_s0 <- s0 + rnorm(1, 0, tuningParam_s0)
-
-      proposed_s1 <- s1
-
-      if(tune) s0_trace[[1]][[1]] <<- c(s0_trace[[1]][[1]][-1], 0)
-
+    if(rbinom(1, 1, 0.5) < ifelse(mirror_moves, 0, 0)){
+      proposal = .self$mirrorN(s0, s0_trace[[3]][1], 0.5 * s0_trace[[3]][2])
+      proposed_s0 <- proposal[[1]]
+      HR = log(proposal[[2]])
     }else{
+      proposed_s0 <- s0 + rnorm(1, 0, tuningParam_s0)
+      HR <- 0
+    }
 
-      proposed_s0 <- s0
+    if(tune) s0_trace[[1]][[1]] <<- c(s0_trace[[1]][[1]][-1], 0)
 
-      proposal <- .self$scale_move(s1, tuningParam_s1)
+    proposed_Sg <- .self$get_sigmax(ss0 = proposed_s0, ss1 = s1)
+    proposed_variance_g_Likelihood <- .self$computeVarianceGPriorProbability(variance_g[out_spike_idx], proposed_Sg[out_spike_idx])
 
-      proposed_s1 <- proposal[[1]]
+    Lp <- sum(proposed_variance_g_Likelihood)
+    Lc <- sum(variance_g_probability[out_spike_idx])
 
-      HR <- log(proposal[[2]])
+    pp <- .self$computeS0PriorProbability(proposed_s0)
+    pc <- .self$computeS0PriorProbability(s0)
 
-      if(tune) s1_trace[[1]][[1]] <<- c(s1_trace[[1]][[1]][-1], 0)
+    R <- temperature * (Lp - Lc + pp - pc) + HR
+
+    if(recover_x) recover()
+
+    if(log(runif(1)) < R){
+
+      s0 <<- proposed_s0
+      if(tune) s0_trace[[1]][[1]][100] <<- 1
+      Sg <<- proposed_Sg
+      variance_g_probability[out_spike_idx] <<- proposed_variance_g_Likelihood
 
     }
 
-    proposed_Sg <- .self$get_sigmax(ss0 = proposed_s0, ss1 = proposed_s1)
+  },
+
+  mhS1 = function(recover_x = FALSE, tune = FALSE){
+
+    if(rbinom(1, 1, 0.5) < ifelse(mirror_moves, 0.5, 0)){
+      proposal = .self$mirrorN(-s1, s1_trace[[3]][1], 0.5 * s1_trace[[3]][2], c(0, Inf))
+      proposed_s1 <- -proposal[[1]]
+    }else{
+      proposal <- .self$scale_move(s1, tuningParam_s1)
+      proposed_s1 <- proposal[[1]]
+    }
+    HR = log(proposal[[2]])
+
+    if(tune) s1_trace[[1]][[1]] <<- c(s1_trace[[1]][[1]][-1], 0)
+
+    proposed_Sg <- .self$get_sigmax(ss0 = s0, ss1 = proposed_s1)
 
     proposed_variance_g_Likelihood <- .self$computeVarianceGPriorProbability(variance_g[out_spike_idx], proposed_Sg[out_spike_idx])
 
@@ -101,29 +126,19 @@ zigzag$methods(
 
     Lc <- sum(variance_g_probability[out_spike_idx])
 
-    pp <- .self$computeS0PriorProbability(proposed_s0) + .self$computeS1PriorProbability(proposed_s1)
+    pp <- .self$computeS1PriorProbability(proposed_s1)
 
-    pc <- .self$computeS0PriorProbability(s0) + .self$computeS1PriorProbability(s1)
+    pc <- .self$computeS1PriorProbability(s1)
 
     R <- temperature * (Lp - Lc + pp - pc) + HR
 
     if(recover_x) recover()
 
-
     if(log(runif(1)) < R){
 
-      s0 <<- proposed_s0
       s1 <<- proposed_s1
 
-      if(selection == 1){
-
-        if(tune) s0_trace[[1]][[1]][100] <<- 1
-
-      }else {
-
-        if(tune) s1_trace[[1]][[1]][100] <<- 1
-
-      }
+      if(tune) s1_trace[[1]][[1]][100] <<- 1
 
       Sg <<- proposed_Sg
 
@@ -133,11 +148,23 @@ zigzag$methods(
 
   },
 
+  mhSg = function(recover_x = FALSE, tune = FALSE){
+    selection = sample(seq(2), 1, prob = c(1,1))
+    if( selection == 1){
+      .self$mhS0(tune = tune)
+    }else{
+      .self$mhS1(tune = tune)
+    }
+  },
+
   mhTau = function(recover_x = FALSE, tune = FALSE){
 
-    proposal <- .self$scale_move(tau, tuningParam_tau)
+    if(rbinom(1, 1, 0.5) < ifelse(mirror_moves, 0, 0)){
+      proposal = .self$mirrorN(tau, tau_trace[[3]][1], 0.5  * tau_trace[[3]][2], c(0, Inf))
+    }else{
+      proposal <- .self$scale_move(tau, tuningParam_tau)
+    }
     proposed_tau <- proposal[[1]]
-
     HR <- log(proposal[[2]])
 
     proposed_tau_Likelihood <- .self$computeVarianceGPriorProbability(variance_g[out_spike_idx], Sg[out_spike_idx], gtau = proposed_tau)
@@ -217,20 +244,20 @@ zigzag$methods(
   mhP_x = function(recover_x = FALSE, tune = FALSE){
 
     randlib=sample(num_libraries,1)
-
     proposed_alpha_r <- alpha_r
 
-    proposal <- .self$scale_move(alpha_r[randlib], tuningParam_alpha_r[randlib])
-
+    if(rbinom(1, 1, 0.5) < ifelse(mirror_moves, 0.5, 0)){
+      proposal <- .self$mirrorN(alpha_r[randlib], alpha_r_trace[[3]][1,randlib], 0.5 * alpha_r_trace[[3]][2,randlib], c(0, Inf))
+    }else{
+      proposal <- .self$scale_move(alpha_r[randlib], tuningParam_alpha_r[randlib])
+    }
     proposed_alpha_r[randlib] <- proposal[[1]]
+    HR = log(proposal[[2]])
 
     if(tune) alpha_r_trace[[1]][[1]][randlib,] <<- c(alpha_r_trace[[1]][[1]][randlib, -1], 0)
 
-    HR <- log(proposal[[2]])
-
     proposed_p_x <- p_x
 
-    if(recover_x) recover()
 
     proposed_p_x[,randlib] <- .self$get_px(falpha_r = proposed_alpha_r[randlib], yy = Yg, bias_m = lib_bias_matrix[,randlib, drop = F])
 
@@ -256,6 +283,7 @@ zigzag$methods(
 
     R <- temperature * (Lp - Lc + pp - pc) + HR
 
+    if(recover_x) recover()
 
     if(log(runif(1)) < R & R != Inf){
 
@@ -283,7 +311,11 @@ zigzag$methods(
     inactive_outspike_idx = which(allocation_active_inactive[out_spike_idx] == 0)
     active_outspike_idx = which(allocation_active_inactive[out_spike_idx] == 1)
 
-    Yg_proposed <<-  rnorm(num_choice, Yg[out_spike_idx], tuningParam_yg[out_spike_idx])#only change out of spike genes
+    if(rbinom(1, 1, 0.5) < ifelse(mirror_moves, 0.5, 0)){
+      Yg_proposed <<-  .self$mirrorN(Yg[out_spike_idx], Yg_trace[[3]][out_spike_idx,1], 0.5 * Yg_trace[[3]][out_spike_idx,2])[[1]]
+    }else{
+      Yg_proposed <<-  rnorm(num_choice, Yg[out_spike_idx], tuningParam_yg[out_spike_idx])#only change out of spike genes
+    }
 
     Sg_proposed <- .self$get_sigmax(yy = Yg_proposed)
 
@@ -343,11 +375,11 @@ zigzag$methods(
 
       if(length(out_spike_idx) < 2){
 
-        Yg_trace[out_spike_idx,] <<- cbind(matrix(Yg_trace[out_spike_idx,-1], nrow = length(out_spike_idx)), choice_idx - 1)
+        Yg_trace[[1]][out_spike_idx,] <<- cbind(matrix(Yg_trace[[1]][out_spike_idx,-1], nrow = length(out_spike_idx)), choice_idx - 1)
 
       }else{
 
-        Yg_trace[out_spike_idx,] <<- cbind(Yg_trace[out_spike_idx,-1], choice_idx - 1)
+        Yg_trace[[1]][out_spike_idx,] <<- cbind(Yg_trace[[1]][out_spike_idx,-1], choice_idx - 1)
       }
     }
 
@@ -461,28 +493,29 @@ zigzag$methods(
   mhInactiveMeans = function(recover_x = FALSE, tune = FALSE){
     ### for each distribution parameter: propose and accept new value with MH algo
 
-    inactive_means_proposed <<- threshold_i - abs(threshold_i - inactive_means - rnorm(1, 0, inactive_mean_tuningParam[[1]]))
+    if(rbinom(1, 1, 0.5) < ifelse(mirror_moves, 0.0, 0)){
+      inactive_means_proposed <<- threshold_i - .self$mirrorN(threshold_i - inactive_means,
+                                                              inactive_means_trace[[3]][1],
+                                                              0.5 * inactive_means_trace[[3]][2], c(0, Inf))[[1]]
+    }else{
+      inactive_means_proposed <<- threshold_i - abs(threshold_i - inactive_means - rnorm(1, 0, inactive_mean_tuningParam[[1]]))
+    }
 
     pp = .self$computeInactiveMeansPriorProbability(inactive_means_proposed)
 
     pc = .self$computeInactiveMeansPriorProbability(inactive_means)
 
     if(length(inactive_idx) > 0){
-
       Lp = sum(.self$computeInactiveLikelihood(Yg[inactive_idx], spike_probability, inactive_means_proposed, inactive_variances,
                                                inactive_spike_allocation[inactive_idx]))
       Lc = sum(.self$computeInactiveLikelihood(Yg[inactive_idx], spike_probability, inactive_means, inactive_variances,
                                                inactive_spike_allocation[inactive_idx]))
-
     }else{
-
       Lp = 0
       Lc = 0
-
     }
 
     R = temperature * (Lp - Lc + pp - pc)
-
 
     if(tune) inactive_means_trace[[1]][[1]] <<- c(inactive_means_trace[[1]][[1]][-1],0)
 
@@ -500,8 +533,17 @@ zigzag$methods(
 
   mhInactiveVariances = function(recover_x = FALSE, tune = FALSE){
 
-    inactive_variances_proposed <<- 10^(.self$two_boundary_slide_move(log(inactive_variances, 10), inactive_variances_prior_log_min,
+    if(rbinom(1, 1, 0.5) < ifelse(mirror_moves, 0.0, 0)){
+      proposal <- .self$mirrorN(inactive_variances, inactive_variances_trace[[3]][1], 0.5 * inactive_variances_trace[[3]][2],
+                                c(inactive_variances_prior_min, inactive_variances_prior_max))
+      inactive_means_proposed <<- proposal[[1]]
+      HR <- log(proposal[[2]])
+    }else{
+      inactive_variances_proposed <<- 10^(.self$two_boundary_slide_move(log(inactive_variances, 10), inactive_variances_prior_log_min,
                                                                       inactive_variances_prior_log_max, inactive_variance_tuningParam))
+      HR <- 0
+    }
+
     if(tune) inactive_variances_trace[[1]][[1]] <<- c(inactive_variances_trace[[1]][[1]][-1], 0)
 
     pp = .self$computeInactiveVariancesPriorProbability(inactive_variances_proposed)
@@ -522,7 +564,7 @@ zigzag$methods(
 
     }
 
-    R =  temperature * (Lp - Lc + pp - pc)
+    R =  temperature * (Lp - Lc + pp - pc) + HR
 
     if(recover_x) recover()
 
@@ -674,18 +716,28 @@ zigzag$methods(
       sapply(sample(num_active_components, num_active_components, replace = TRUE), function(k){
 
         active_means_dif_proposed <<- active_means_dif
-        active_means_dif_proposed[k] <<- abs(active_means_dif[k] + rnorm(1,0,active_mean_tuningParam[k]))
+
+        if(rbinom(1, 1, 0.5) < ifelse(mirror_moves, 0.0, 0)){
+          proposal <- .self$mirrorN(active_means_dif[k], active_means_trace[[3]][1,k], 1 * active_means_trace[[3]][2,k], c(0, Inf))
+          active_means_dif_proposed[k] <<- proposal[[1]]
+          HR <- log(proposal[[2]])
+        }else{
+          active_means_dif_proposed[k] <<- abs(active_means_dif[k] + rnorm(1,0,active_mean_tuningParam[k]))
+          HR <- 0
+        }
 
         mp = .self$calculate_active_means(active_means_dif_proposed)
         mc = active_means
 
-        Lp <- sum(.self$computeActiveLikelihood(Yg[active_idx], allocation_within_active[[1]][active_idx], mp, active_variances, inactive_spike_allocation[active_idx]))
-        Lc <- sum(.self$computeActiveLikelihood(Yg[active_idx], allocation_within_active[[1]][active_idx], mc, active_variances, inactive_spike_allocation[active_idx]))
+        Lp <- sum(.self$computeActiveLikelihood(Yg[active_idx], allocation_within_active[[1]][active_idx], mp,
+                                                active_variances, inactive_spike_allocation[active_idx]))
+        Lc <- sum(.self$computeActiveLikelihood(Yg[active_idx], allocation_within_active[[1]][active_idx], mc,
+                                                active_variances, inactive_spike_allocation[active_idx]))
 
         pp = computeActiveMeansDifPriorProbability(active_means_dif_proposed[k])
         pc = computeActiveMeansDifPriorProbability(active_means_dif[k])
 
-        R = temperature * (Lp + pp - Lc - pc)
+        R = temperature * (Lp + pp - Lc - pc) + HR
 
         if(recover_x) recover()
 
@@ -738,25 +790,49 @@ zigzag$methods(
     k = sample(num_active_components, 1, replace = TRUE)
 
     if(shared_active_variances){
+      if(rbinom(1, 1, 0.5) < ifelse(mirror_moves, 0.0, 0)){
+        proposal <- .self$mirrorN(active_variances[1], active_variances_trace[[3]][1,1], 0.5 * active_variances_trace[[3]][2,1],
+                                  c(active_variances_prior_min, active_variances_prior_max))
+        active_variances_proposed <<- proposal[[1]]
+        HR <- log(proposal[[2]])
+      }else{
+        active_variances_proposed <<- rep(10^(.self$two_boundary_slide_move(log(active_variances[1], 10),
+                                                                            active_variances_prior_log_min,
+                                                                            active_variances_prior_log_max,
+                                                                            active_variance_tuningParam[1])),
+          num_active_components)
+        HR <- 0
+      }
 
-      active_variances_proposed <<- rep(10^(.self$two_boundary_slide_move(
-        log(active_variances[1], 10), active_variances_prior_log_min, active_variances_prior_log_max, active_variance_tuningParam[1])),
-        num_active_components)
 
       if(tune) active_variances_trace[[1]][[1]][1,] <<- c(active_variances_trace[[1]][[1]][1,-1],0)
 
     }else{
 
-      active_variances_proposed[k] <<- 10^(.self$two_boundary_slide_move(log(active_variances[k], 10),
-                                                                         active_variances_prior_log_min, active_variances_prior_log_max, active_variance_tuningParam[k]))
+      if(rbinom(1, 1, 0.5) < ifelse(mirror_moves, 0.5, 0)){
+        proposal <- .self$mirrorN(active_variances[k], active_variances_trace[[3]][1,1], active_variances_trace[[3]][2,1],
+                                  c(active_variances_prior_log_min, active_variances_prior_log_max))
+        active_variances_proposed[k] <<- proposal[[1]]
+        HR <- log(proposal[[2]])
+      }else{
+        active_variances_proposed[k] <<- 10^(.self$two_boundary_slide_move(log(active_variances[k], 10),
+                                                                           active_variances_prior_log_min,
+                                                                           active_variances_prior_log_max,
+                                                                           active_variance_tuningParam[k]))
+        HR <- 0
+      }
+
+
       if(tune) active_variances_trace[[1]][[1]][k,] <<- c(active_variances_trace[[1]][[1]][k,-1],0)
 
     }
 
     if(length(active_idx) > 0){
 
-      Lp = sum(.self$computeActiveLikelihood(Yg[active_idx], allocation_within_active[[1]][active_idx], active_means, active_variances_proposed, inactive_spike_allocation[active_idx]))
-      Lc = sum(.self$computeActiveLikelihood(Yg[active_idx], allocation_within_active[[1]][active_idx], active_means, active_variances, inactive_spike_allocation[active_idx]))
+      Lp = sum(.self$computeActiveLikelihood(Yg[active_idx], allocation_within_active[[1]][active_idx], active_means,
+                                             active_variances_proposed, inactive_spike_allocation[active_idx]))
+      Lc = sum(.self$computeActiveLikelihood(Yg[active_idx], allocation_within_active[[1]][active_idx], active_means,
+                                             active_variances, inactive_spike_allocation[active_idx]))
 
     }else{
 
@@ -768,7 +844,7 @@ zigzag$methods(
     pp = .self$computeActiveVariancesPriorProbability(active_variances_proposed[k])
     pc = .self$computeActiveVariancesPriorProbability(active_variances[k])
 
-    R = temperature * (Lp + pp - Lc - pc )
+    R = temperature * (Lp + pp - Lc - pc ) + HR
 
     if(recover_x) recover()
 
@@ -984,9 +1060,18 @@ zigzag$methods(
 
     # inactive and active components share variance. Propose new active variance and set inactive equal
 
-    active_variances_proposed <<- rep(10^(.self$two_boundary_slide_move(
-      log(active_variances[1], 10), active_variances_prior_log_min, active_variances_prior_log_max, active_variance_tuningParam[1])),
-      num_active_components)
+    if(rbinom(1, 1, 0.5) < ifelse(mirror_moves, 0.0, 0)){
+      proposal <- .self$mirrorN(active_variances[1], active_variances_trace[[3]][1,1], 1 * active_variances_trace[[3]][2,1],
+                                c(active_variances_prior_min, active_variances_prior_max))
+      active_variances_proposed <<- rep(proposal[[1]], 2)
+      HR <- log(proposal[[2]])
+    }else{
+      active_variances_proposed <<- rep(10^(.self$two_boundary_slide_move(log(active_variances[1], 10),
+                                                                          active_variances_prior_log_min,
+                                                                          active_variances_prior_log_max,
+                                                                          active_variance_tuningParam[1])), num_active_components)
+      HR <- 0
+    }
 
     if(tune) active_variances_trace[[1]][[1]][1,] <<- c(active_variances_trace[[1]][[1]][1,-1],0)
 
@@ -996,20 +1081,17 @@ zigzag$methods(
     inactive_Lp = sum(.self$computeInactiveLikelihood(Yg[inactive_idx], spike_probability, inactive_means, active_variances_proposed[1], inactive_spike_allocation[inactive_idx]))
     inactive_Lc = sum(.self$computeInactiveLikelihood(Yg[inactive_idx], spike_probability, inactive_means, inactive_variances, inactive_spike_allocation[inactive_idx]))
 
-    active_pp = .self$computeActiveVariancesPriorProbability(active_variances_proposed)
-    active_pc = .self$computeActiveVariancesPriorProbability(active_variances)
+    variance_pp = .self$computeActiveVariancesPriorProbability(active_variances_proposed[1])
+    variance_pc = .self$computeActiveVariancesPriorProbability(active_variances[1])
 
-    inactive_pp = .self$computeActiveVariancesPriorProbability(active_variances_proposed)
-    inactive_pc = .self$computeActiveVariancesPriorProbability(active_variances)
-
-    R = temperature * (active_Lp + inactive_Lp + active_pp + inactive_pp - active_Lc - inactive_Lc - active_pc - inactive_pc)
+    R = temperature * (active_Lp + inactive_Lp + variance_pp - active_Lc - inactive_Lc - variance_pc) + HR
 
     if(recover_x) recover()
 
 
     if(log(runif(1)) < R){
 
-        active_variances <<- rep(active_variances_proposed[1], num_active_components)
+        active_variances <<- active_variances_proposed
 
         inactive_variances <<- active_variances_proposed[1]
 

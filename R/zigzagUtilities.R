@@ -208,10 +208,10 @@ zigzag$methods(
     tuningParam_s0tau <<- .self$x_tune(s0tau_trace[[1]][[1]], tuningParam_s0tau,
                                        burnin_target_acceptance_rate,
                                        mintuningParam = 0.0001, maxtuningParam = 5)
-    tuningParam_variance_g <<- .self$x_tune(variance_g_trace, tuningParam_variance_g,
+    tuningParam_variance_g <<- .self$x_tune(variance_g_trace[[1]], tuningParam_variance_g,
                                          burnin_target_acceptance_rate,
                                          mintuningParam = 0.0001, maxtuningParam = 100)
-    tuningParam_yg <<- .self$x_tune(Yg_trace, tuningParam_yg, burnin_target_acceptance_rate,
+    tuningParam_yg <<- .self$x_tune(Yg_trace[[1]], tuningParam_yg, burnin_target_acceptance_rate,
                                     mintuningParam = 0.0001, maxtuningParam = 100)
 
     tuningParam_multi_sigma <<- .self$x_tune(multi_sigma_trace[[1]][[1]], tuningParam_multi_sigma,

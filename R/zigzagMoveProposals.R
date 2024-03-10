@@ -89,7 +89,39 @@ zigzag$methods(
 
     return(c(newparam1, newparam2))
 
-  }
+  },
 
+  mirrorN = function(params, mu_star, sigma_star, support = c(-Inf, Inf)){
+
+    if(support[1] == -Inf & support[2] == Inf){
+      # (-Inf, Inf)
+      new_param = rnorm(length(mu_star), 2 * mu_star - params, sigma_star)
+      HR = 1
+
+    }else if(support[1] != -Inf & support[2] != Inf){
+      # [a, b]
+      y = log((params - support[1])/(support[2] - params))
+      new_y = rnorm(length(mu_star), 2 * mu_star - y, sigma_star)
+      new_param = (support[1] + support[2] * exp(y))/(1 + exp(y))
+      HR = ((support[2] - new_param)*(new_param - support[1]))/((support[2] - params)*(params - support[1]))
+
+    }else if(support[1] != -Inf & support[2] == Inf){
+      # [a, Inf)
+      y = log(params - support[1])
+      new_y = rnorm(length(mu_star), 2 * mu_star - y, sigma_star)
+      new_param = exp(new_y) + support[1]
+      HR = (new_param - support[1])/(params - support[1])
+
+    }else if(support[1] == -Inf & support[2] != Inf){
+      # (-Inf, a]
+      # new_param = rnorm(length(mu_star), 2 * mu_star - params, sigma_star)
+      # HR = 1
+    }
+
+    return(list(new_param, HR))
+
+  },
+
+  mirrorU = function(params, mu_star, sigma_star, tuningParam){}
 
 )
