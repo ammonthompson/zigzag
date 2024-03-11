@@ -1,10 +1,10 @@
 # read some data
 
 
-dat <- read.table("../simulate_data/simulated_data/sim1_sim_nactive4800.tsv", header=TRUE, row.names=1)
+dat <- read.table("../simulate_data/simulated_data/sim1_sim_nactive3000.tsv", header=TRUE, row.names=1)
 
 gene_length_df = read.table("../simulate_data/simulated_data/sim1_sim_gene_length.tsv",
-                            row.names = 1, header = FALSE)
+                            row.names = 1, header = TRUE)
 
 
 sq=rbind(c(1,2),c(3,4)); layout(sq)
@@ -17,10 +17,10 @@ mm <- zigzag$new(data = as.data.frame(dat), gene_length = gene_length_df[, 1], c
 
 
 mm$burnin(sample_frequency = 100, burnin_target_acceptance_rate=0.44,
-          write_to_files = T, ngen=25000)
+          write_to_files = T, ngen=500)
 
 
-mm$mcmc(sample_frequency = 50, write_to_files = T, ngen=30000, append = F,
+mm$mcmc(sample_frequency = 50, write_to_files = T, ngen=1000, append = F,
         run_posterior_predictive = T, mcmcprefix = "sim_check")
 
 

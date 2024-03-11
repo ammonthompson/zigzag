@@ -5,7 +5,7 @@
 ##########################
 
 file_prefix = "sim"
-num_yg = 200
+num_yg = 500
 df = read.table("sim_control_file.template.cf",header = F, row.names = 1)
 
 simulated_gene_lengths  = rlnorm(df$V2[5], log(2000), 0.5)
