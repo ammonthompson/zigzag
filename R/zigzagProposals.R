@@ -15,8 +15,7 @@ zigzag$methods(
     HR <- log(proposal[[2]])
 
     proposed_XgLikelihood <- .self$computeXgLikelihood(Xg[out_spike_idx,], Yg[out_spike_idx], variance_g_proposed, p_x[out_spike_idx,],
-                                                       spike_allocation = inactive_spike_allocation[out_spike_idx], nd_spike = no_detect_spike[out_spike_idx],
-                                                       bias_matrix = lib_bias_matrix[out_spike_idx,])
+                                                       spike_allocation = inactive_spike_allocation[out_spike_idx], nd_spike = no_detect_spike[out_spike_idx])
 
     proposed_varianceGProbability <- .self$computeVarianceGPriorProbability(variance_g_proposed, Sg[out_spike_idx])
 
@@ -232,17 +231,17 @@ zigzag$methods(
 
     if(recover_x) recover()
 
-    proposed_p_x[,randlib] <- .self$get_px(falpha_r = proposed_alpha_r[randlib], yy = Yg, bias_m = lib_bias_matrix[,randlib, drop = F])
+    proposed_p_x[,randlib] <- .self$get_px(falpha_r = proposed_alpha_r[randlib], yy = Yg)
 
     if(num_libraries > 2){
 
       proposed_xgLikelihood <- .self$XgLikelihood +
-        .self$computeXgLikelihood(Xg[,randlib], Yg, variance_g, proposed_p_x[,randlib], bias_matrix = lib_bias_matrix[,randlib, drop = F]) -
-        .self$computeXgLikelihood(Xg[,randlib], Yg, variance_g, p_x[,randlib], bias_matrix = lib_bias_matrix[,randlib, drop = F])
+        .self$computeXgLikelihood(Xg[,randlib], Yg, variance_g, proposed_p_x[,randlib]) -
+        .self$computeXgLikelihood(Xg[,randlib], Yg, variance_g, p_x[,randlib])
 
     }else{
 
-      proposed_xgLikelihood <- .self$computeXgLikelihood(Xg, Yg, variance_g, proposed_p_x, bias_matrix = lib_bias_matrix)
+      proposed_xgLikelihood <- .self$computeXgLikelihood(Xg, Yg, variance_g, proposed_p_x)
 
     }
 
@@ -287,12 +286,11 @@ zigzag$methods(
 
     Sg_proposed <- .self$get_sigmax(yy = Yg_proposed)
 
-    p_x_proposed <- .self$get_px(yy = Yg_proposed, gl = gene_lengths[out_spike_idx], bias_m = lib_bias_matrix[out_spike_idx,])
+    p_x_proposed <- .self$get_px(yy = Yg_proposed, gl = gene_lengths[out_spike_idx])
 
     ## proposed Yg likelihoods
     proposed_XgLikelihood = .self$computeXgLikelihood(Xg[out_spike_idx,], Yg_proposed, variance_g[out_spike_idx], p_x_proposed,
-                                                      spike_allocation = inactive_spike_allocation[out_spike_idx],
-                                                      bias_matrix = lib_bias_matrix[out_spike_idx,])
+                                                      spike_allocation = inactive_spike_allocation[out_spike_idx])
 
     proposed_varianceGProbability = .self$computeVarianceGPriorProbability(variance_g[out_spike_idx], Sg_proposed)
 
@@ -576,7 +574,7 @@ zigzag$methods(
 
     variance_g_proposed <- rlnorm(length(zero_and_inactive_idx), log(Sg_proposed) + tau, sqrt(tau))  # P(variance_g | proposed_Yg)
 
-    p_x_proposed <- .self$get_px(yy = yg_proposed, gl = gene_lengths[zero_and_inactive_idx], bias_m = lib_bias_matrix[zero_and_inactive_idx,])
+    p_x_proposed <- .self$get_px(yy = yg_proposed, gl = gene_lengths[zero_and_inactive_idx])
 
 
     #*** Compute prior probabilities
@@ -605,8 +603,7 @@ zigzag$methods(
     #*** Compute Likelihoods
 
     Lp = .self$computeXgLikelihood(Xg[zero_and_inactive_idx,], yg_proposed, variance_g_proposed, p_x_proposed,
-                                   inactive_spike_allocation_proposal, nd_spike = no_detect_spike[zero_and_inactive_idx],
-                                   bias_matrix = lib_bias_matrix[zero_and_inactive_idx,])
+                                   inactive_spike_allocation_proposal, nd_spike = no_detect_spike[zero_and_inactive_idx])
     Lc = XgLikelihood[zero_and_inactive_idx]
 
     both_inf_boolean = ifelse(Lp == -Inf & Lc == -Inf, TRUE, FALSE)
@@ -794,191 +791,6 @@ zigzag$methods(
 
   },
 
-  mhInactiveBias = function(recover_x = FALSE, tune = FALSE){
-
-    current_simplex <- inactive_bias/bias_scalor + 1/num_libraries
-    proposed_simplex <- r_dirichlet(current_simplex * tuningParam_inactive_bias)
-    inactive_bias_proposed <- bias_scalor * (proposed_simplex - 1/num_libraries)
-
-    logHastings = d_dirichlet(current_simplex, proposed_simplex * tuningParam_inactive_bias , log = TRUE)  -
-      d_dirichlet(proposed_simplex, current_simplex * tuningParam_inactive_bias , log =TRUE)
-
-
-    ################
-
-
-    lib_bias_matrix_proposed <- .self$get_lib_bias_matrix(ib = inactive_bias_proposed, ab = active_bias)
-
-    pp = .self$computeBiasProbability(inactive_bias_proposed)
-
-    pc = .self$computeBiasProbability(inactive_bias)
-
-    px_proposed = .self$get_px(bias_m = lib_bias_matrix_proposed)
-
-    if(length(inactive_idx) > 0){
-
-      Lp_g = .self$computeXgLikelihood(Xg[out_spike_idx,], Yg[out_spike_idx], variance_g[out_spike_idx], px_proposed[out_spike_idx,],
-                                         spike_allocation = inactive_spike_allocation[out_spike_idx],
-                                         nd_spike = no_detect_spike[out_spike_idx],
-                                         bias_matrix = lib_bias_matrix_proposed[out_spike_idx,,drop = F])
-      Lc_g = XgLikelihood[out_spike_idx]
-
-      Lp = sum(Lp_g)
-      Lc = sum(Lc_g)
-
-    }else{
-
-      Lp = 0
-      Lc = 0
-
-    }
-
-    # R = temperature * (Lp - Lc + pp - pc)
-    R = temperature * (Lp - Lc + pp - pc + logHastings)
-
-
-    if(tune) inactive_bias_trace[[1]][[1]] <<- c(inactive_bias_trace[[1]][[1]][-1],0)
-
-    if(recover_x) recover()
-
-    if(log(runif(1)) < R){
-
-      inactive_bias <<- inactive_bias_proposed
-
-      lib_bias_matrix <<- lib_bias_matrix_proposed
-
-      if(tune) inactive_bias_trace[[1]][[1]][100] <<- 1
-
-      ## update XgLikelihood
-      if(length(inactive_idx) > 0) XgLikelihood[out_spike_idx] <<- Lp_g
-
-      p_x <<- px_proposed
-
-    }
-
-  },
-
-  mhActiveBias = function(recover_x = FALSE, tune = FALSE){
-
-    current_simplex <- active_bias/bias_scalor + 1/num_libraries
-    proposed_simplex <- r_dirichlet(current_simplex * tuningParam_active_bias)
-    active_bias_proposed <- bias_scalor * (proposed_simplex - 1/num_libraries)
-
-    logHastings = d_dirichlet(current_simplex, proposed_simplex * tuningParam_active_bias , log = TRUE)  -
-      d_dirichlet(proposed_simplex, current_simplex * tuningParam_active_bias , log =TRUE)
-
-
-
-    ########
-
-    lib_bias_matrix_proposed <- .self$get_lib_bias_matrix(ib = inactive_bias, ab = active_bias_proposed)
-
-    pp = .self$computeBiasProbability(active_bias_proposed)
-
-    pc = .self$computeBiasProbability(active_bias)
-
-    px_proposed = .self$get_px(bias_m = lib_bias_matrix_proposed)
-
-    if(length(active_idx) > 0){
-
-      Lp_g = .self$computeXgLikelihood(Xg[out_spike_idx,], Yg[out_spike_idx], variance_g[out_spike_idx], px_proposed[out_spike_idx,],
-                                         spike_allocation = inactive_spike_allocation[out_spike_idx],
-                                         nd_spike = no_detect_spike[out_spike_idx],
-                                         bias_matrix = lib_bias_matrix_proposed[out_spike_idx,])
-      Lc_g = .self$XgLikelihood[out_spike_idx]
-
-      Lp = sum(Lp_g)
-      Lc = sum(Lc_g)
-
-    }else{
-
-      Lp = 0
-      Lc = 0
-
-    }
-
-    R = temperature * (Lp - Lc + pp - pc + logHastings)
-
-
-    if(tune) active_bias_trace[[1]][[1]] <<- c(active_bias_trace[[1]][[1]][-1],0)
-
-    if(recover_x) recover()
-
-    if(log(runif(1)) < R){
-
-      active_bias <<- active_bias_proposed
-
-      lib_bias_matrix <<- lib_bias_matrix_proposed
-
-      if(tune) active_bias_trace[[1]][[1]][100] <<- 1
-
-      ## update XgLikelihood
-      if(length(active_idx) > 0) XgLikelihood[out_spike_idx] <<- Lp_g
-
-      p_x <<- px_proposed
-
-    }
-
-  },
-
-  gibbsAllocationActiveInactiveLibBias = function(recover_x = FALSE, tune = FALSE) {
-
-    ### Gibbs move active/inactive component
-
-    inactive_lib_bias_matrix <- get_lib_bias_matrix(i_idx = seq(num_transcripts), a_idx = NULL)
-    active_lib_bias_matrix <- get_lib_bias_matrix(i_idx = NULL, a_idx = seq(num_transcripts))
-
-    prior_inactive_lib_bias_matrix <- .self$computeBiasMatrixProbability(i_idx = seq(num_transcripts), a_idx = NULL)
-    prior_active_lib_bias_matrix <- .self$computeBiasMatrixProbability(i_idx=NULL, a_idx=seq(num_transcripts))
-
-    inactive_px <- .self$get_px(bias_m = inactive_lib_bias_matrix)
-    active_px <- .self$get_px(bias_m = active_lib_bias_matrix)
-
-    inactive_XgLikelihood <- .self$computeXgLikelihood(Xg, Yg, variance_g, inactive_px,
-                                                        spike_allocation = inactive_spike_allocation,
-                                                        nd_spike = no_detect_spike,
-                                                        bias_matrix = inactive_lib_bias_matrix)
-
-    active_XgLikelihood <- .self$computeXgLikelihood(Xg, Yg, variance_g, active_px,
-                                                       spike_allocation = inactive_spike_allocation,
-                                                       nd_spike = no_detect_spike,
-                                                       bias_matrix = active_lib_bias_matrix)
-
-    L_0 = exp(inactive_XgLikelihood +
-              .self$computeInactiveLikelihood(Yg, spike_probability, inactive_means, inactive_variances, inactive_spike_allocation, all = TRUE) +
-              prior_inactive_lib_bias_matrix)
-
-    L_1 = 0
-
-    for(k in seq(num_active_components)){
-
-      L_1 = L_1 + weight_within_active[k] * exp(.self$computeActiveLikelihood(Yg, k, active_means, active_variances, all = TRUE))
-
-    }
-    L_1 = L_1 * exp(active_XgLikelihood + prior_active_lib_bias_matrix)
-
-    prob_active <- weight_active * L_1 * (1-inactive_spike_allocation)/((1 - weight_active) * L_0 + weight_active * L_1 * (1-inactive_spike_allocation))
-    prob_active[is.nan(prob_active)] <- weight_active
-
-    if(recover_x) recover()
-
-    allocation_active_inactive <<- rbinom(num_transcripts, 1, prob_active)
-
-
-    if(!is.null(active_gene_set)) allocation_active_inactive[active_gene_set_idx] <<- as.integer(1)
-
-    .self$setActiveInactive_idx()
-
-    .self$gibbsAllocationWithinActive()
-
-    lib_bias_matrix <<- .self$get_lib_bias_matrix()
-
-    p_x <<- .self$get_px()
-
-    XgLikelihood[allocation_active_inactive == 0] <<-  inactive_XgLikelihood[allocation_active_inactive == 0]
-    XgLikelihood[allocation_active_inactive == 1] <<-  active_XgLikelihood[allocation_active_inactive == 1]
-
-  },
 
   mhSharedActiveInactiveVariance = function(recover_x = FALSE, tune = FALSE){
 

@@ -89,7 +89,6 @@
 #' @field alpha_r_rate .
 #' @field p_x .
 #' @field alpha_r .
-#' @field library_bias .
 #' @field inactive_spike_allocation .
 #' @field allocation_active_inactive .
 #' @field allocation_active_inactive_prob .
@@ -165,8 +164,6 @@ zigzag <- setRefClass(
     tuningParam_variance_g = "numeric",
     tuningParam_multi_sigma = "numeric",
     tuningParam_sigma_mu = "numeric",
-    tuningParam_inactive_bias = "numeric",
-    tuningParam_active_bias = "numeric",
 
     multi_sigma_trace = "list",
     sigma_mu_trace = "list",
@@ -252,16 +249,6 @@ zigzag <- setRefClass(
     p_x = "matrix",
     alpha_r = "numeric",
     alpha_r_trace = "list",
-
-    library_bias = "logical",
-    bias_alpha = "numeric",
-    bias_scalor = "numeric",
-    bias_var = "numeric",
-    inactive_bias = "numeric",
-    inactive_bias_trace = "list",
-    active_bias = "numeric",
-    active_bias_trace = "list",
-    lib_bias_matrix = "matrix",
 
     # whether Yg is allocated to the spike value inf_tol
     no_detect_spike = "numeric",
