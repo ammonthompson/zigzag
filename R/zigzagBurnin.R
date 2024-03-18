@@ -4,13 +4,10 @@ zigzag$methods(
 #' @name burnin
 #' @description Run burnin and tune proposal size parameters for hieararchical bayesian mixture model
 #' @usage burnin(sample_frequency = 100, ngen = 1000, burnin_target_acceptance_rate=0.44,
-#' target_ESS = NULL, progress_plot = FALSE, write_to_files = TRUE,
-#' burninprefix = "burnin", append = FALSE)
+#' progress_plot = FALSE, write_to_files = TRUE, burninprefix = "burnin", append = FALSE)
 #' @param sample_frequency Number of generations between samples from the chain
 #' @param ngen Number of generations to run the chain
 #' @param burnin_target_acceptance_rate proportion of proposals that are accepted. For proposal size tuning.
-#' @param threads Depricated
-#' @param target_ESS Depricated. Probably
 #' @param progress_plot Show plots of model statistics as MCMC progresses
 #' @param write_to_files Write burnin samples to output files in burninprefix_burnin_output directory
 #' @param burninprefix The prefix for the burnin output directory as well as the burnin output files within
@@ -21,9 +18,13 @@ zigzag$methods(
 #'
 # @examples
 #'
-  burnin = function(sample_frequency = 100, ngen = 10000, burnin_target_acceptance_rate=0.44,
-                 threads = 1, target_ESS = NULL, progress_plot = FALSE, write_to_files = TRUE,
-                 burninprefix = "output", append = FALSE){
+  burnin = function(sample_frequency = 100,
+                    ngen = 10000,
+                    burnin_target_acceptance_rate=0.44,
+                    progress_plot = FALSE,
+                    write_to_files = TRUE,
+                    burninprefix = "output",
+                    append = FALSE){
 
   timestart = as.numeric(Sys.time())
 
@@ -39,7 +40,10 @@ zigzag$methods(
    dir.create(paste0(output_directory, "/", mcmc_prefixdir))
    .self$initializeOutputFiles(paste0(mcmc_prefixdir, "/", prefix))
 
-  }else if(append == TRUE & !file.exists(paste0(output_directory, "/", mcmc_prefixdir, "/", burninprefix, "_burnin_model_parameters.log"))){
+  }else if(append == TRUE & !file.exists(paste0(output_directory, "/",
+                                                mcmc_prefixdir, "/",
+                                                burninprefix,
+                                                "_burnin_model_parameters.log"))){
 
    print("File does not exist to append. Creating new file")
    dir.create(paste0(output_directory, "/", mcmc_prefixdir))
@@ -83,7 +87,7 @@ zigzag$methods(
 
      xx_timestart = as.numeric(Sys.time())
 
-     if(is.null(target_ESS)) j = i
+     j = i
 
      cat("#### ",i," ####  ", lnl_trace[[length(lnl_trace)]], "\n")
 
@@ -125,12 +129,6 @@ zigzag$methods(
        if((i / sample_frequency) %% 4 == 0)
          .self$writeToYgVariancegOutputFiles(paste0(mcmc_prefixdir,"/", prefix), gen = i)
 
-     }
-
-     if(!is.null(target_ESS)  & length(lnl_trace) > 100){
-       if(.self$calculate_lnl_ESS() > target_ESS){
-         break
-       }
      }
 
      cat("time: ", as.numeric(Sys.time()) - timestart, "\n")
