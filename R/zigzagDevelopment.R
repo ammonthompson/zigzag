@@ -467,7 +467,7 @@ zigzag$methods(
 
     }else{
 
-      if(shared_active_variances){
+      if(shared_active_variance){
 
         active_variances_proposed <<- rep(10^(.self$two_boundary_slide_move(
           log(active_variances[1], 10), active_variances_prior_log_min, active_variances_prior_log_max, active_variance_tuningParam[1])),
@@ -554,7 +554,7 @@ zigzag$methods(
 
       }else{
 
-        if(shared_active_variances){
+        if(shared_active_variance){
 
           active_variances <<- rep(active_variances_proposed[1], num_active_components)
 

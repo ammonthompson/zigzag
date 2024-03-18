@@ -734,7 +734,7 @@ zigzag$methods(
 
     k = sample(num_active_components, 1, replace = TRUE)
 
-    if(shared_active_variances){
+    if(shared_active_variance){
 
       active_variances_proposed <<- rep(10^(.self$two_boundary_slide_move(
         log(active_variances[1], 10), active_variances_prior_log_min, active_variances_prior_log_max, active_variance_tuningParam[1])),
@@ -772,7 +772,7 @@ zigzag$methods(
 
     if(log(runif(1)) < R){
 
-      if(shared_active_variances){
+      if(shared_active_variance){
 
         active_variances <<- rep(active_variances_proposed[1], num_active_components)
 
@@ -792,7 +792,7 @@ zigzag$methods(
   },
 
 
-  mhSharedActiveInactiveVariance = function(recover_x = FALSE, tune = FALSE){
+  mhSharedVariance = function(recover_x = FALSE, tune = FALSE){
 
     # inactive and active components share variance. Propose new active variance and set inactive equal
 

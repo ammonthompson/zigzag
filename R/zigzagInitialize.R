@@ -18,8 +18,8 @@ zigzag$methods(
                         active_means_dif_prior_rate = 1/3,
                         active_variances_prior_min = 0.01,
                         active_variances_prior_max = 5,
-                        shared_active_variances = TRUE,
-                        shared_active_inactive_variances = TRUE,
+                        shared_active_variance = TRUE,
+                        shared_variance = TRUE,
                         output_directory = "output",
                         multi_ta = FALSE,
                         threshold_a = "auto",
@@ -38,11 +38,11 @@ zigzag$methods(
                         active_gene_set = NULL,
                         ...) {
 
-    shared_active_inactive_variances <<- shared_active_inactive_variances
-    if(shared_active_inactive_variances){
-      shared_active_variances <<- TRUE
+    shared_variance <<- shared_variance
+    if(shared_variance){
+      shared_active_variance <<- TRUE
     }else{
-      shared_active_variances <<- shared_active_variances
+      shared_active_variance <<- shared_active_variance
     }
     ############################
     ## Set up data matrix, Xg ##
@@ -258,16 +258,16 @@ zigzag$methods(
                            .self$mhS0Tau,
                            .self$mhP_x)
 
-    if(shared_active_inactive_variances) proposal_list[[7]]  <<- .self$mhSharedActiveInactiveVariance
+    if(shared_variance) proposal_list[[7]]  <<- .self$mhSharedVariance
 
     is2Libs <- (num_libraries == 2) * 0.5 # use this variable to upweight probability of proposing L1 variance params
 
     if(num_libraries > 1 ){
 
       proposal_probs <<- c(8, 60, 10,                                                      ### weights, alloc active_inactive, alloc within_active
-                           12, 15 * (1 - shared_active_inactive_variances),                ### i_mean, i_var
+                           12, 15 * (1 - shared_variance),                ### i_mean, i_var
                            10,                                                             ### a_mean
-                           8 + 4 * (1 - shared_active_variances),                          ### a_var
+                           8 + 4 * (1 - shared_active_variance),                          ### a_var
                            5, 10,                                                          ### spike prob, spike alloc
                            c(2, 2) + is2Libs + 1 * (num_transcripts < 15000),              ### Yg, sigm_g
                            c(6, 6, 6),                                                     ### tau, Sg, s0tau
@@ -277,9 +277,9 @@ zigzag$methods(
     }else{
       # not implemented yet
       proposal_probs <<- c(8, 60,10,                                                      ### weights, alloc active_inactive, alloc within_active
-                           12, 15 * (1 - shared_active_inactive_variances),               ### i_mean, i_var
+                           12, 15 * (1 - shared_variance),               ### i_mean, i_var
                            8,                                                             ### a_mean
-                           4 + 4 * (1 - shared_active_variances),                         ### a_var
+                           4 + 4 * (1 - shared_active_variance),                         ### a_var
                            5, 0,                                                          ### spike prob, spike alloc
                            c(1, 1) * 0,                                                   ### Yg, sigm_g
                            c(6, 6, 6) * 0,                                                ### tau, Sg, s0tau
@@ -331,7 +331,7 @@ zigzag$methods(
     active_variances_prior_log_min <<- log(active_variances_prior_min, 10)
     active_variances_prior_log_max <<- log(active_variances_prior_max, 10)
 
-    if(shared_active_variances){
+    if(shared_active_variance){
 
       active_variances <<- rep(10^(runif(1, active_variances_prior_log_min, active_variances_prior_log_max)), num_acomps)
       active_variances_proposed <<- active_variances
@@ -364,7 +364,7 @@ zigzag$methods(
     inactive_variances_prior_max <<- inactive_variances_prior_max
     inactive_variances_prior_log_min <<- log(inactive_variances_prior_min, 10)
     inactive_variances_prior_log_max <<- log(inactive_variances_prior_max, 10)
-    if(shared_active_inactive_variances){
+    if(shared_variance){
       inactive_variances <<- active_variances[1]
     }else{
       inactive_variances <<- 10^(runif(1, inactive_variances_prior_log_min, inactive_variances_prior_log_max))

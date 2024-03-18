@@ -219,7 +219,7 @@ zigzag$methods(
                           burnin_target_acceptance_rate,
                           mintuningParam = 0.01, maxtuningParam = 10))})
 
-    if(shared_active_variances){
+    if(shared_active_variance){
 
       active_variance_tuningParam   <<- sapply(seq(num_active_components), function(lib){
         return(.self$x_tune(active_variances_trace[[1]][[1]][1,], active_variance_tuningParam[1], burnin_target_acceptance_rate,
