@@ -8,6 +8,8 @@
 \usage{
 zigzag$new(data, gene_length = NULL, candidate_gene_list = "all",
 num_active_components = "auto",
+shared_variance = TRUE,
+shared_active_variance = TRUE,
 weight_active_shape_1 = 2,
 weight_active_shape_2 = 2,
 inactive_means_prior_shape = 1,
@@ -20,7 +22,6 @@ active_means_dif_prior_shape = 1,
 active_means_dif_prior_rate = 1/3,
 active_variances_prior_min = 0.01,
 active_variances_prior_max = 5,
-shared_active_variances = TRUE,
 output_directory = "output",
 threshold_a = "auto",
 threshold_i = "auto": threshold_a[1],
@@ -49,8 +50,6 @@ hyperparameters and initializes all model parameters.
 
 \item{\code{output_directory}}{A directory where burnin and and mcmc log files and plots are created and stored.}
 
-\item{\code{gene_names}}{A character vector of length G contianing the gene names.}
-
 \item{\code{num_libraries}}{The number of libraries in the data.}
 
 \item{\code{num_active_components}}{The number of Normally-distributed subcomponents of the active distribution.}
@@ -70,7 +69,11 @@ and the difference between mean 2 and 3 will be gamma distributed.}
 
 \item{\code{candidate_gene_list}}{A character vector of genes of interest for which mcmc log files for Yg and variance_g should be output.}
 
-\item{\code{shared_active_variances}}{A boolean indicating if all active subcomponents share a variance component. If FALSE, a variance parameter is estimated for each component.}
+\item{\code{shared_variance}}{Boolean indicating if all latent mixture components have same variance.}
+
+\item{\code{shared_active_variance}}{If shared_variance is TRUE, this is also set to TRUE.
+A boolean indicating if all active subcomponents share a variance component.
+If FALSE, a variance parameter is estimated for each component.}
 
 \item{\code{variance_g_upper_bound}}{The upper boundary for the truncated log-normal prior for gene-specific variances. Default = Inf}
 

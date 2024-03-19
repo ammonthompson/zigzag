@@ -38,12 +38,11 @@ zigzag$methods(
                         active_gene_set = NULL,
                         ...) {
 
-    shared_variance <<- shared_variance
-    if(shared_variance){
-      shared_active_variance <<- TRUE
-    }else{
-      shared_active_variance <<- shared_active_variance
-    }
+    .self$shared_variance <- shared_variance
+    .self$shared_active_variance <- shared_active_variance
+    if(shared_variance) .self$shared_active_variance <- TRUE
+
+
     ############################
     ## Set up data matrix, Xg ##
     ############################
@@ -331,7 +330,7 @@ zigzag$methods(
     active_variances_prior_log_min <<- log(active_variances_prior_min, 10)
     active_variances_prior_log_max <<- log(active_variances_prior_max, 10)
 
-    if(shared_active_variance){
+    if(.self$shared_active_variance){
 
       active_variances <<- rep(10^(runif(1, active_variances_prior_log_min, active_variances_prior_log_max)), num_acomps)
       active_variances_proposed <<- active_variances
