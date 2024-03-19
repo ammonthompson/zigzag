@@ -137,12 +137,12 @@ for(i in seq(params[17])){
 
 	# expression data file
 	write.table(cbind(row.names(sim_xg), exp(sim_xg)),
-	            file = paste0(output_dir, "sim", i, "_", file_prefix, "_nactive", nactive, ".tsv"),
+	            file = paste0(output_dir, "sim", i, ".tsv"),
 	            quote = F, row.names = FALSE, col.names = colnames, sep="\t")
 
 	# gene length file
   write.table(cbind(row.names(sim_xg), sim_gl),
-              file = paste0(output_dir, "sim", i, "_", file_prefix, "_gene_length.tsv"),
+              file = paste0(output_dir, "sim", i, "_gene_length.tsv"),
               quote=FALSE, row.names = FALSE, col.names=c("gene_name", "gene_length"), sep = "\t")
 
   # yg and simga_g of interest data
