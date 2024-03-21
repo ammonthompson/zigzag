@@ -82,7 +82,7 @@ zigzag$methods(
 
       num_acomps <- num_active_components
 
-      if(any(is.character(threshold_a)) || threshold_a == "auto"){
+      if(any(is.character(threshold_a), threshold_a == "auto")){
 
         auto_thresholds_list <- .self$findthresholds(rmedians_noInf, num_acomps)
 
@@ -108,7 +108,7 @@ zigzag$methods(
 
       }
 
-      if(any(is.character(threshold_i)) || threshold_i == "auto"){
+      if(any(is.character(threshold_i), threshold_i == "auto")){
 
         auto_thresholds_list <- .self$findthresholds(rmedians_noInf, num_acomps)
 
