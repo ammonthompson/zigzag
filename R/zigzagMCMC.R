@@ -137,10 +137,10 @@ zigzag$methods(
     #########################
     all_allocation_mcmc <- allocation_active_inactive * allocation_within_active[[1]]
 
-    allocation_trace <<- matrix(apply(component_matrix, 2, function(comp_matrix_col) 1 *
+    .self$allocation_trace <- matrix(apply(component_matrix, 2, function(comp_matrix_col) 1 *
                         (comp_matrix_col == all_allocation_mcmc)), nrow = num_transcripts)
 
-    lnl_trace[[length(lnl_trace) + 1]] <<- .self$calculate_lnl(num_libraries)
+    .self$lnl_trace[[length(lnl_trace) + 1]] <- .self$calculate_lnl(num_libraries)
 
     i <- gen
     j <- 0
@@ -178,12 +178,12 @@ zigzag$methods(
         if(temperature == 1){
 
           all_allocation_mcmc <- allocation_active_inactive * allocation_within_active[[1]]
-          allocation_trace <<- allocation_trace + apply(component_matrix, 2, function(comp_matrix_col) 1 *
+          .self$allocation_trace <- allocation_trace + apply(component_matrix, 2, function(comp_matrix_col) 1 *
                                                           (comp_matrix_col == all_allocation_mcmc))
 
         }
 
-        lnl_trace[[length(lnl_trace) + 1]] <<- .self$calculate_lnl(num_libraries)
+        .self$lnl_trace[[length(lnl_trace) + 1]] <- .self$calculate_lnl(num_libraries)
 
 
         if(write_to_files & write_yg_varg * temperature == 1){
@@ -227,7 +227,7 @@ zigzag$methods(
 
 
       i = i + 1
-      gen <<- i
+      .self$gen <- i
 
       #if postpred interrupted, close out pdf devices
       on.exit(if(length(dev.list()) > 2) dev.off(post_pred_multi_L1_plot_device))

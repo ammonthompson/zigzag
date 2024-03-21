@@ -16,7 +16,7 @@ zigzag$methods(
 
     mcgen <- .self$gen
 
-    proposal_probs[c(1,2,24)] <<- c(10, 0, 1)
+    .self$proposal_probs[c(1,2,24)] <- c(10, 0, 1)
 
     dT <- 0.025
 
@@ -118,7 +118,7 @@ zigzag$methods(
             chain_list[[hot_idx]]$allocation_trace <- chain_list[[cold_idx]]$allocation_trace
 
 
-            # chain_list[[swapchains[hot]]]$wtf <<- chain_list[[swapchains[cold]]]$wtf # wtf is write to file boolean
+            # .self$chain_list[[swapchains[hot]]]$wtf <- chain_list[[swapchains[cold]]]$wtf # wtf is write to file boolean
 
 
           }
@@ -154,7 +154,7 @@ zigzag$methods(
       require(matrixStats)
       require(coda)
 
-      beta <<- ssbeta[k]
+      .self$beta <- ssbeta[k]
 
       .self$burnin(sample_frequency = ss_sample_frequency, ngen = burnin_gen, write_to_files = F, target_ESS = floor(0.5*ESS_target))
 
@@ -192,7 +192,7 @@ zigzag$methods(
 
       logmarginal <- sum(sslikelihoods[,2])
 
-      beta <<- 1
+      .self$beta <- 1
 
     }
 
@@ -218,12 +218,12 @@ zigzag$methods(
 
     if(length(inactive_idx) > 0){
 
-      # spike_probability_proposed <<- abs(spike_probability + rnorm(1, 0, spike_probability_tuningParam[[1]]))
-      # if(spike_probability_proposed > 1) spike_probability_proposed <<- 2 - spike_probability_proposed
+      # .self$spike_probability_proposed <- abs(spike_probability + rnorm(1, 0, spike_probability_tuningParam[[1]]))
+      # if(spike_probability_proposed > 1) .self$spike_probability_proposed <- 2 - spike_probability_proposed
 
       proposal_scale <- spike_probability_tuningParam
 
-      spike_probability_proposed <<- rbeta(1, spike_probability * proposal_scale, (1 - spike_probability) * proposal_scale)
+      .self$spike_probability_proposed <- rbeta(1, spike_probability * proposal_scale, (1 - spike_probability) * proposal_scale)
 
       HR = dbeta(spike_probability, spike_probability_proposed * proposal_scale, (1 - spike_probability_proposed) * proposal_scale, log = TRUE) -
         dbeta(spike_probability_proposed, spike_probability * proposal_scale, (1 - spike_probability) * proposal_scale, log = TRUE)
@@ -242,25 +242,25 @@ zigzag$methods(
 
       if(recover_x) recover()
 
-      if(tune) spike_probability_trace[[1]][[1]] <<- c(spike_probability_trace[[1]][[1]][-1], 0)
+      if(tune) .self$spike_probability_trace[[1]][[1]] <- c(spike_probability_trace[[1]][[1]][-1], 0)
 
       if(log(runif(1)) < R){
 
-        spike_probability <<- spike_probability_proposed
+        .self$spike_probability <- spike_probability_proposed
 
-        if(tune) spike_probability_trace[[1]][[1]][100] <<- 1
+        if(tune) .self$spike_probability_trace[[1]][[1]][100] <- 1
 
       }
 
 
     }else{
 
-      # spike_probability_proposed <<- abs(spike_probability + rnorm(1, 0, spike_probability_tuningParam[[1]]))
-      # if(spike_probability_proposed > 1) spike_probability_proposed <<- 2 - spike_probability_proposed
+      # .self$spike_probability_proposed <- abs(spike_probability + rnorm(1, 0, spike_probability_tuningParam[[1]]))
+      # if(spike_probability_proposed > 1) .self$spike_probability_proposed <- 2 - spike_probability_proposed
 
       proposal_scale <- spike_probability_tuningParam
 
-      spike_probability_proposed <<- rbeta(1, spike_probability * proposal_scale, (1 - spike_probability) * proposal_scale)
+      .self$spike_probability_proposed <- rbeta(1, spike_probability * proposal_scale, (1 - spike_probability) * proposal_scale)
 
       HR = dbeta(spike_probability, spike_probability_proposed * proposal_scale, (1 - spike_probability_proposed) * proposal_scale, log = TRUE) -
         dbeta(spike_probability_proposed, spike_probability * proposal_scale, (1 - spike_probability) * proposal_scale, log = TRUE)
@@ -270,12 +270,12 @@ zigzag$methods(
 
       if(recover_x) recover()
 
-      if(tune) spike_probability_trace[[1]][[1]] <<- c(spike_probability_trace[[1]][[1]][-1], 0)
+      if(tune) .self$spike_probability_trace[[1]][[1]] <- c(spike_probability_trace[[1]][[1]][-1], 0)
 
       if(log(runif(1)) < R){
 
-        spike_probability <<- spike_probability_proposed
-        if(tune) spike_probability_trace[[1]][[1]][100] <<- 1
+        .self$spike_probability <- spike_probability_proposed
+        if(tune) .self$spike_probability_trace[[1]][[1]][100] <- 1
 
       }
 
@@ -322,9 +322,9 @@ zigzag$methods(
 
     lib <- 1
 
-    active_means_dif_proposed <<- active_means_dif
+    .self$active_means_dif_proposed <- active_means_dif
 
-    inactive_means_proposed <<- inactive_means
+    .self$inactive_means_proposed <- inactive_means
 
     not_inspike <- which(inactive_spike_allocation == 0)
 
@@ -334,9 +334,9 @@ zigzag$methods(
 
     if(active_or_inactive == 1){
 
-      inactive_means_proposed <<- threshold_i - abs(threshold_i - inactive_means - rnorm(1, 0, inactive_mean_tuningParam[[1]]))
+      .self$inactive_means_proposed <- threshold_i - abs(threshold_i - inactive_means - rnorm(1, 0, inactive_mean_tuningParam[[1]]))
 
-      if(tune) inactive_means_trace[[1]][[lib]] <<- c(inactive_means_trace[[1]][[lib]][-1],0)
+      if(tune) .self$inactive_means_trace[[1]][[lib]] <- c(inactive_means_trace[[1]][[lib]][-1],0)
 
       pp = computeInactiveMeansPriorProbability(inactive_means_proposed)
       pc = computeInactiveMeansPriorProbability(inactive_means)
@@ -346,9 +346,9 @@ zigzag$methods(
 
       pk <- sample(seq(num_active_components), 1)
 
-      active_means_dif_proposed[pk] <<- abs(active_means_dif[pk] + rnorm(1,0,active_mean_tuningParam[pk]))
+      .self$active_means_dif_proposed[pk] <- abs(active_means_dif[pk] + rnorm(1,0,active_mean_tuningParam[pk]))
 
-      if(tune) active_means_trace[[1]][[lib]][pk,] <<- c(active_means_trace[[1]][[lib]][pk,-1],0)
+      if(tune) .self$active_means_trace[[1]][[lib]][pk,] <- c(active_means_trace[[1]][[lib]][pk,-1],0)
 
       pp = computeActiveMeansDifPriorProbability(active_means_dif_proposed)
       pc = computeActiveMeansDifPriorProbability(active_means_dif)
@@ -415,17 +415,17 @@ zigzag$methods(
 
       if(active_or_inactive == 1){
 
-        inactive_means <<- inactive_means_proposed
+        .self$inactive_means <- inactive_means_proposed
 
-        if(tune) inactive_means_trace[[1]][[lib]][100] <<- 1
+        if(tune) .self$inactive_means_trace[[1]][[lib]][100] <- 1
 
       }else{
 
-        active_means_dif[pk] <<- active_means_dif_proposed[pk]
+        .self$active_means_dif[pk] <- active_means_dif_proposed[pk]
 
-        active_means <<- mp
+        .self$active_means <- mp
 
-        if(tune) active_means_trace[[1]][[lib]][pk,100] <<- 1
+        if(tune) .self$active_means_trace[[1]][[lib]][pk,100] <- 1
 
 
       }
@@ -441,9 +441,9 @@ zigzag$methods(
 
     lib <- 1
 
-    inactive_variances_proposed <<- inactive_variances
+    .self$inactive_variances_proposed <- inactive_variances
 
-    active_variances_proposed <<- active_variances
+    .self$active_variances_proposed <- active_variances
 
     not_inspike <- which(inactive_spike_allocation == 0)
 
@@ -453,14 +453,14 @@ zigzag$methods(
 
     if(active_or_inactive == 1){
 
-      inactive_variances_proposed <<- 10^(.self$two_boundary_slide_move(
+      .self$inactive_variances_proposed <- 10^(.self$two_boundary_slide_move(
         log(inactive_variances, 10), inactive_variances_prior_log_min, inactive_variances_prior_log_max, inactive_variance_tuningParam))
 
       pp = computeInactiveVariancesPriorProbability(inactive_variances_proposed)
 
       pc = computeInactiveVariancesPriorProbability(inactive_variances)
 
-      if(tune) inactive_variances_trace[[1]][[lib]] <<- c(inactive_variances_trace[[1]][[lib]][-1],0)
+      if(tune) .self$inactive_variances_trace[[1]][[lib]] <- c(inactive_variances_trace[[1]][[lib]][-1],0)
 
       #HR = log(inactive_variances_proposed/inactive_variances)
 
@@ -469,7 +469,7 @@ zigzag$methods(
 
       if(shared_active_variance){
 
-        active_variances_proposed <<- rep(10^(.self$two_boundary_slide_move(
+        .self$active_variances_proposed <- rep(10^(.self$two_boundary_slide_move(
           log(active_variances[1], 10), active_variances_prior_log_min, active_variances_prior_log_max, active_variance_tuningParam[1])),
           num_active_components)
 
@@ -477,7 +477,7 @@ zigzag$methods(
 
         pc = computeActiveVariancesPriorProbability(active_variances[1])
 
-        if(tune) active_variances_trace[[1]][[lib]][1,] <<- c(active_variances_trace[[1]][[lib]][1,-1],0)
+        if(tune) .self$active_variances_trace[[1]][[lib]][1,] <- c(active_variances_trace[[1]][[lib]][1,-1],0)
 
         #HR = log(active_variances_proposed[1]/active_variances[1])
 
@@ -486,14 +486,14 @@ zigzag$methods(
 
         pk <- sample(seq(num_active_components), 1)
 
-        active_variances_proposed[pk] <<- 10^(.self$two_boundary_slide_move(
+        .self$active_variances_proposed[pk] <- 10^(.self$two_boundary_slide_move(
           log(active_variances[pk], 10), active_variances_prior_log_min, active_variances_prior_log_max, active_variance_tuningParam[pk]))
 
         pp = computeActiveVariancesPriorProbability(active_variances_proposed)
 
         pc = computeActiveVariancesPriorProbability(active_variances)
 
-        if(tune) active_variances_trace[[1]][[lib]][pk,] <<- c(active_variances_trace[[1]][[lib]][pk,-1],0)
+        if(tune) .self$active_variances_trace[[1]][[lib]][pk,] <- c(active_variances_trace[[1]][[lib]][pk,-1],0)
 
         #HR = log(active_variances_proposed[pk]/active_variances[pk])
 
@@ -548,24 +548,24 @@ zigzag$methods(
 
       if(active_or_inactive == 1){
 
-        inactive_variances <<- inactive_variances_proposed
+        .self$inactive_variances <- inactive_variances_proposed
 
-        if(tune) inactive_variances_trace[[1]][[lib]][100] <<- 1
+        if(tune) .self$inactive_variances_trace[[1]][[lib]][100] <- 1
 
       }else{
 
         if(shared_active_variance){
 
-          active_variances <<- rep(active_variances_proposed[1], num_active_components)
+          .self$active_variances <- rep(active_variances_proposed[1], num_active_components)
 
-          if(tune) active_variances_trace[[1]][[lib]][1,100] <<- 1
+          if(tune) .self$active_variances_trace[[1]][[lib]][1,100] <- 1
 
 
         }else{
 
-          active_variances[pk] <<- active_variances_proposed[pk]
+          .self$active_variances[pk] <- active_variances_proposed[pk]
 
-          if(tune) active_variances_trace[[1]][[lib]][pk,100] <<- 1
+          if(tune) .self$active_variances_trace[[1]][[lib]][pk,100] <- 1
 
         }
 
@@ -588,8 +588,8 @@ zigzag$methods(
 
     if(0 %in% mixtureWeights_proposed) break
 
-    weight_active_proposed <<- 1 - mixtureWeights_proposed[1]
-    weight_within_active_proposed <<- mixtureWeights_proposed[-1]/sum(mixtureWeights_proposed[-1])
+    .self$weight_active_proposed <- 1 - mixtureWeights_proposed[1]
+    .self$weight_within_active_proposed <- mixtureWeights_proposed[-1]/sum(mixtureWeights_proposed[-1])
 
     allweights_priorProbabilityProposed <- d_dirichlet(mixtureWeights_proposed, c(weight_active_shape_1, weight_within_active_alpha), log = TRUE)
     allweights_priorProbability <- d_dirichlet(mixtureWeights, c(weight_active_shape_2, weight_within_active_alpha) , log = TRUE) #weight_active_shape_2 is for the inactive comp.
@@ -603,14 +603,14 @@ zigzag$methods(
 
     if(recover_x) recover()
 
-    if(tune) mixture_weight_trace[[1]][[1]] <<- c(mixture_weight_trace[[1]][[1]][-1],0)
+    if(tune) .self$mixture_weight_trace[[1]][[1]] <- c(mixture_weight_trace[[1]][[1]][-1],0)
 
     if(log(runif(1)) < logR){
 
-      weight_active <<- weight_active_proposed
-      weight_within_active <<- weight_within_active_proposed
+      .self$weight_active <- weight_active_proposed
+      .self$weight_within_active <- weight_within_active_proposed
 
-      if(tune) mixture_weight_trace[[1]][[1]][100] <<- 1
+      if(tune) .self$mixture_weight_trace[[1]][[1]][100] <- 1
 
     }
 
@@ -620,13 +620,13 @@ zigzag$methods(
 
     lib = 1
 
-    active_means_dif_proposed <<- active_means_dif
+    .self$active_means_dif_proposed <- active_means_dif
 
-    inactive_means_proposed <<- inactive_means
+    .self$inactive_means_proposed <- inactive_means
 
-    inactive_variances_proposed <<- inactive_variances
+    .self$inactive_variances_proposed <- inactive_variances
 
-    active_variances_proposed <<- active_variances
+    .self$active_variances_proposed <- active_variances
 
     not_inspike <- which(inactive_spike_allocation == 0)
 
@@ -641,7 +641,7 @@ zigzag$methods(
 
     if(random_mu == 0){
 
-      inactive_means_proposed <<- threshold_i - abs(threshold_i - inactive_means - rnorm(1, 0, inactive_mean_tuningParam))
+      .self$inactive_means_proposed <- threshold_i - abs(threshold_i - inactive_means - rnorm(1, 0, inactive_mean_tuningParam))
 
       mu_pp = computeInactiveMeansPriorProbability(inactive_means_proposed)
 
@@ -649,7 +649,7 @@ zigzag$methods(
 
     }else{
 
-      active_means_dif_proposed[random_mu] <<- abs(active_means_dif[random_mu] + rnorm(1, 0, active_mean_tuningParam[random_mu]))
+      .self$active_means_dif_proposed[random_mu] <- abs(active_means_dif[random_mu] + rnorm(1, 0, active_mean_tuningParam[random_mu]))
 
       mu_pp = computeActiveMeansDifPriorProbability(active_means_dif_proposed)
 
@@ -661,7 +661,7 @@ zigzag$methods(
 
     if(random_sigma == 0){
 
-      inactive_variances_proposed <<- 10^(.self$two_boundary_slide_move(log(inactive_variances, 10), inactive_variances_prior_log_min, inactive_variances_prior_log_max, inactive_variance_tuningParam))
+      .self$inactive_variances_proposed <- 10^(.self$two_boundary_slide_move(log(inactive_variances, 10), inactive_variances_prior_log_min, inactive_variances_prior_log_max, inactive_variance_tuningParam))
 
       sigma_pp = computeInactiveVariancesPriorProbability(inactive_variances_proposed)
 
@@ -673,7 +673,7 @@ zigzag$methods(
     }else{
 
 
-      active_variances_proposed[random_sigma] <<- 10^(.self$two_boundary_slide_move(log(active_variances[random_sigma], 10), active_variances_prior_log_min, active_variances_prior_log_max, active_variance_tuningParam[random_sigma]))
+      .self$active_variances_proposed[random_sigma] <- 10^(.self$two_boundary_slide_move(log(active_variances[random_sigma], 10), active_variances_prior_log_min, active_variances_prior_log_max, active_variance_tuningParam[random_sigma]))
 
       sigma_pp = computeActiveVariancesPriorProbability(active_variances_proposed)
 
@@ -731,42 +731,42 @@ zigzag$methods(
       if(random_mu == 0 && random_sigma == 0){
 
 
-        inactive_means <<- inactive_means_proposed
+        .self$inactive_means <- inactive_means_proposed
 
 
-        inactive_variances <<- inactive_variances_proposed
+        .self$inactive_variances <- inactive_variances_proposed
 
 
       }else if(random_mu == 0 && random_sigma > 0){
 
 
-        inactive_means <<- inactive_means_proposed
+        .self$inactive_means <- inactive_means_proposed
 
 
-        active_variances[random_sigma] <<- active_variances_proposed[random_sigma]
+        .self$active_variances[random_sigma] <- active_variances_proposed[random_sigma]
 
 
 
       }else if( random_mu > 0 && random_sigma == 0){
 
 
-        active_means_dif[random_mu] <<- active_means_dif_proposed[random_mu]
+        .self$active_means_dif[random_mu] <- active_means_dif_proposed[random_mu]
 
-        active_means <<- mp
+        .self$active_means <- mp
 
 
-        inactive_variances <<- inactive_variances_proposed
+        .self$inactive_variances <- inactive_variances_proposed
 
 
       }else{
 
 
-        active_means_dif[random_mu] <<- active_means_dif_proposed[random_mu]
+        .self$active_means_dif[random_mu] <- active_means_dif_proposed[random_mu]
 
-        active_means <<- mp
+        .self$active_means <- mp
 
 
-        active_variances[random_sigma] <<- active_variances_proposed[random_sigma]
+        .self$active_variances[random_sigma] <- active_variances_proposed[random_sigma]
 
       }
 
@@ -852,11 +852,11 @@ zigzag$methods(
     if(recover_x) recover()
 
 
-    inactive_spike_allocation[zero_and_inactive_idx] <<- current_proposed[choice_matrix]
+    .self$inactive_spike_allocation[zero_and_inactive_idx] <- current_proposed[choice_matrix]
 
-    Yg[zero_and_inactive_idx][proposed_out_spike_idx] <<- yg_current_proposed[choice_matrix][proposed_out_spike_idx]
+    .self$Yg[zero_and_inactive_idx][proposed_out_spike_idx] <- yg_current_proposed[choice_matrix][proposed_out_spike_idx]
 
-    Yg[zero_and_inactive_idx][proposed_in_spike_idx] <<- yg_current_proposed[choice_matrix][proposed_in_spike_idx]
+    .self$Yg[zero_and_inactive_idx][proposed_in_spike_idx] <- yg_current_proposed[choice_matrix][proposed_in_spike_idx]
 
     .self$set_sigmaX_pX()
 
@@ -875,7 +875,7 @@ zigzag$methods(
 
     proposed_alpha_r[randlib] <- proposal[[1]]
 
-    if(tune) alpha_r_trace[[1]][[1]][randlib,] <<- c(alpha_r_trace[[1]][[1]][randlib, -1], 0)
+    if(tune) .self$alpha_r_trace[[1]][[1]][randlib,] <- c(alpha_r_trace[[1]][[1]][randlib, -1], 0)
 
     HR <- log(proposal[[2]])
 
@@ -896,11 +896,11 @@ zigzag$methods(
 
     if(log(runif(1)) < R & ! is.nan(R) & ! is.na(R)){
 
-      alpha_r[randlib] <<- proposed_alpha_r[randlib]
+      .self$alpha_r[randlib] <- proposed_alpha_r[randlib]
 
-      p_x[,randlib] <<- proposed_p_x[,randlib]
+      .self$p_x[,randlib] <- proposed_p_x[,randlib]
 
-      if(tune) alpha_r_trace[[1]][[1]][randlib,100] <<- 1
+      if(tune) .self$alpha_r_trace[[1]][[1]][randlib,100] <- 1
 
     }
 
@@ -912,7 +912,7 @@ zigzag$methods(
 
     nodetect_active_idx <- which(allocation_active_inactive[all_zero_idx] == 1)
 
-    Yg_proposed <<- Yg[all_zero_idx] + rnorm(length(all_zero_idx), 0, tuningParam_yg[all_zero_idx]) * (1 - inactive_spike_allocation[all_zero_idx])
+    .self$Yg_proposed <- Yg[all_zero_idx] + rnorm(length(all_zero_idx), 0, tuningParam_yg[all_zero_idx]) * (1 - inactive_spike_allocation[all_zero_idx])
 
     p_x_proposed <- .self$get_px(yy = Yg_proposed,  gl = gene_lengths[all_zero_idx])
     # p_x_proposed <- .self$xxget_px(yy = Yg_proposed,  gl = gene_lengths[all_zero_idx], xx = Xg[all_zero_idx,], sg = variance_g[all_zero_idx])
@@ -954,24 +954,24 @@ zigzag$methods(
 
     choice_idx <- 1 + (log(runif(length(Yg_proposed))) < R)
 
-    Yg[all_zero_idx] <<- current_and_proposed[cbind(seq(length(Yg_proposed)), choice_idx)]
+    .self$Yg[all_zero_idx] <- current_and_proposed[cbind(seq(length(Yg_proposed)), choice_idx)]
 
 
     ## update XgLikelihood, Sg and p_x
 
-    XgLikelihood[all_zero_idx] <<- current_and_proposed_likelihood[cbind(seq(length(Yg_proposed)), choice_idx)]
+    .self$XgLikelihood[all_zero_idx] <- current_and_proposed_likelihood[cbind(seq(length(Yg_proposed)), choice_idx)]
 
     .self$set_sigmaX_pX()
 
-    if(tune) Yg_trace[all_zero_idx,] <<- cbind(Yg_trace[all_zero_idx,-1], choice_idx - 1)
+    if(tune) .self$Yg_trace[all_zero_idx,] <- cbind(Yg_trace[all_zero_idx,-1], choice_idx - 1)
 
   },
 
   mhCombinedMultiSigma = function(sigma_test = FALSE, tune = FALSE){
 
-    inactive_variances_proposed <<- inactive_variances
+    .self$inactive_variances_proposed <- inactive_variances
 
-    active_variances_proposed <<- active_variances
+    .self$active_variances_proposed <- active_variances
 
     not_inspike <- which(inactive_spike_allocation == 0)
 
@@ -987,17 +987,17 @@ zigzag$methods(
 
         proposal <- .self$twoSigma_slide_move(log(c(inactive_variances, active_variances_proposed[pk]), 10), inactive_variances_prior_log_min, inactive_variances_prior_log_max, inactive_variance_tuningParam)
 
-        inactive_variances_proposed <<- 10^proposal[1]
+        .self$inactive_variances_proposed <- 10^proposal[1]
 
-        active_variances_proposed[pk] <<- 10^proposal[2]
+        .self$active_variances_proposed[pk] <- 10^proposal[2]
 
       }else{
 
         proposal <- .self$twoSigma_slide_move(log(c(active_variances_proposed[pk], inactive_variances), 10), active_variances_prior_log_min, active_variances_prior_log_max, active_variance_tuningParam[pk])
 
-        inactive_variances_proposed <<- 10^proposal[2]
+        .self$inactive_variances_proposed <- 10^proposal[2]
 
-        active_variances_proposed[pk] <<- 10^proposal[1]
+        .self$active_variances_proposed[pk] <- 10^proposal[1]
 
       }
 
@@ -1013,9 +1013,9 @@ zigzag$methods(
 
       proposal <- .self$twoSigma_slide_move(log(active_variances_proposed[c(pk1, pk2)], 10), active_variances_prior_log_min, active_variances_prior_log_max, active_variance_tuningParam[pk1])
 
-      active_variances_proposed[pk1] <<- 10^proposal[1]
+      .self$active_variances_proposed[pk1] <- 10^proposal[1]
 
-      active_variances_proposed[pk2] <<- 10^proposal[2]
+      .self$active_variances_proposed[pk2] <- 10^proposal[2]
 
       pp = computeActiveVariancesPriorProbability(active_variances_proposed)
 
@@ -1026,7 +1026,7 @@ zigzag$methods(
 
     HR = sum(log(c(inactive_variances_proposed, active_variances_proposed)/c(inactive_variances, active_variances)))
 
-    if(tune) multi_sigma_trace[[1]][[1]] <<- c(multi_sigma_trace[[1]][[1]][-1],0)
+    if(tune) .self$multi_sigma_trace[[1]][[1]] <- c(multi_sigma_trace[[1]][[1]][-1],0)
 
 
     Lp = (1 - spike_probability) * 1/(sqrt(inactive_variances_proposed) * sqrt2pi *
@@ -1076,19 +1076,19 @@ zigzag$methods(
 
       if(0 %in% random_components){
 
-        inactive_variances <<- inactive_variances_proposed
+        .self$inactive_variances <- inactive_variances_proposed
 
-        active_variances[pk] <<- active_variances_proposed[pk]
+        .self$active_variances[pk] <- active_variances_proposed[pk]
 
       }else{
 
-        active_variances[pk1] <<- active_variances_proposed[pk1]
+        .self$active_variances[pk1] <- active_variances_proposed[pk1]
 
-        active_variances[pk2] <<- active_variances_proposed[pk2]
+        .self$active_variances[pk2] <- active_variances_proposed[pk2]
 
       }
 
-      if(tune) multi_sigma_trace[[1]][[1]][100] <<- 1
+      if(tune) .self$multi_sigma_trace[[1]][[1]][100] <- 1
 
       .self$gibbsAllocationActiveInactive()
       .self$gibbsAllocationWithinActive()
@@ -1106,9 +1106,9 @@ zigzag$methods(
 
     lib <- 1
 
-    active_means_dif_proposed <<- active_means_dif
+    .self$active_means_dif_proposed <- active_means_dif
 
-    inactive_means_proposed <<- inactive_means
+    .self$inactive_means_proposed <- inactive_means
 
     not_inspike <- which(inactive_spike_allocation == 0)
 
@@ -1119,15 +1119,15 @@ zigzag$methods(
 
     if(pk < num_active_components){
 
-      active_means_dif_proposed[c(pk, pk + 1)] <<- .self$twoMean_slide_move(active_means_dif[c(pk, pk + 1)], active_mean_tuningParam[pk])
+      .self$active_means_dif_proposed[c(pk, pk + 1)] <- .self$twoMean_slide_move(active_means_dif[c(pk, pk + 1)], active_mean_tuningParam[pk])
 
-      if(tune) active_means_trace[[1]][[lib]][pk,] <<- c(active_means_trace[[1]][[lib]][pk,-1],0)
+      if(tune) .self$active_means_trace[[1]][[lib]][pk,] <- c(active_means_trace[[1]][[lib]][pk,-1],0)
 
     }else{
 
-      active_means_dif_proposed[pk] <<- abs(active_means_dif[pk] + rnorm(1,0,active_mean_tuningParam[pk]))
+      .self$active_means_dif_proposed[pk] <- abs(active_means_dif[pk] + rnorm(1,0,active_mean_tuningParam[pk]))
 
-      if(tune) active_means_trace[[1]][[lib]][pk,] <<- c(active_means_trace[[1]][[lib]][pk,-1],0)
+      if(tune) .self$active_means_trace[[1]][[lib]][pk,] <- c(active_means_trace[[1]][[lib]][pk,-1],0)
 
     }
 
@@ -1183,11 +1183,11 @@ zigzag$methods(
 
       # print("#______________________________ OLD _________________________________#")
 
-      active_means_dif <<- active_means_dif_proposed
+      .self$active_means_dif <- active_means_dif_proposed
 
-      if(tune) active_means_trace[[1]][[lib]][pk,100] <<- 1
+      if(tune) .self$active_means_trace[[1]][[lib]][pk,100] <- 1
 
-      if(length(active_idx) > 0) active_means <<- mp
+      if(length(active_idx) > 0) .self$active_means <- mp
 
       .self$gibbsAllocationActiveInactive()
       .self$gibbsAllocationWithinActive()
@@ -1200,11 +1200,11 @@ zigzag$methods(
 
   mhSigmaSwap = function(ss_test = FALSE, tune = FALSE){
 
-    inactive_variances_proposed <<- inactive_variances
+    .self$inactive_variances_proposed <- inactive_variances
 
-    active_variances_proposed <<- active_variances
+    .self$active_variances_proposed <- active_variances
 
-    weight_within_active_proposed <<- weight_within_active
+    .self$weight_within_active_proposed <- weight_within_active
 
     not_inspike <- which(inactive_spike_allocation == 0)
 
@@ -1216,13 +1216,13 @@ zigzag$methods(
 
     pk2 <- random_components[2]
 
-    weight_within_active_proposed[pk1] <<- weight_within_active[pk2]
+    .self$weight_within_active_proposed[pk1] <- weight_within_active[pk2]
 
-    weight_within_active_proposed[pk2] <<- weight_within_active[pk1]
+    .self$weight_within_active_proposed[pk2] <- weight_within_active[pk1]
 
-    active_variances_proposed[pk1] <<- active_variances[pk2]
+    .self$active_variances_proposed[pk1] <- active_variances[pk2]
 
-    active_variances_proposed[pk2] <<- active_variances[pk1]
+    .self$active_variances_proposed[pk2] <- active_variances[pk1]
 
     pp = computeActiveVariancesPriorProbability(active_variances_proposed)
 
@@ -1257,11 +1257,11 @@ zigzag$methods(
 
       cat("************SWAAAAAPPPP!!!********", active_means[random_components], "\n")
 
-      weight_within_active <<- weight_within_active_proposed
+      .self$weight_within_active <- weight_within_active_proposed
 
-      active_variances[pk1] <<- active_variances_proposed[pk1]
+      .self$active_variances[pk1] <- active_variances_proposed[pk1]
 
-      active_variances[pk2] <<- active_variances_proposed[pk2]
+      .self$active_variances[pk2] <- active_variances_proposed[pk2]
 
       .self$gibbsAllocationWithinActive()
 
@@ -1316,7 +1316,7 @@ zigzag$methods(
 
   old_mhYg = function(recover_x = FALSE, tune = FALSE){
 
-    Yg_proposed <<- Yg + rnorm(num_transcripts, 0, tuningParam_yg) * (1 - inactive_spike_allocation) #only change out of spike genes
+    .self$Yg_proposed <- Yg + rnorm(num_transcripts, 0, tuningParam_yg) * (1 - inactive_spike_allocation) #only change out of spike genes
 
     Sg_proposed <- .self$get_sigmax(yy = Yg_proposed)
 
@@ -1365,29 +1365,29 @@ zigzag$methods(
 
     choice_matrix <- cbind(seq(num_transcripts), choice_idx)
 
-    Yg <<- current_and_proposed[cbind(seq(num_transcripts), choice_idx)]
+    .self$Yg <- current_and_proposed[cbind(seq(num_transcripts), choice_idx)]
 
     if(tune){
 
       if(length(out_spike_idx) < 2){
 
-        Yg_trace[out_spike_idx,] <<- cbind(matrix(Yg_trace[out_spike_idx,-1], nrow = length(out_spike_idx)), choice_idx[out_spike_idx] - 1)
+        .self$Yg_trace[out_spike_idx,] <- cbind(matrix(Yg_trace[out_spike_idx,-1], nrow = length(out_spike_idx)), choice_idx[out_spike_idx] - 1)
 
       }else{
 
-        Yg_trace[out_spike_idx,] <<- cbind(Yg_trace[out_spike_idx,-1], choice_idx[out_spike_idx] - 1)
+        .self$Yg_trace[out_spike_idx,] <- cbind(Yg_trace[out_spike_idx,-1], choice_idx[out_spike_idx] - 1)
       }
     }
 
     ## update XgLikelihood, Sg and p_x
 
-    XgLikelihood <<- current_and_proposed_likelihood[choice_matrix]
+    .self$XgLikelihood <- current_and_proposed_likelihood[choice_matrix]
 
     .self$set_sigmaX_pX()
 
     current_and_proposed_varianceGProbability <- cbind(variance_g_probability, proposed_varianceGProbability)
 
-    variance_g_probability[out_spike_idx] <<- current_and_proposed_varianceGProbability[choice_matrix][out_spike_idx]
+    .self$variance_g_probability[out_spike_idx] <- current_and_proposed_varianceGProbability[choice_matrix][out_spike_idx]
 
   }
 

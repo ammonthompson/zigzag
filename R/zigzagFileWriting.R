@@ -2,28 +2,28 @@ zigzag$methods(
 
   initializeOutputFiles = function(prefix, post_pred_boolean = FALSE){
 
-    model_paramlist <<- c("gen", "lnl", "s0", "s1", "tau")
+    .self$model_paramlist <- c("gen", "lnl", "s0", "s1", "tau")
 
     for(param in seq(num_libraries)){
 
-      model_paramlist[length(model_paramlist)+1] <<- paste0("alpha_r_library_", param)
+      .self$model_paramlist[length(model_paramlist)+1] <- paste0("alpha_r_library_", param)
 
     }
 
-    model_paramlist <<- c(model_paramlist, "spike_probability", "inactive_mean", "inactive_variance")
+    .self$model_paramlist <- c(model_paramlist, "spike_probability", "inactive_mean", "inactive_variance")
 
     for(param in c("active_mean","active_variance") ){
 
       for(k in 1:num_active_components){
-        model_paramlist[length(model_paramlist)+1] <<- paste0(param, "_component",k)
+        .self$model_paramlist[length(model_paramlist)+1] <- paste0(param, "_component",k)
       }
 
     }
 
-    model_paramlist[length(model_paramlist)+1] <<- "weight_active"
+    .self$model_paramlist[length(model_paramlist)+1] <- "weight_active"
 
     for(k in 1:num_active_components ){
-      model_paramlist[length(model_paramlist)+1] <<- paste0("weight_within_active_component_",k)
+      .self$model_paramlist[length(model_paramlist)+1] <- paste0("weight_within_active_component_",k)
     }
 
     write.table(matrix(model_paramlist,nrow=1),
