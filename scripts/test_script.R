@@ -32,10 +32,10 @@ mm$mcmc(sample_frequency = 10, ngen=1000, append = F,
 agdat <- read.table("../../../RESEARCH_PROJECTS/transcriptome_turnover/data_files/tpm_files/dmel_ag_refonly_replicates_matchGLengthfile.tpm", header=TRUE, row.names=1)
 aggl = read.table("../../../RESEARCH_PROJECTS/transcriptome_turnover/data_files/gene_length_files/dmel_gene_meanLength_matchTPMfile.txt", row.names = 1, header = TRUE)
 
-mm <- zigzag$new(data = agdat, gene_length = aggl, output_directory = "olg_ag_test", variance_g_upper_bound = 10)
-mm$burnin(sample_frequency = 10, ngen=3000, progress_plot = T)
+mm <- zigzag$new(data = agdat, gene_length = aggl, output_directory = "pp_ag_test", variance_g_upper_bound = 25)
+mm$burnin(sample_frequency = 10, ngen=2000, progress_plot = T)
 mm$mcmc(sample_frequency = 10, ngen=20000, append = F,
-        run_posterior_predictive = T, mcmcprefix = "old_ag_test")
+        run_posterior_predictive = T, mcmcprefix = "pp_ag_test")
 
 
 

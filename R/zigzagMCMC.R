@@ -92,7 +92,7 @@ zigzag$methods(
 
         libdensity = density(scaled_xg[, plib])
         plot(libdensity$x, libdensity$y, type = "l", ylim = c(0, max(libdensity$y)*1.1),
-             lwd = 2, ylab = "", xlab = "", main = paste0("Lib. ", plib), axes = F)
+             lwd = 2, ylab = "", xlab = "", main = paste0(mcmcprefix, " Lib. ", plib), axes = F)
         axis(1)
         multi_plot_pars[[plib]] = par("usr","plt","mfg")
 
@@ -112,7 +112,7 @@ zigzag$methods(
       y_max =  max(d_posYg_rowMeans$y)
 
       layout(matrix(seq(2),nrow=2))
-      plot(NULL, xlim = post_pred_plot_xlims, main = "Upper level",
+      plot(NULL, xlim = post_pred_plot_xlims, main = paste0(mcmcprefix, ", true expression (Y) distribution"),
            ylim = c(0, 1.2 * y_max),
            xlab = "log Expression", ylab = "density")
 
@@ -120,7 +120,7 @@ zigzag$methods(
              col = c("orange", "green"), lty = 1, lwd = 3)
       post_pred_L2_plot_device = dev.cur()
 
-      plot(NULL, xlim = post_pred_plot_xlims, main = "Upper level",
+      plot(NULL, xlim = post_pred_plot_xlims, main = "",
            ylim = c(0, 1.2 * y_max),
            xlab = "log Expression", ylab = "density")
       legend(post_pred_plot_xlims[1], 1.2 * y_max, legend = c("Post. inactive Y", "Post. active Y"),
