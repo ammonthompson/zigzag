@@ -58,79 +58,53 @@ zigzag$methods(
     ## Set thresholds for component mean priors ############
     ########################################################
 
-    rmedians_noInf <- matrixStats::rowMedians(Xg)
-
-    rmedians_noInf <- rmedians_noInf[rmedians_noInf > -Inf]
-
-
-    #########
-
-    if(is.character(num_active_components) || num_active_components == "auto"){
-
-      auto_thresholds_list <- .self$findthresholds(rmedians_noInf)
-
-      num_acomps <- auto_thresholds_list[[1]]
-
-      .self$num_active_components <- num_acomps
-
-      thresh_a <- auto_thresholds_list[[2]]
-
-      thresh_i <- auto_thresholds_list[[2]][1]
-
-      .self$threshold_a <- thresh_a
-
-      .self$threshold_i <- thresh_i
-
-
-    }else{
-
-      .self$num_active_components <- num_active_components
-
-      num_acomps <- num_active_components
-
-      if(any(is.character(threshold_a), threshold_a == "auto")){
-
-        auto_thresholds_list <- .self$findthresholds(rmedians_noInf, num_acomps)
-
-        thresh_a <- auto_thresholds_list[[2]]
-
-        .self$threshold_a <- thresh_a
-
-      }else{
-
-        if(length(threshold_a) == num_active_components){
-
-          thresh_a <- threshold_a
-
-          .self$threshold_a <- threshold_a
-
-        }else{
-
-          thresh_a <- threshold_a[1]
-
-          .self$threshold_a <- thresh_a
-
-        }
-
-      }
-
-      if(any(is.character(threshold_i), threshold_i == "auto")){
-
-        auto_thresholds_list <- .self$findthresholds(rmedians_noInf, num_acomps)
-
-        thresh_i <- auto_thresholds_list[[2]][1]
-
-        .self$threshold_i <- thresh_i
-
-      }else{
-
-        thresh_i <- threshold_i
-
-        .self$threshold_i <- thresh_i
-
-      }
-
+    # if any of the component mean priors are set to "auto" then auto find prior thresholds
+    # use for each that apply
+    if(any(is.character(num_active_components), is.character(threshold_i), is.character(threshold_a))){
+      rmedians_noInf <- matrixStats::rowMedians(Xg)
+      rmedians_noInf <- rmedians_noInf[rmedians_noInf > -Inf]
+      auto_thresholds_list <- .self$findthresholds(rmedians_noInf, num_active_components)
     }
+
+    # set inactive mean prior threshold
+    if(any(is.character(threshold_i), threshold_i == "auto")){
+      thresh_i <- auto_thresholds_list[[2]][1]
+    }else if(length(threshold_i) == 1){
+      thresh_i <- threshold_i
+    }else{
+      cat("\tWarning: Currently, only 1 inactive component allowed. Threshold set to first in vector.\n")
+      thresh_i <- threshold_i[1]
+    }
+    .self$threshold_i <- thresh_i
+
+    # set number of active components.
+    # if "auto" or character, get from auto_thresholds_list
+    if(is.character(num_active_components)){
+      num_acomps <- auto_thresholds_list[[1]]
+    }else{
+      num_acomps <- num_active_components
+    }
+    .self$num_active_components <- num_acomps
+
+    # set active mean prior threshold
+    # if auto or character, get from auto_thresholds_list
+    if(any(is.character(threshold_a), threshold_a == "auto")){
+      thresh_a <- auto_thresholds_list[[2]]
+    }else{
+      thresh_a <- threshold_a
+    }
+    .self$threshold_a <- thresh_a
+
+    # if the length of threshold_a set by user (implied number of active components)
+    # and number of active components disagree, then set the number of components equal to the length
+    # of threshold_a and print a warning.
+    if(length(.self$threshold_a) != .self$num_active_components){
+      cat("\tWarning: num. active components does not equal length of threshold_a.
+                 Number of active components set to length of threshold_a.\n")
+      num_acomps <- length(threshold_a)
+      .self$num_active_components <- num_acomps
+    }
+
 
     if(length(thresh_a) == num_acomps){
       multi_ta <- TRUE
@@ -263,14 +237,14 @@ zigzag$methods(
 
     if(num_libraries > 1 ){
 
-      .self$proposal_probs <- c(8, 60, 10,                                                      ### weights, alloc active_inactive, alloc within_active
-                           12, 15 * (1 - shared_variance),                ### i_mean, i_var
-                           10,                                                             ### a_mean
-                           8 + 4 * (1 - shared_active_variance),                          ### a_var
-                           5, 10,                                                          ### spike prob, spike alloc
-                           c(2, 2) + is2Libs + 1 * (num_transcripts < 15000),              ### Yg, sigm_g
-                           c(6, 6, 6),                                                     ### tau, Sg, s0tau
-                           num_libraries * 1.25                                           ### p_x
+      .self$proposal_probs <- c(8, 60, 10,                                      ### weights, alloc active_inactive, alloc within_active
+                           12, 15 * (1 - shared_variance),                      ### i_mean, i_var
+                           10,                                                  ### a_mean
+                           8 + 4 * (1 - shared_active_variance),                ### a_var
+                           5, 10,                                               ### spike prob, spike alloc
+                           c(2, 2) + is2Libs + 1 * (num_transcripts < 15000),   ### Yg, sigm_g
+                           c(6, 6, 6),                                          ### tau, Sg, s0tau
+                           num_libraries * 1.5                                  ### p_x
                           )
 
     }else{
