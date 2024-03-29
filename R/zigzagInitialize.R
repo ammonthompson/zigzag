@@ -140,39 +140,24 @@ zigzag$methods(
 
     # Gene lengths, scaled to have mean = 1
     if(! is.null(gene_length)){
-
       if( is.vector(gene_length) ) .self$gene_lengths <- gene_length/mean(gene_length) else .self$gene_lengths <- gene_length[,1]/mean(gene_length[,1])
-
     }else{
-
       .self$gene_lengths <- rep(1, num_transcripts)
-
     }
-
     if(length(gene_lengths) != num_transcripts) cat("WARNING: genelengths size does not equal number of genes!!!\n")
 
 
     # candidate genes to output posterior samples to files
     cat("Reading candidate genes to record in mcmc log files...\n")
-
     if(candidate_gene_list[1] == "random"){
-
       .self$candidate_gene_list <- c(gene_names[c(1:10,sample(num_transcripts, size = 100, replace = F))])
-
     }else if(candidate_gene_list[1] == "all"){
-
       .self$candidate_gene_list <- gene_names
-
     }else{
-
       .self$candidate_gene_list <- candidate_gene_list
-
       if(length(which(!( candidate_gene_list %in% gene_names))) > 0){
-
         stop("Invalid candidate_gene_list. Check for typos and gene names not present in the data.")
-
       }
-
     }
 
     # Set up active genes: the genes user is certain are actively expressed. Default is NULL
@@ -183,10 +168,12 @@ zigzag$methods(
 
     }
 
-    # create output directory
+    # create output directory if doesnt exist
     .self$output_directory <- output_directory
-    dir.create(output_directory)
-    cat("Created output directory called: ", output_directory, "...\n")
+    if (!dir.exists(output_directory)) {
+      dir.create(output_directory, recursive = TRUE, showWarnings = TRUE)
+      cat("Created output directory called: ", output_directory, "...\n")
+    }
 
 
     ##########################################################
@@ -440,13 +427,11 @@ zigzag$methods(
           rlnorm(1, log(mean(matrixStats::rowVars(Xg), na.rm = T)), sqrt(var(matrixStats::rowVars(Xg), na.rm = T)))
         }
       })
-
       .self$Yg <- rnorm(num_transcripts, rwm, sqrt(rwv))
 
     }else{
 
       .self$Yg <- Xg[,1]
-
       .self$Yg[which(Yg == inf_tol)] <- rnorm(length(which(Yg == inf_tol)), inactive_means, sqrt(inactive_variances))
 
     }
@@ -481,18 +466,11 @@ zigzag$methods(
 
         .self$Yg[which(XgLikelihood == -Inf)] <- rnorm(length(which(XgLikelihood == -Inf)),
                                                   inactive_means, sqrt(inactive_variances))
-
         .self$Sg <- exp(s0 + s1 * Yg)
-
         .self$p_x <- .self$get_px()
-
         .self$variance_g[which(XgLikelihood == -Inf)] <- rlnorm(length(which(XgLikelihood == -Inf)),
                                                         log(Sg[which(XgLikelihood == -Inf)]) + tau, sqrt(tau))
-
         .self$variance_g[which(variance_g > variance_g_upper_bound)] <- variance_g_upper_bound
-
-
-
         .self$XgLikelihood <- .self$computeXgLikelihood(Xg, Yg, variance_g, p_x)
 
         counter  = counter + 1
@@ -501,9 +479,7 @@ zigzag$methods(
           cat("initialization failed. Try again\n")
           break
         }
-
       }
-
     }
 
     .self$variance_g_probability <- .self$computeVarianceGPriorProbability(variance_g, Sg)
