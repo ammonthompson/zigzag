@@ -79,6 +79,7 @@ zigzag$methods(
    }
    if(end) break
 
+   j <- i
 
    #####################
    # sample from chain #
@@ -87,7 +88,6 @@ zigzag$methods(
 
      xx_timestart = as.numeric(Sys.time())
 
-     j = i
 
      cat("#### ",i," ####  ", lnl_trace[[length(lnl_trace)]], "\n")
 

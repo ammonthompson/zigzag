@@ -23,11 +23,15 @@ zigzag$methods(
 #' \dontrun{mcmc(sample_frequency = 100, ngen = 50000, mcmcprefix = "organ_x_posterior_sample")}
 #' }
 #'
-  mcmc = function(sample_frequency = 100, ngen = 10000, target_ESS = NULL,
-                  write_to_files = TRUE, mcmcprefix = "out", compute_probs = TRUE,
-                  run_posterior_predictive = FALSE,
+  mcmc = function(sample_frequency                  = 100,
+                  ngen                              = 10000,
+                  target_ESS                        = NULL,
+                  write_to_files                    = TRUE,
+                  mcmcprefix                        = "out",
+                  compute_probs                     = TRUE,
+                  run_posterior_predictive          = FALSE,
                   run_posterior_predictive_and_plot = run_posterior_predictive,
-                  append = FALSE){
+                  append                            = FALSE){
 
 
     ###########################
@@ -142,8 +146,10 @@ zigzag$methods(
 
     .self$lnl_trace[[length(lnl_trace) + 1]] <- .self$calculate_lnl(num_libraries)
 
-    i <- gen
-    j <- 0
+    # j increments with gen when target_ESS isn't used
+    # i <- gen
+    # j <- 0
+    j <- gen
 
     plist_length <- length(proposal_list)
 
@@ -163,16 +169,26 @@ zigzag$methods(
     while(j <= ngen ){
 
       ### run n = plist_length proposals ###
-      for(p in sample(seq(plist_length), plist_length, replace = TRUE, prob = proposal_probs)) proposal_list[[p]]()
+      for(p in sample(seq(plist_length), plist_length, replace = TRUE, prob = proposal_probs))
+        proposal_list[[p]]()
 
       #############################
       # sample from markov chain  #
       #############################
-      if(i %% sample_frequency == 0){
+      # if(i %% sample_frequency == 0){
+      #
+      #   if(is.null(target_ESS))
+      #     j <- i
 
-        if(is.null(target_ESS)) j = i
+        if(is.null(target_ESS))
+          j <- gen
 
-        cat("#### ",i," ####", "\n")
+        gen_write <- FALSE
+
+        if(gen %% sample_frequency == 0){
+
+          # cat("#### ",i," ####", "\n")
+          cat("#### ",gen," ####", "\n")
 
         ### For computing Pr(zag = 1) ###
         if(temperature == 1){
@@ -188,20 +204,27 @@ zigzag$methods(
 
         if(write_to_files & write_yg_varg * temperature == 1){
 
-          .self$writeToOutputFiles(paste0(mcmc_prefixdir,"/", mcmcprefix), gen = i)
+          # .self$writeToOutputFiles(paste0(mcmc_prefixdir,"/", mcmcprefix), gen = i)
+          .self$writeToOutputFiles(paste0(mcmc_prefixdir,"/", mcmcprefix), gen = gen)
 
-          # if((i / sample_frequency) %% 4 == 0)
-          if((i / sample_frequency) %% yg_varg_subsample_frequency == 0)
-              .self$writeToYgVariancegOutputFiles(paste0(mcmc_prefixdir,"/", mcmcprefix), gen = i)
-              if((i - starting_gen) / (yg_varg_subsample_frequency * sample_frequency) > 500) write_yg_varg = FALSE
+          # if((i / sample_frequency) %% yg_varg_subsample_frequency == 0)
+          #     .self$writeToYgVariancegOutputFiles(paste0(mcmc_prefixdir,"/", mcmcprefix), gen = i)
+          # if((i - starting_gen) / (yg_varg_subsample_frequency * sample_frequency) > 500)
+          #   write_yg_varg <- FALSE
+          if((gen / sample_frequency) %% yg_varg_subsample_frequency == 0)
+            .self$writeToYgVariancegOutputFiles(paste0(mcmc_prefixdir,"/", mcmcprefix), gen = gen)
+          if((gen - starting_gen) / (yg_varg_subsample_frequency * sample_frequency) > 500)
+            write_yg_varg <- FALSE
+
+          gen_write <- TRUE
         }
+
 
         if(!is.null(target_ESS) & length(lnl_trace) > 100){
 
           if(.self$calculate_lnl_ESS() > target_ESS) break
 
         }
-
 
       } #end sample from chain
 
@@ -211,27 +234,43 @@ zigzag$methods(
       # Run posterior predictive simulation #
       #######################################
 
-      if((run_posterior_predictive | run_posterior_predictive_and_plot) & (i / (postpred_freq * sample_frequency)) %% 1 == 0){
+    # if((run_posterior_predictive | run_posterior_predictive_and_plot) & (i / (postpred_freq * sample_frequency)) %% 1 == 0){
+    #
+    #   post_pred_instance <- .self$posteriorPredictiveSimulation(prefix = mcmcprefix)
+    #
+    #   if( run_posterior_predictive_and_plot & (i / (postpred_freq * postpred_plotfeq * sample_frequency)) %% 1 == 0){
+    #
+    #     .self$update_postPredPlots(post_pred_instance, multi_plot_pars,
+    #                                post_pred_multi_L1_plot_device,
+    #                                post_pred_L2_plot_device, d_posXg_rowMeans)
+    #
+    #   } #end posterior predicitve plotting
+    #
+    # } #end posterior predictive simulation
+    if((run_posterior_predictive | run_posterior_predictive_and_plot) & (gen / (postpred_freq * sample_frequency)) %% 1 == 0){
 
-        post_pred_instance <- .self$posteriorPredictiveSimulation(prefix = mcmcprefix)
+      post_pred_instance <- .self$posteriorPredictiveSimulation(prefix = mcmcprefix)
 
-        if( run_posterior_predictive_and_plot & (i / (postpred_freq * postpred_plotfeq * sample_frequency)) %% 1 == 0){
+      if( run_posterior_predictive_and_plot & (gen / (postpred_freq * postpred_plotfeq * sample_frequency)) %% 1 == 0){
 
-          .self$update_postPredPlots(post_pred_instance, multi_plot_pars,
-                                     post_pred_multi_L1_plot_device,
-                                     post_pred_L2_plot_device, d_posXg_rowMeans)
+        .self$update_postPredPlots(post_pred_instance, multi_plot_pars,
+                                   post_pred_multi_L1_plot_device,
+                                   post_pred_L2_plot_device, d_posXg_rowMeans)
 
-        } #end posterior predicitve plotting
+      } #end posterior predicitve plotting
 
-      } #end posterior predictive simulation
+    } #end posterior predictive simulation
 
 
-      i = i + 1
-      .self$gen <- i
+
+    # i <- i + 1
+    # .self$gen <- i
+    .self$gen <- gen + 1
 
       #if postpred interrupted, close out pdf devices
       on.exit(if(length(dev.list()) > 2) dev.off(post_pred_multi_L1_plot_device))
       on.exit(if(length(dev.list()) > 2) dev.off(post_pred_L2_plot_device), add = TRUE)
+      on.exit(if(gen_write) .self$gen <- gen + 1, add = TRUE, after = TRUE)
 
     } #end mcmc
 
