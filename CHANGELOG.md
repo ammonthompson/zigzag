@@ -6,19 +6,19 @@ All notable changes to the zigzag project are documented in this file.
 
 ### Added
 - Initial release of the package.
-- `Method1` to do X in `Class1`.
-- `Property1` in `Class2` for Y.
 
 ### Fixed
-- Addressed the issue with Z in `Method2` of `Class3`.
+- xxxxxx.
 
 ## [0.2.0] - 2024-04-01
 
 ### Added
+- Model with all mixture components (whether active or inactive).
 - `XXXX` XXXX.
 
 ### Changed
-- XXXXX.
+- By default mixture component share a single variance parameter
+- Posterior predictive plots show inactive and active component distributions
 
 ### Fixed
 - XXXXXX.
