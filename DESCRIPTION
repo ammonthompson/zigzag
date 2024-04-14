@@ -1,7 +1,7 @@
 Package: zigzag
 Type: Package
 Title: Compute the posterior probability of active gene expression
-Version: 0.1.0
+Version: 1.0.0
 Authors@R: c(
     person("Ammon", "Thompson", email = "ammonthompson@gmail.com", role = c("aut", "cre")),
     person("Michael", "May", role = c("aut")),

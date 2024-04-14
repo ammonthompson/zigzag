@@ -18,13 +18,13 @@ zigzag$methods(
 #'
 # @examples
 #'
-  burnin = function(sample_frequency = 100,
-                    ngen = 10000,
-                    burnin_target_acceptance_rate=0.44,
-                    progress_plot = FALSE,
-                    write_to_files = TRUE,
-                    burninprefix = "output",
-                    append = FALSE){
+  burnin = function(sample_frequency              = 100,
+                    ngen                          = 10000,
+                    burnin_target_acceptance_rate = 0.44,
+                    progress_plot                 = FALSE,
+                    write_to_files                = TRUE,
+                    burninprefix                  = "output",
+                    append                        = FALSE){
 
   timestart = as.numeric(Sys.time())
 

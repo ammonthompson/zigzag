@@ -41,8 +41,6 @@ gene_names = paste0("gene_", seq(num_transcripts))
 ### Generate sims
 for(i in seq(params[17])){
 
-
-
 	#### spike and weights
 	total = params[5]
 	sim_gl = sample(simulated_gene_lengths, total)
@@ -52,35 +50,38 @@ for(i in seq(params[17])){
 	if(is.na(params[13])) weight_active =  rbeta(1, 10, 10)
 
 	weight_within_active = params[14:15]
-	if(is.na(params[14]) | is.na(params[15])){weight_within_active[1] = rbeta(1, 10, 2); weight_within_active[2] = 1 - weight_within_active[1]}
+	if(is.na(params[14]) | is.na(params[15])){weight_within_active[1] = rbeta(1, 5, 5); weight_within_active[2] = 1 - weight_within_active[1]}
 
 	spike_prob =  params[16]
 	if(is.na(params[16])) spike_prob = rbeta(1, 2, 8)
 
-	num_inactive = floor((1 - weight_active) * total) + rbinom(1, 1, (1 - weight_active) * total - floor((1 - weight_active) * total))
+	# num_inactive = floor((1 - weight_active) * total) + rbinom(1, 1, (1 - weight_active) * total - floor((1 - weight_active) * total))
+    # num_spike = floor(spike_prob * num_inactive) + rbinom(1, 1, spike_prob * num_inactive - floor(spike_prob * num_inactive))
+	num_inactive = sum(rbinom(num_transcripts, 1, 1 - weight_active))
+	num_spike = sum(rbinom(num_inactive, 1, spike_prob))
 
-        num_spike = floor(spike_prob * num_inactive) + rbinom(1, 1, spike_prob * num_inactive - floor(spike_prob * num_inactive))
 
 	#### sigma_x
-	taux = params[1]; if(is.na(taux)) taux = rgamma(1, 4, 40)
-	s0x = params[2]; if(is.na(s0x)) s0x = rnorm(1, -3, 1/5)
+	taux = params[1]; if(is.na(taux)) taux = rgamma(1, 4, 20)
+	s0x = params[2]; if(is.na(s0x)) s0x = rnorm(1, -2, 1/5)
 	s1x = params[3]; if(is.na(s1x)) s1x = -rgamma(1, 1, 10)
 
 
 	#### p_x
 
-	alpha_rx = rep(params[6], num_libs); if(is.na(params[6])) alpha_rx = rgamma(num_libs, 15, 1)
+	alpha_rx = rep(params[6], num_libs)
+	if(is.na(params[6])) alpha_rx = rgamma(num_libs, 15, 1)
 
 
 	### sim_yg
 
-	ymu_i = params[7]; if(is.na(ymu_i)) ymu_i = -rgamma(1, 1, 1)
+	ymu_i = params[7]; if(is.na(ymu_i)) ymu_i = -rgamma(1, 1, 1) - 1
 	ymu_a1 = params[8]; if(is.na(ymu_a1)) ymu_a1 = 1 + rgamma(1, 1, 1)
 	ymu_a2 = params[9]; if(is.na(ymu_a2)) ymu_a2 = 7 + rgamma(1, 1, 1)
 
-	yVariance_i =  params[10]; if(is.na(yVariance_i)) yVariance_i = exp(runif(1, log(1), log(3)))
-	yVariance_a1 =  params[11]; if(is.na(yVariance_a1)) yVariance_a1 = exp(runif(1, log(1), log(3)))
-	yVariance_a2 =  params[12]; if(is.na(yVariance_a2)) yVariance_a2 = yVariance_a1
+	yVariance_i =  params[10]; if(is.na(yVariance_i)) yVariance_i = 10^(runif(1, log(1, base = 10), log(3, base = 10)))
+	yVariance_a1 =  params[11]; if(is.na(yVariance_a1)) yVariance_a1 = yVariance_i #exp(runif(1, log(1), log(3)))
+	yVariance_a2 =  params[12]; if(is.na(yVariance_a2)) yVariance_a2 = yVariance_i #yVariance_a1
 
 	cat("simulation:", i, "\n")
 	cat("ymu_i:", round(ymu_i, digits = 5), " yVariance_i:", round(yVariance_i, digits = 5), " spike prob:", round(spike_prob, digits = 5), " weight_active:", round(weight_active, digits = 5))

@@ -8,16 +8,18 @@ zigzag$methods(
                         num_active_components = "auto",
                         weight_active_shape_1 = 2,
                         weight_active_shape_2 = 2,
+                        shared_variance_prior_min = 0.01,
+                        shared_variance_prior_max = 5,
                         inactive_means_prior_shape = 1,
                         inactive_means_prior_rate = 1/3,
-                        inactive_variances_prior_min = 0.01,
-                        inactive_variances_prior_max = 5,
+                        inactive_variances_prior_min = shared_variance_prior_min,
+                        inactive_variances_prior_max = shared_variance_prior_max,
                         spike_prior_shape_1 = 1,
                         spike_prior_shape_2 = 1,
                         active_means_dif_prior_shape = 1,
                         active_means_dif_prior_rate = 1/3,
-                        active_variances_prior_min = 0.01,
-                        active_variances_prior_max = 5,
+                        active_variances_prior_min = shared_variance_prior_min,
+                        active_variances_prior_max = shared_variance_prior_max,
                         shared_active_variance = TRUE,
                         shared_variance = TRUE,
                         output_directory = "output",
@@ -230,7 +232,7 @@ zigzag$methods(
                            8 + 4 * (1 - shared_active_variance),                ### a_var
                            5, 10,                                               ### spike prob, spike alloc
                            c(2, 2) + is2Libs + 1 * (num_transcripts < 15000),   ### Yg, sigm_g
-                           c(6, 6, 6),                                          ### tau, Sg, s0tau
+                           c(10, 5, 10),                                        ### tau, Sg, s0tau
                            num_libraries * 1.5                                  ### p_x
                           )
 
@@ -285,28 +287,39 @@ zigzag$methods(
     .self$active_means_trace[[1]] <- lapply(1,function(x){return(t(sapply(1:num_acomps,function(y){return(c(rep(0,77),rep(1,23)))})))})
     .self$active_means <- .self$calculate_active_means(active_means_dif, mt = multi_ta)
 
+    # shared variances
+    .self$shared_variance_prior_log_min <- log(shared_variance_prior_min, 10)
+    .self$shared_variance_prior_log_max <- log(shared_variance_prior_max, 10)
+
     # active variances
-    .self$active_variances_prior_min <- active_variances_prior_min
-    .self$active_variances_prior_max <- active_variances_prior_max
-    .self$active_variances_prior_log_min <- log(active_variances_prior_min, 10)
-    .self$active_variances_prior_log_max <- log(active_variances_prior_max, 10)
-
-    if(.self$shared_active_variance){
-
+    if(shared_variance){
+      .self$active_variances_prior_min <- shared_variance_prior_min
+      .self$active_variances_prior_max <- shared_variance_prior_max
+      .self$active_variances_prior_log_min <- shared_variance_prior_log_min
+      .self$active_variances_prior_log_max <- shared_variance_prior_log_max
       .self$active_variances <- rep(10^(runif(1, active_variances_prior_log_min, active_variances_prior_log_max)), num_acomps)
       .self$active_variances_proposed <- active_variances
       .self$active_variances_prob <- .self$computeActiveVariancesPriorProbability(active_variances[1])
       .self$active_variances_prob_proposed <- .self$computeActiveVariancesPriorProbability(active_variances_proposed)
       .self$active_variances_trace[[1]] <- lapply(1,function(x){return(t(sapply(1:num_acomps,function(y){return(c(rep(0,77),rep(1,23)))})))})
-
     }else{
-
-      .self$active_variances <- 10^(runif(num_acomps, active_variances_prior_log_min, active_variances_prior_log_max))
-      .self$active_variances_proposed <- active_variances
-      .self$active_variances_prob <- .self$computeActiveVariancesPriorProbability(active_variances)
-      .self$active_variances_prob_proposed <- .self$computeActiveVariancesPriorProbability(active_variances_proposed)
-      .self$active_variances_trace[[1]] <- lapply(1,function(x){return(t(sapply(1:num_acomps,function(y){return(c(rep(0,77),rep(1,23)))})))})
-
+      .self$active_variances_prior_min <- active_variances_prior_min
+      .self$active_variances_prior_max <- active_variances_prior_max
+      .self$active_variances_prior_log_min <- log(active_variances_prior_min, 10)
+      .self$active_variances_prior_log_max <- log(active_variances_prior_max, 10)
+      if(.self$shared_active_variance){
+        .self$active_variances <- rep(10^(runif(1, active_variances_prior_log_min, active_variances_prior_log_max)), num_acomps)
+        .self$active_variances_proposed <- active_variances
+        .self$active_variances_prob <- .self$computeActiveVariancesPriorProbability(active_variances[1])
+        .self$active_variances_prob_proposed <- .self$computeActiveVariancesPriorProbability(active_variances_proposed)
+        .self$active_variances_trace[[1]] <- lapply(1,function(x){return(t(sapply(1:num_acomps,function(y){return(c(rep(0,77),rep(1,23)))})))})
+      }else{
+        .self$active_variances <- 10^(runif(num_acomps, active_variances_prior_log_min, active_variances_prior_log_max))
+        .self$active_variances_proposed <- active_variances
+        .self$active_variances_prob <- .self$computeActiveVariancesPriorProbability(active_variances)
+        .self$active_variances_prob_proposed <- .self$computeActiveVariancesPriorProbability(active_variances_proposed)
+        .self$active_variances_trace[[1]] <- lapply(1,function(x){return(t(sapply(1:num_acomps,function(y){return(c(rep(0,77),rep(1,23)))})))})
+      }
     }
 
     # inactive means
@@ -320,13 +333,17 @@ zigzag$methods(
     .self$inactive_means_trace[[1]] <- lapply(1,function(x){return(c(rep(0,77),rep(1,23)))})
 
     # inactive variances
-    .self$inactive_variances_prior_min <- inactive_variances_prior_min
-    .self$inactive_variances_prior_max <- inactive_variances_prior_max
-    .self$inactive_variances_prior_log_min <- log(inactive_variances_prior_min, 10)
-    .self$inactive_variances_prior_log_max <- log(inactive_variances_prior_max, 10)
     if(shared_variance){
+      .self$inactive_variances_prior_min <- shared_variance_prior_min
+      .self$inactive_variances_prior_max <- shared_variance_prior_max
+      .self$inactive_variances_prior_log_min <- shared_variance_prior_log_min
+      .self$inactive_variances_prior_log_max <- shared_variance_prior_log_max
       .self$inactive_variances <- active_variances[1]
     }else{
+      .self$inactive_variances_prior_min <- inactive_variances_prior_min
+      .self$inactive_variances_prior_max <- inactive_variances_prior_max
+      .self$inactive_variances_prior_log_min <- log(inactive_variances_prior_min, 10)
+      .self$inactive_variances_prior_log_max <- log(inactive_variances_prior_max, 10)
       .self$inactive_variances <- 10^(runif(1, inactive_variances_prior_log_min, inactive_variances_prior_log_max))
     }
     .self$inactive_variances_proposed <- inactive_variances
@@ -492,11 +509,11 @@ zigzag$methods(
                "active_means_dif_prior_shape", "active_meaans_dif_prior_rate", "active_variances_prior_min", "active_variances_prior_max",
                "inactive_means_prior_shape", "inactive_means_prior_rate", "inactive_variances_prior_min", "inactive_variances_prior_max",
                "threshold_i", "threshold_a"),
-              c(s0_mu, s0_sigma, s1_shape, s1_rate, tau_rate, tau_shape,  alpha_r_shape, alpha_r_rate,
-               weight_active_shape_1, weight_active_shape_2, weight_within_active_alpha[1], spike_prior_shape_1, spike_prior_shape_2,
-               active_means_dif_prior_shape, round(active_means_dif_prior_rate, digits = 3) , active_variances_prior_min, active_variances_prior_max,
-               inactive_means_prior_shape, round(inactive_means_prior_rate, digits = 3), inactive_variances_prior_min, inactive_variances_prior_max,round(thresh_i, digits = 2),
-               paste(round(thresh_a, digits = 2), collapse=", ")))),
+              c(.self$s0_mu, .self$s0_sigma, .self$s1_shape, .self$s1_rate, .self$tau_rate, .self$tau_shape,  .self$alpha_r_shape, .self$alpha_r_rate,
+                .self$weight_active_shape_1, .self$weight_active_shape_2, .self$weight_within_active_alpha[1], .self$spike_prior_shape_1, .self$spike_prior_shape_2,
+                .self$active_means_dif_prior_shape, round(.self$active_means_dif_prior_rate, digits = 3) , .self$active_variances_prior_min, .self$active_variances_prior_max,
+                .self$inactive_means_prior_shape, round(.self$inactive_means_prior_rate, digits = 3), .self$inactive_variances_prior_min, .self$inactive_variances_prior_max,
+                round(.self$threshold_i, digits = 2), paste(round(.self$threshold_a, digits = 2), collapse=", ")))),
               file = paste0(output_directory, "/", "hyperparameter_settings.txt"), sep = "\t", row.names = F, quote = F, col.names = F)
 
 

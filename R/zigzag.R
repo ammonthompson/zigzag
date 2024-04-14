@@ -214,6 +214,10 @@ zigzag <- setRefClass(
     active_variances_prior_rate = "numeric",
     active_variances_prior_log_min = "numeric",
     active_variances_prior_log_max = "numeric",
+    shared_variance_prior_log_min = "numeric",
+    shared_variance_prior_log_max = "numeric",
+    shared_variance_prior_min = "numeric",
+    shared_variance_prior_max = "numeric",
 
 
     weight_within_active_alpha = "numeric",

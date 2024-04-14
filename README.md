@@ -1,5 +1,5 @@
+# <strong><em>Z<sup>i</sup>g Z<sup>a</sup>g</em></strong> v. 1.0.0
 
-# <strong><em>Z<sup>i</sup>g Z<sup>a</sup>g</em></strong>
 # Quick Installation Guide and Simple Analysis
 
 The `zigzag` R package is designed to compute the posterior probability that genes are actively expressed, given a set of RNA-seq relative expression estimates. Requires at least 2 replicates (expression estimates from RNA-seq libraries).
@@ -7,7 +7,8 @@ The `zigzag` R package is designed to compute the posterior probability that gen
 ## Installation
 
 To install the `zigzag` package, you can use the following commands in your R environment:
-```R
+
+``` r
 if (!requireNamespace("devtools", quietly = TRUE))
     install.packages("devtools")
 devtools::install_github("ammonthompson/zigzag")
@@ -17,7 +18,7 @@ devtools::install_github("ammonthompson/zigzag")
 
 You can perform a basic analysis to get a feel for `zigzag`'s functionality. Here's a simple example to get you started:
 
-```R
+``` r
 library(zigzag)
 
 # Load your RNA-seq expression data with at least 2 replicate libraries.
@@ -34,18 +35,17 @@ my_zigzag <- zigzag$new(expression_data,
 my_zigzag$burnin()
 my_zigzag$mcmc()
 
-View the results located in "my_output/" and evaluate quality of mcmc in "my_output/*mcmc_output/mcmc_report"
-
+View the results located in "my_output/" and evaluate quality of mcmc and influence of priors in "my_output/*mcmc_output/mcmc_report". 
 
 ```
-You will likely not want to use all default settings.
-Use ? to view documentation on functions. For example
-```R
+
+You will likely not want to use all default settings. Use ? to view documentation on functions. For example
+
+``` r
 ?zigzag
 ?my_zigzag$burnin 
 ?my_zigzag$mcmc
 ```
-
 
 ## Documentation and Tutorial
 
@@ -57,4 +57,3 @@ If you use `zigzag` in your research, please cite our work using the following r
 
 [Thompson et al., 2020, PNAS](https://doi.org/10.1073/pnas.1919748117)
 
-Thank you for using `zigzag`! If you have any questions or feedback, feel free to open an issue on the GitHub repository.

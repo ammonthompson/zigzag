@@ -376,6 +376,8 @@ zigzag$methods(
     prob_active <- weight_active * L_1 * (1-inactive_spike_allocation)/((1 - weight_active) * L_0 + weight_active * L_1 * (1-inactive_spike_allocation))
     prob_active[is.nan(prob_active)] <- weight_active
 
+    if(recover_x) recover()
+
     .self$allocation_active_inactive <- rbinom(num_transcripts, 1, prob_active)
 
     if(!is.null(active_gene_set)) .self$allocation_active_inactive[active_gene_set_idx] <- as.integer(1)
@@ -791,14 +793,15 @@ zigzag$methods(
 
   },
 
-
   mhSharedVariance = function(recover_x = FALSE, tune = FALSE){
 
     # inactive and active components share variance. Propose new active variance and set inactive equal
 
-    .self$active_variances_proposed <- rep(10^(.self$two_boundary_slide_move(
-      log(active_variances[1], 10), active_variances_prior_log_min, active_variances_prior_log_max, active_variance_tuningParam[1])),
-      num_active_components)
+    .self$active_variances_proposed <- rep(10^(.self$two_boundary_slide_move( log(active_variances[1], 10),
+                                                                              active_variances_prior_log_min,
+                                                                              active_variances_prior_log_max,
+                                                                              active_variance_tuningParam[1])),
+                                                                              num_active_components )
 
     if(tune) .self$active_variances_trace[[1]][[1]][1,] <- c(active_variances_trace[[1]][[1]][1,-1],0)
 
