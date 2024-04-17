@@ -48,7 +48,7 @@ You will likely not want to use all default settings. Use ? to view documentatio
 
 ## Documentation and Tutorial
 
-For a more comprehensive guide and detailed tutorials on how to use `zigzag`, please visit our [tutorial page](https://ammonthompson.github.io/zigzag/).
+For a more comprehensive guide and detailed tutorials on how to use `zigzag`, please visit our [tutorial page](https://ammonthompson.github.io/zigzag_user_guide/).
 
 ## Citation
 
