@@ -35,16 +35,15 @@ my_zigzag <- zigzag$new(expression_data,
 my_zigzag$burnin()
 my_zigzag$mcmc()
 
-View the results located in "my_output/" and evaluate quality of mcmc and influence of priors in "my_output/*mcmc_output/mcmc_report". 
-
 ```
+View the results located in "my_output/" and evaluate quality of the MCMC samples and priors in "my_output/*mcmc_output/mcmc_report". 
 
 You will likely not want to use all default settings. Use ? to view documentation on functions. For example
 
 ``` r
 ?zigzag
-?my_zigzag$burnin 
-?my_zigzag$mcmc
+?zigzag::burnin 
+?zigzag::mcmc
 ```
 
 ## Documentation and Tutorial

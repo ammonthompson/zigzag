@@ -5,8 +5,7 @@
 \title{burnin}
 \usage{
 burnin(sample_frequency = 100, ngen = 1000, burnin_target_acceptance_rate=0.44,
-target_ESS = NULL, progress_plot = FALSE, write_to_files = TRUE,
-burninprefix = "burnin", append = FALSE)
+progress_plot = FALSE, write_to_files = TRUE, burninprefix = "burnin", append = FALSE)
 }
 \arguments{
 \item{sample_frequency}{Number of generations between samples from the chain}
@@ -14,10 +13,6 @@ burninprefix = "burnin", append = FALSE)
 \item{ngen}{Number of generations to run the chain}
 
 \item{burnin_target_acceptance_rate}{proportion of proposals that are accepted. For proposal size tuning.}
-
-\item{threads}{Depricated}
-
-\item{target_ESS}{Depricated. Probably}
 
 \item{progress_plot}{Show plots of model statistics as MCMC progresses}
 
