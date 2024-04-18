@@ -5,12 +5,13 @@
 ##########################
 
 file_prefix = "sim"
-num_yg = 500
 df = read.table("sim_control_file.template.cf",header = F, row.names = 1)
 
 simulated_gene_lengths  = rlnorm(df$V2[5], log(2000), 0.5)
 
-output_dir = "simulated_data/"
+output_dir = "../data/simulated_data/"
+if( !dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+
 params = as.numeric(df[,1])
 
 num_libs = params[4]
@@ -37,12 +38,13 @@ write.table(matrix(c("sim_number", "mu_i", "variance_i", "spike_prob", "weight_a
 
 num_transcripts = params[5]
 gene_names = paste0("gene_", seq(num_transcripts))
+num_goi = num_transcripts
 
 ### Generate sims
 for(i in seq(params[17])){
 
 	#### spike and weights
-	total = params[5]
+	total = num_transcripts
 	sim_gl = sample(simulated_gene_lengths, total)
 	sim_rel_gl = sim_gl/mean(sim_gl)
 
@@ -55,13 +57,13 @@ for(i in seq(params[17])){
 	spike_prob =  params[16]
 	if(is.na(params[16])) spike_prob = rbeta(1, 2, 8)
 
-	num_inactive = sum(rbinom(num_transcripts, 1, 1 - weight_active))
-	num_spike = sum(rbinom(num_inactive, 1, spike_prob))
+	num_inactive = rbinom(1, num_transcripts, 1 - weight_active)
+	num_spike = rbinom(1, num_inactive, spike_prob)
 
 
 	#### sigma_x
-	taux = params[1]; if(is.na(taux)) taux = rgamma(1, 4, 20)
-	s0x = params[2]; if(is.na(s0x)) s0x = rnorm(1, -2, 1/5)
+	taux = params[1]; if(is.na(taux)) taux = rgamma(1, 5, 20)
+	s0x = params[2]; if(is.na(s0x)) s0x = rnorm(1, -1, 1/5)
 	s1x = params[3]; if(is.na(s1x)) s1x = -rgamma(1, 1, 10)
 
 
@@ -73,9 +75,9 @@ for(i in seq(params[17])){
 
 	### sim_yg
 
-	ymu_i = params[7]; if(is.na(ymu_i)) ymu_i = -rgamma(1, 1, 1) - 1
+	ymu_i = params[7]; if(is.na(ymu_i)) ymu_i =  -1 - rgamma(1, 1, 1)
 	ymu_a1 = params[8]; if(is.na(ymu_a1)) ymu_a1 = 1 + rgamma(1, 1, 1)
-	ymu_a2 = params[9]; if(is.na(ymu_a2)) ymu_a2 = 7 + rgamma(1, 1, 1)
+	ymu_a2 = params[9]; if(is.na(ymu_a2)) ymu_a2 = 6 + rgamma(1, 1, 1)
 
 	yVariance_i =  params[10]; if(is.na(yVariance_i)) yVariance_i = 10^(runif(1, log(1, base = 10), log(3, base = 10)))
 	yVariance_a1 =  params[11]; if(is.na(yVariance_a1)) yVariance_a1 = yVariance_i #exp(runif(1, log(1), log(3)))
@@ -92,7 +94,7 @@ for(i in seq(params[17])){
 	write.table(matrix(c(paste0("sim_", i), round(c(ymu_i, yVariance_i, spike_prob, weight_active, ymu_a1, ymu_a2, yVariance_a1, yVariance_a2, weight_within_active, taux, s0x, s1x, alpha_rx), digits = 3)), nrow = 1),
 	file = prior_settings_file, append = TRUE, sep = "\t", quote = F, row.names = FALSE, col.names = FALSE)
 
-	num_a1 = rbinom(total - num_inactive, 1, weight_within_active[1])
+	num_a1 = rbinom(1, total - num_inactive, weight_within_active[1])
 	num_a2 = (total - num_inactive) - num_a1
 
 
@@ -118,7 +120,7 @@ for(i in seq(params[17])){
 	### simulate spike # first num_spike genes are in spike
 	sim_xg = as.data.frame(rbind( matrix(rep(rep(-Inf, num_libs),num_spike), nrow=num_spike), sim_xg))
 
-        row.names(sim_xg) = gene_names
+  row.names(sim_xg) = gene_names
 
 	sim_yg=c( rep(-Inf,num_spike), sim_yg)
 	sigma_gx = c(rep(1, num_spike), sigma_gx)
@@ -129,7 +131,7 @@ for(i in seq(params[17])){
 
 
 	# sample random genes to record Yg values. Store in list for zigzag input as goi
-	goi = gene_names[sample(seq(num_transcripts), num_yg, replace = FALSE)]
+	goi = gene_names[sample(seq(num_transcripts), num_goi, replace = FALSE)]
 	write.table(gene_names[which(gene_names %in% goi)], file = paste0(output_dir, "sim", i,"_goi.txt"), row.names = FALSE,
 	            col.names = FALSE, sep = "\t", quote = FALSE)
 
@@ -155,9 +157,4 @@ for(i in seq(params[17])){
 	            file = paste0(output_dir, "sim", i,"_Yg.txt"),
 	            row.names = FALSE,	quote = FALSE, append = TRUE, sep = "\t", col.names = FALSE )
 
-
-#	print(warnings())
-#	warnings()
 }
-warnings()
-print(warnings())

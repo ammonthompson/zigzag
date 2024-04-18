@@ -2,7 +2,7 @@ sigmag_tau	NA
 sigmax_s0	NA
 sigmax_s1	NA
 num_libs	4
-num_genes	8000
+num_genes	10000
 lambda_c	NA
 ymeans_i	NA
 ymeans_a1	NA
@@ -14,4 +14,4 @@ weight_active	NA
 weight_a1	NA
 weight_a2	NA
 spike_prob	NA
-num_sims	100
+num_sims	1

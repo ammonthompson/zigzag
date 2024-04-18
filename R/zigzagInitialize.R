@@ -226,14 +226,14 @@ zigzag$methods(
 
     if(num_libraries > 1 ){
 
-      .self$proposal_probs <- c(8, 60, 10,                                      ### weights, alloc active_inactive, alloc within_active
-                           12, 15 * (1 - shared_variance),                      ### i_mean, i_var
-                           10,                                                  ### a_mean
-                           8 + 4 * (1 - shared_active_variance),                ### a_var
-                           5, 10,                                               ### spike prob, spike alloc
-                           c(2, 2) + is2Libs + 1 * (num_transcripts < 15000),   ### Yg, sigm_g
-                           c(10, 5, 10),                                        ### tau, Sg, s0tau
-                           num_libraries * 1.5                                  ### p_x
+      .self$proposal_probs <- c(4, 30, 5,                                      ### weights, alloc active_inactive, alloc within_active
+                           6, 7 * (1 - shared_variance),                      ### i_mean, i_var
+                           5,                                                  ### a_mean
+                           4 + 2 * (1 - shared_active_variance),                ### a_var
+                           2, 5,                                               ### spike prob, spike alloc
+                           c(1, 1) + is2Libs + 1 * (num_transcripts < 15000),   ### Yg, sigm_g
+                           c(8, 10, 8),                                        ### tau, Sg, s0tau
+                           num_libraries * 1.1                                  ### p_x
                           )
 
     }else{
