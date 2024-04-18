@@ -1,4 +1,4 @@
-# <strong><em>Z<sup>i</sup><sub>g</sup> Z<sup>a</sup><sub>g</sup></em></strong> v. 1.0.0
+# <strong><em>Z<sup>i</sup><sub>g</sub> Z<sup>a</sup><sub>g</sub></em></strong> v. 1.0.0
 
 # Quick Installation Guide and Simple Analysis
 
