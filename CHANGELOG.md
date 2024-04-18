@@ -20,6 +20,7 @@ All notable changes to the zigzag project are documented in this file.
 ### Changed
 - By default mixture component now share a single variance parameter instead of one for the inactive component and one shared by all active components.
 -- Need to set shared_variance = FALSE to set model to original default model in v0.1.0.
+- Streamlined tutorial.
 - Reorganized tutorial and simulation directories.
 
 
