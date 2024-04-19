@@ -13,6 +13,11 @@ if (!requireNamespace("devtools", quietly = TRUE))
     install.packages("devtools")
 devtools::install_github("ammonthompson/zigzag")
 ```
+or you can clone the repository and install it locally:
+
+``` r
+install.packages("path/to/zigzag", type = "source", repos = NULL)
+```
 
 ## Simple Analysis Example
 
