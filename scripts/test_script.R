@@ -50,7 +50,6 @@ mm <- zigzag$new(data = priordat,
                  beta = 0)
 
 mm$burnin(sample_frequency = 20, ngen=4000, write_to_files = T)
-
 mm$mcmc(sample_frequency = 50, ngen=4000000, mcmcprefix = "prior1")
 
 

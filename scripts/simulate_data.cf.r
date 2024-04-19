@@ -30,6 +30,8 @@ get_p_x = function(gene, lib, gl){
   return(1 - exp(-alpha_rx[lib] * gl * exp(gene)))
 }
 
+
+# save header for prior settings to be appended for each sim
 prior_settings_file = paste0(output_dir, file_prefix, ".parameterValues")
 write.table(matrix(c("sim_number", "mu_i", "variance_i", "spike_prob", "weight_active",
 	"mu_a1", "mu_a2", "variance_a1", "variance_a2", "w_a1", "w_a2", "tau", "s0", "s1",
@@ -105,8 +107,6 @@ for(i in seq(params[17])){
 	sigma_gx <- get_sigma2_g(sim_yg)
 
 	sim_xg = sapply(1:num_libs, function(x){return(rnorm(length(sim_yg), sim_yg, sqrt(sigma_gx)))})
-	#one lib is an outlier for many genes
-	# sim_xg[sample(seq(nrow(sim_xg)), 2000, replace = F),1] = rnorm(2000, 4, 2)
 
 	sapply(1:num_libs, function(lib){
 

@@ -1,10 +1,12 @@
 #!/usr/bin/env Rscript
 library(zigzag)
+  # sim data zigzag analysis
+  # under same prior settings as simulation script
+
 args = commandArgs(trailingOnly = T)
 start_idx = as.numeric(args[1])
 end_idx = as.numeric(args[2])
 for(i in start_idx:end_idx){
-  # sim data zigzag analysis
   sim_prefix = paste0("sim", i)
   simdat_fn = paste0("../data/simulated_data/", sim_prefix, ".tsv")
   simgl_fn = paste0("../data/simulated_data/", sim_prefix, "_gene_length.tsv")
