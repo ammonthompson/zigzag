@@ -57,6 +57,7 @@ zigzag$methods(
     grand_mean_sim_xg <- mean(lib_means_sim_xg)
     scaled_sim_xg <- sapply(seq(num_libraries), function(sx) sim_xg[,sx] - lib_means_sim_xg[sx] + grand_mean_sim_xg)
 
+
     W_L_r <- sapply(seq(ncol(scaled_xg)), function(sxg){
 
       .self$get_lowerLevel_wasserstein(scaled_xg[,sxg, drop = F], bins, yg_lessThan_bin, p_x[,sxg, drop = F]) -
@@ -175,26 +176,53 @@ zigzag$methods(
       grand_mean_sim_xg = mean(lib_means_sim_xg)
       scaled_sim_xg = sapply(seq(num_libraries), function(sx) post_pred_instance_f[[1]][,sx] - lib_means_sim_xg[sx] + grand_mean_sim_xg)
 
+      x_from <- min(Xg[which(Xg > inf_tol, arr.ind = T)]) * 0.99
+      x_to <- max(Xg[which(Xg > inf_tol, arr.ind = T)]) * 1.01
+      ppred_bw <- density(Xg[,1], from = x_from, to = x_to)$bw
       for(lib_plot in seq(num_libs_plot_postpred)){
         par("usr" = multi_plot_pars_f[[lib_plot]]$usr)
         par("plt" = multi_plot_pars_f[[lib_plot]]$plt)
         par("mfg" = multi_plot_pars_f[[lib_plot]]$mfg)
-        lines(density(scaled_sim_xg[,lib_plot]), col = "tomato", lwd = 0.25)
+
+        d_inactive = density(scaled_sim_xg[inactive_idx,lib_plot], bw = ppred_bw, from = x_from, to = x_to)
+        d_active = density(scaled_sim_xg[active_idx,lib_plot], bw = ppred_bw, from = x_from, to = x_to)
+
+        # lines(density(scaled_sim_xg[,lib_plot]), col = "chartreuse3", lwd = 0.25)
+        lines(d_inactive$x, d_inactive$y * (1 - weight_active) + d_active$y * weight_active, col = "chartreuse3", lwd = 0.25)
+
+        lines(d_inactive$x, d_inactive$y * (1 - weight_active),col = "dodgerblue", lwd = 0.5)
+        lines(d_active$x, d_active$y * weight_active, col = "tomato", lwd = 0.5)
+
+        # p zero
+        pzero = sum(post_pred_instance_f[[1]][,lib_plot] == inf_tol)/num_transcripts
+        pzero_xpos = par("usr")[1] + 0.05 * diff(par("usr")[1:2])
+        pzero_ypos = par("usr")[4]
+        points(pzero_xpos, pzero * pzero_ypos, col = "dodgerblue")
       }
+
 
       ### Upper level plot ###
       dev.set(upperPlotDevice)
 
-      ybins = seq(min(c(Yg[out_spike_idx] , post_pred_instance_f[[2]][out_spike_idx])) -1 ,
-                  max(c(Yg[out_spike_idx] , post_pred_instance_f[[2]][out_spike_idx]))+1, by = 0.2)
+      par(mfg = c(1,1))
 
-      dYg = hist(Yg[out_spike_idx], plot = F, breaks = ybins)
-      dsimYg = hist(post_pred_instance_f[[2]][out_spike_idx], plot = F, breaks = ybins)
+      # ybins = seq(min(c(Yg[out_spike_idx] , post_pred_instance_f[[2]][out_spike_idx])) -1 ,
+      #             max(c(Yg[out_spike_idx] , post_pred_instance_f[[2]][out_spike_idx]))+1, by = 0.2)
+      #
+      # dYg = hist(Yg[out_spike_idx], plot = F, breaks = ybins)
+      # dsimYg = hist(post_pred_instance_f[[2]][out_spike_idx], plot = F, breaks = ybins)
 
-      lines(lowess(dYg$mids, dYg$density - dsimYg$density - 0.6 * max(d_posXg_rowMeans_f$y), f=0.15) , col = "tomato", lwd = 0.25)
-      lines(density(Yg[out_spike_idx]), col = "orange", lwd =0.25)
-      lines(density(post_pred_instance_f[[2]][out_spike_idx]), col = "chartreuse3", lwd =0.25)
-    },
+      lines(density(post_pred_instance_f[[2]][out_spike_idx], from = x_from, to = x_to, bw = ppred_bw), col = "chartreuse3", lwd =0.25)
+      lines(density(Yg[out_spike_idx], from = x_from, to = x_to, bw = ppred_bw), col = "orange", lwd =0.25)
+
+      par(mfg = c(2,1))
+      dY_inactive = density(Yg[intersect(out_spike_idx, inactive_idx)], from = x_from, to = x_to, bw = ppred_bw)
+      dY_active = density(Yg[active_idx], from = x_from, to = x_to, bw = ppred_bw)
+      lines(density(Yg[out_spike_idx], from = x_from, to = x_to, bw = ppred_bw), col = "orange", lwd =0.25)
+      lines(dY_inactive$x, dY_inactive$y * (1 - weight_active * num_transcripts/length(out_spike_idx)), col = "dodgerblue", lwd =0.25)
+      lines(dY_active$x, dY_active$y * weight_active * num_transcripts/length(out_spike_idx), col = "tomato", lwd =0.25)
+
+  },
 
   finalize_postPredPlots = function(multi_plot_pars_f,
                                     multiL1PlotDevice, upperPlotDevice, d_posXg_rowMeans_f, scaled_xg_f){
@@ -208,7 +236,14 @@ zigzag$methods(
       par("usr" = multi_plot_pars_f[[i]]$usr)
       par("plt" = multi_plot_pars_f[[i]]$plt)
       par("mfg" = multi_plot_pars_f[[i]]$mfg)
-      lines(density(scaled_xg_f[,i]), lwd = 0.75)
+      lines(density(scaled_xg_f[,i]), lwd = 1)
+
+      # p zero
+      pzero = sum(Xg[,i] == inf_tol)/num_transcripts
+      pzero_xpos = par("usr")[1] + 0.07 * diff(par("usr")[1:2])
+      pzero_ypos = par("usr")[4]
+      points(pzero_xpos, pzero * pzero_ypos, col = "black", pch = 4)
+
     }
 
     #Upper level (2)

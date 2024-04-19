@@ -67,7 +67,7 @@ zigzag$methods(
 
     par("mai" = 0.5 * opar)
 
-    if(shared_active_variances & length(grep(pattern = "^active_variance", colnames(mcmc_trace_df))) > 1)
+    if(shared_active_variance & length(grep(pattern = "^active_variance", colnames(mcmc_trace_df))) > 1)
       mcmc_trace_df <- mcmc_trace_df[,-which(grepl(pattern = "^active_variance", colnames(mcmc_trace_df)))[-1]]
 
     nparams <- ncol(mcmc_trace_df)
@@ -100,7 +100,7 @@ zigzag$methods(
     opar <- par("mai")
     par("mai" = 0.5 * opar)
     nparams <- ncol(mcmc_df) - num_libraries + 1 -
-      (shared_active_variances) * (num_active_components - 1) -
+      (shared_active_variance) * (num_active_components - 1) -
       1 - (num_active_components == 1)
     plot_rows <- ceiling(sqrt(nparams))
     plot_cols <- nparams/plot_rows - (nparams/plot_rows)%%1 + ((nparams/plot_rows)%%1 > 0)
@@ -152,7 +152,7 @@ zigzag$methods(
 
 
     post = mcmc_df[,grepl(pattern = "^active_variance", x = colnames(mcmc_df)), drop = F]
-    free_variables = 1 + (!shared_active_variances) * (num_active_components - 1)
+    free_variables = 1 + (!shared_active_variance) * (num_active_components - 1)
     for(k in seq(free_variables)){
       range = c(min(post[,k]) - (max(post[,k]) - min(post[,k])),
                 max(post[,k]) + (max(post[,k]) - min(post[,k])))

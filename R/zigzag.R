@@ -6,19 +6,22 @@
 #'
 #' @usage zigzag$new(data, gene_length = NULL, candidate_gene_list = "all",
 #' num_active_components = "auto",
+#' shared_variance = TRUE,
+#' shared_variance_prior_min = 0.01,
+#' shared_variance_prior_max = 5,
 #' weight_active_shape_1 = 2,
 #' weight_active_shape_2 = 2,
 #' inactive_means_prior_shape = 1,
 #' inactive_means_prior_rate = 1/3,
-#' inactive_variances_prior_min = 0.01,
-#' inactive_variances_prior_max = 5,
+#' inactive_variances_prior_min = shared_variance_prior_min,
+#' inactive_variances_prior_max = shared_variance_prior_max,
 #' spike_prior_shape_1 = 1,
 #' spike_prior_shape_2 = 1,
 #' active_means_dif_prior_shape = 1,
 #' active_means_dif_prior_rate = 1/3,
-#' active_variances_prior_min = 0.01,
-#' active_variances_prior_max = 5,
-#' shared_active_variances = TRUE,
+#' shared_active_variance = TRUE,
+#' active_variances_prior_min = shared_variance_prior_min,
+#' active_variances_prior_max = shared_variance_prior_max,
 #' output_directory = "output",
 #' threshold_a = "auto",
 #' threshold_i = "auto": threshold_a[1],
@@ -35,27 +38,30 @@
 #'
 #' @field Xg A G x R matrix containing the log-relative-expression of G genes in R libraries.
 #' @field Yg A vector of length G containing the true latent log-relative-expression for G, genes.
-#' @field output_directory A directory where burnin and and mcmc log files and plots are created and stored.
-#' @field gene_names A character vector of length G contianing the gene names.
-#' @field num_libraries The number of libraries in the data.
-#' @field num_active_components The number of Normally-distributed subcomponents of the active distribution.
-#' @field num_transcripts The number of genes or transcripts in the data depending on whether the data is gene or transcript level expression.
 #' @field gene_lengths A vector of length G, containing either the mean lengths of gene transcripts or the lengths of transcripts.
+#' @field output_directory A directory where burnin and and mcmc log files and plots are created and stored.
+#' @field num_active_components The number of Normally-distributed subcomponents of the active distribution.
+#' @field threshold_i The upper boundary for the inactive distribution.
 #' @field threshold_a A vector containing the lower-bound of the prior distribution for the active component means.
 #' If the length of the threshold_a vector is < than num_active_components then threshold_a[1] is used as the lower bound for the first active component
 #' and subsequent active means are parameterized with orderd offsets rather than component-specific
 #' lower boundaries. For example, if the user specifies 3 active subcomponents and sets threshold_a = c(1,3), then
 #' the lower boundary for subcomponent 1 will be set 1, and the prior distributions for the difference between mean 1 and 2,
 #' and the difference between mean 2 and 3 will be gamma distributed.
-#' @field threshold_i The upper boundary for the inactive distribution.
 #' @field candidate_gene_list A character vector of genes of interest for which mcmc log files for Yg and variance_g should be output.
-#' @field shared_active_variances A boolean indicating if all active subcomponents share a variance component. If FALSE, a variance parameter is estimated for each component.
+#' @field shared_variance Boolean indicating if all latent mixture components have same variance.
+
+#' @field shared_active_variance If shared_variance is TRUE, this is also set to TRUE.
+#' A boolean indicating if all active subcomponents share a variance component.
+#' If FALSE, a variance parameter is estimated for each component.
 #' @field variance_g_upper_bound The upper boundary for the truncated log-normal prior for gene-specific variances. Default = Inf
 #' @field candidate_gene_list A character vector of gene names to record Yg and variange_g samples from the chain. Set = "random" to record 100 random genes. Default = "all".
 #' @field weight_active_shape_1 .
 #' @field weight_active_shape_2 .
 #' @field inactive_means_prior_shape .
 #' @field inactive_means_prior_rate .
+#' @field shared_variance_prior_min
+#' @field shared_variance_prior_max
 #' @field inactive_variances_prior_min .
 #' @field inactive_variances_prior_max .
 #' @field inactive_variances_prior_shape .
@@ -211,6 +217,10 @@ zigzag <- setRefClass(
     active_variances_prior_rate = "numeric",
     active_variances_prior_log_min = "numeric",
     active_variances_prior_log_max = "numeric",
+    shared_variance_prior_log_min = "numeric",
+    shared_variance_prior_log_max = "numeric",
+    shared_variance_prior_min = "numeric",
+    shared_variance_prior_max = "numeric",
 
 
     weight_within_active_alpha = "numeric",
@@ -266,6 +276,7 @@ zigzag <- setRefClass(
     #######################
 
 
+    shared_variance = "logical",
 
     allocation_active_inactive = "integer",
     allocation_active_inactive_proposed = "integer",
@@ -299,7 +310,7 @@ zigzag <- setRefClass(
     active_means_dif_prob_proposed = "numeric",
     active_means = "numeric",
 
-    shared_active_variances = "logical",
+    shared_active_variance = "logical",
     active_variances = "numeric",
     active_variances_proposed = "numeric",
     active_variances_trace = "list",
@@ -327,9 +338,4 @@ zigzag <- setRefClass(
   ) # end fields
 
 )
-
-
-
-
-
 

@@ -1,51 +1,55 @@
-# read some data
 
-
-dat <- read.table("../simulate_data/simulated_data/sim1_sim_nactive4800.tsv", header=TRUE, row.names=1)
-
-gene_length_df = read.table("../simulate_data/simulated_data/sim1_sim_gene_length.tsv",
-                            row.names = 1, header = FALSE)
-
-
-sq=rbind(c(1,2),c(3,4)); layout(sq)
-subsample = sample(seq(5000), 2000, replace = F)
-
+# set working dir to script location
 library(zigzag)
+library(this.path)
+setwd(dirname(this.path()))
 
-mm <- zigzag$new(data = as.data.frame(dat), gene_length = gene_length_df[, 1], candidate_gene_list = "random",
-                    output_directory = "testing", num_active_components = 2, threshold_a = c(0,4))
+# sim data zigzag analysis under default settings
+sim_prefix <- "sim1"
+out_dir    <- paste0("../data/simulated_data/zigzag_output_", sim_prefix)
+simdat_fn  <- paste0("../data/simulated_data/", sim_prefix, ".tsv")
+simgl_fn   <- paste0("../data/simulated_data/", sim_prefix, "_gene_length.tsv")
+simdat     <- read.table(simdat_fn, header = T, row.names = 1)
+simgl      <- read.table(simgl_fn, header = T, row.names = 1)
+
+mm         <- zigzag$new(data = simdat, gene_length = simgl, output_directory = out_dir)
+mm$burnin(sample_frequency = 20, ngen=5000, write_to_files = T)
+mm$mcmc(sample_frequency = 20, ngen=20000, run_posterior_predictive = T, mcmcprefix = "sim1_run1")
+
+mm         <- zigzag$new(data = simdat, gene_length = simgl, output_directory = out_dir)
+mm$burnin(sample_frequency = 20, ngen=5000, write_to_files = T)
+mm$mcmc(sample_frequency = 20, ngen=20000, run_posterior_predictive = F, mcmcprefix = "sim1_run2")
 
 
-mm$burnin(sample_frequency = 100, burnin_target_acceptance_rate=0.44,
-          write_to_files = T, ngen=25000)
+# lung data zigzag analysis under default settings
+lungdat    <- read.table("../data/example_lung.tpm", header=TRUE, row.names=1)
+lunggl     <- read.table("../data/example_gene_length.txt", row.names = 1, header = TRUE)
+
+mm         <- zigzag$new(data = lungdat, gene_length = lunggl, output_directory = "../data/example_lung")
+mm$burnin(sample_frequency = 20, ngen=5000)
+mm$mcmc(sample_frequency = 20, ngen=20000, run_posterior_predictive = T, mcmcprefix = "lung_run1")
+
+mm         <- zigzag$new(data = lungdat, gene_length = lunggl, output_directory = "../data/example_lung")
+mm$burnin(sample_frequency = 20, ngen=5000)
+mm$mcmc(sample_frequency = 20, ngen=20000, run_posterior_predictive = F, mcmcprefix = "lung_run2")
 
 
-mm$mcmc(sample_frequency = 50, write_to_files = T, ngen=30000, append = F,
-        run_posterior_predictive = T, mcmcprefix = "sim_check")
 
-
-
-########################################
-## mcmc under prior. (set beta to 0) ###
-########################################
+#######################################
+## mcmc under prior. (set beta = 0) ###
+#######################################
 
 priordat = matrix(c(-Inf, -Inf), nrow = 1)
-goi = "gene1"
 row.names(priordat) = c("gene1")
 
-sq=rbind(c(1,2),c(3,4)); layout(sq)
+mm <- zigzag$new(data = priordat,
+                 output_directory = "testing_prior",
+                 num_active_components = 2,
+                 threshold_i = 0,
+                 threshold_a = c(0,5),
+                 beta = 0)
 
-mm <- zigzag(data = priordat, gene_length = NULL, candidate_gene_list = goi,
-                    output_directory = "../testing_prior", num_active_components =2,
-                    threshold_i = 0, threshold_a = c(0,5), active_gene_set = NULL,
-                    shared_active_variances = T, beta = 0)
-
-mm$burnin(sample_frequency = 20, burnin_target_acceptance_rate=0.44, progress_plot = T,
-          write_to_files = T, ngen=4000, append = F)
-
-
-mm$mcmc(sample_frequency = 50, progress_plot = F, write_to_files = T, ngen=4000000, append = F,
-        run_posterior_predictive = F, mcmcprefix = "prior1")
-
+mm$burnin(sample_frequency = 20, ngen=4000, write_to_files = T)
+mm$mcmc(sample_frequency = 50, ngen=4000000, mcmcprefix = "prior1")
 
 

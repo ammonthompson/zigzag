@@ -4,13 +4,10 @@ zigzag$methods(
 #' @name burnin
 #' @description Run burnin and tune proposal size parameters for hieararchical bayesian mixture model
 #' @usage burnin(sample_frequency = 100, ngen = 1000, burnin_target_acceptance_rate=0.44,
-#' target_ESS = NULL, progress_plot = FALSE, write_to_files = TRUE,
-#' burninprefix = "burnin", append = FALSE)
+#' progress_plot = FALSE, write_to_files = TRUE, burninprefix = "burnin", append = FALSE)
 #' @param sample_frequency Number of generations between samples from the chain
 #' @param ngen Number of generations to run the chain
 #' @param burnin_target_acceptance_rate proportion of proposals that are accepted. For proposal size tuning.
-#' @param threads Depricated
-#' @param target_ESS Depricated. Probably
 #' @param progress_plot Show plots of model statistics as MCMC progresses
 #' @param write_to_files Write burnin samples to output files in burninprefix_burnin_output directory
 #' @param burninprefix The prefix for the burnin output directory as well as the burnin output files within
@@ -21,9 +18,13 @@ zigzag$methods(
 #'
 # @examples
 #'
-  burnin = function(sample_frequency = 100, ngen = 10000, burnin_target_acceptance_rate=0.44,
-                 threads = 1, target_ESS = NULL, progress_plot = FALSE, write_to_files = TRUE,
-                 burninprefix = "output", append = FALSE){
+  burnin = function(sample_frequency              = 100,
+                    ngen                          = 10000,
+                    burnin_target_acceptance_rate = 0.44,
+                    progress_plot                 = FALSE,
+                    write_to_files                = TRUE,
+                    burninprefix                  = "output",
+                    append                        = FALSE){
 
   timestart = as.numeric(Sys.time())
 
@@ -39,7 +40,10 @@ zigzag$methods(
    dir.create(paste0(output_directory, "/", mcmc_prefixdir))
    .self$initializeOutputFiles(paste0(mcmc_prefixdir, "/", prefix))
 
-  }else if(append == TRUE & !file.exists(paste0(output_directory, "/", mcmc_prefixdir, "/", burninprefix, "_burnin_model_parameters.log"))){
+  }else if(append == TRUE & !file.exists(paste0(output_directory, "/",
+                                                mcmc_prefixdir, "/",
+                                                burninprefix,
+                                                "_burnin_model_parameters.log"))){
 
    print("File does not exist to append. Creating new file")
    dir.create(paste0(output_directory, "/", mcmc_prefixdir))
@@ -75,6 +79,7 @@ zigzag$methods(
    }
    if(end) break
 
+   j <- i
 
    #####################
    # sample from chain #
@@ -83,7 +88,6 @@ zigzag$methods(
 
      xx_timestart = as.numeric(Sys.time())
 
-     if(is.null(target_ESS)) j = i
 
      cat("#### ",i," ####  ", lnl_trace[[length(lnl_trace)]], "\n")
 
@@ -95,28 +99,28 @@ zigzag$methods(
      ## Important in case user interrupts the burnin)                   ##
      #####################################################################
 
-     s0_trace[[2]] <<- s0
-     s1_trace[[2]] <<- s1
-     alpha_r_trace[[2]] <<- alpha_r
+     .self$s0_trace[[2]] <- s0
+     .self$s1_trace[[2]] <- s1
+     .self$alpha_r_trace[[2]] <- alpha_r
 
-     inactive_means_trace[[2]] <<- inactive_means
-     inactive_variances_trace[[2]] <<- inactive_variances
-     spike_probability_trace[[2]] <<- spike_probability
-     active_means_trace[[2]] <<- active_means
-     active_variances_trace[[2]] <<- active_variances
-     weight_active_trace[[2]] <<- weight_active
-     weight_within_active_trace[[2]] <<- weight_within_active
+     .self$inactive_means_trace[[2]] <- inactive_means
+     .self$inactive_variances_trace[[2]] <- inactive_variances
+     .self$spike_probability_trace[[2]] <- spike_probability
+     .self$active_means_trace[[2]] <- active_means
+     .self$active_variances_trace[[2]] <- active_variances
+     .self$weight_active_trace[[2]] <- weight_active
+     .self$weight_within_active_trace[[2]] <- weight_within_active
 
      if(temperature == 1){
 
        all_allocation_burnin = allocation_active_inactive * allocation_within_active[[1]]
 
-       allocation_trace <<- matrix(apply(component_matrix, 2, function(comp_matrix_col) 1 *
+       .self$allocation_trace <- matrix(apply(component_matrix, 2, function(comp_matrix_col) 1 *
                                            (comp_matrix_col == all_allocation_burnin)), nrow = num_transcripts)
 
      }
 
-     lnl_trace[[length(lnl_trace) + 1]] <<- .self$calculate_lnl(num_libraries)
+     .self$lnl_trace[[length(lnl_trace) + 1]] <- .self$calculate_lnl(num_libraries)
 
      if(write_to_files & temperature == 1){
 
@@ -127,12 +131,6 @@ zigzag$methods(
 
      }
 
-     if(!is.null(target_ESS)  & length(lnl_trace) > 100){
-       if(.self$calculate_lnl_ESS() > target_ESS){
-         break
-       }
-     }
-
      cat("time: ", as.numeric(Sys.time()) - timestart, "\n")
      timestart = as.numeric(Sys.time())
 
@@ -140,7 +138,7 @@ zigzag$methods(
 
    i = i + 1
 
-   gen <<- i
+   .self$gen <- i
 
    ################################################
    ### tune the tuning parameters (tuningParam) ###
@@ -149,7 +147,7 @@ zigzag$methods(
 
   } #end mcmc
 
-  lnl_trace <<- list(lnl_trace[[length(lnl_trace)]])
+  .self$lnl_trace <- list(lnl_trace[[length(lnl_trace)]])
 
   }
 

@@ -8,19 +8,22 @@
 \usage{
 zigzag$new(data, gene_length = NULL, candidate_gene_list = "all",
 num_active_components = "auto",
+shared_variance = TRUE,
+shared_variance_prior_min = 0.01,
+shared_variance_prior_max = 5,
 weight_active_shape_1 = 2,
 weight_active_shape_2 = 2,
 inactive_means_prior_shape = 1,
 inactive_means_prior_rate = 1/3,
-inactive_variances_prior_min = 0.01,
-inactive_variances_prior_max = 5,
+inactive_variances_prior_min = shared_variance_prior_min,
+inactive_variances_prior_max = shared_variance_prior_max,
 spike_prior_shape_1 = 1,
 spike_prior_shape_2 = 1,
 active_means_dif_prior_shape = 1,
 active_means_dif_prior_rate = 1/3,
-active_variances_prior_min = 0.01,
-active_variances_prior_max = 5,
-shared_active_variances = TRUE,
+shared_active_variance = TRUE,
+active_variances_prior_min = shared_variance_prior_min,
+active_variances_prior_max = shared_variance_prior_max,
 output_directory = "output",
 threshold_a = "auto",
 threshold_i = "auto": threshold_a[1],
@@ -47,17 +50,13 @@ hyperparameters and initializes all model parameters.
 
 \item{\code{Yg}}{A vector of length G containing the true latent log-relative-expression for G, genes.}
 
+\item{\code{gene_lengths}}{A vector of length G, containing either the mean lengths of gene transcripts or the lengths of transcripts.}
+
 \item{\code{output_directory}}{A directory where burnin and and mcmc log files and plots are created and stored.}
-
-\item{\code{gene_names}}{A character vector of length G contianing the gene names.}
-
-\item{\code{num_libraries}}{The number of libraries in the data.}
 
 \item{\code{num_active_components}}{The number of Normally-distributed subcomponents of the active distribution.}
 
-\item{\code{num_transcripts}}{The number of genes or transcripts in the data depending on whether the data is gene or transcript level expression.}
-
-\item{\code{gene_lengths}}{A vector of length G, containing either the mean lengths of gene transcripts or the lengths of transcripts.}
+\item{\code{threshold_i}}{The upper boundary for the inactive distribution.}
 
 \item{\code{threshold_a}}{A vector containing the lower-bound of the prior distribution for the active component means.
 If the length of the threshold_a vector is < than num_active_components then threshold_a[1] is used as the lower bound for the first active component
@@ -66,11 +65,13 @@ lower boundaries. For example, if the user specifies 3 active subcomponents and 
 the lower boundary for subcomponent 1 will be set 1, and the prior distributions for the difference between mean 1 and 2,
 and the difference between mean 2 and 3 will be gamma distributed.}
 
-\item{\code{threshold_i}}{The upper boundary for the inactive distribution.}
-
 \item{\code{candidate_gene_list}}{A character vector of genes of interest for which mcmc log files for Yg and variance_g should be output.}
 
-\item{\code{shared_active_variances}}{A boolean indicating if all active subcomponents share a variance component. If FALSE, a variance parameter is estimated for each component.}
+\item{\code{shared_variance}}{Boolean indicating if all latent mixture components have same variance.}
+
+\item{\code{shared_active_variance}}{If shared_variance is TRUE, this is also set to TRUE.
+A boolean indicating if all active subcomponents share a variance component.
+If FALSE, a variance parameter is estimated for each component.}
 
 \item{\code{variance_g_upper_bound}}{The upper boundary for the truncated log-normal prior for gene-specific variances. Default = Inf}
 
