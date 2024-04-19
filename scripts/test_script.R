@@ -4,9 +4,7 @@ library(zigzag)
 library(this.path)
 setwd(dirname(this.path()))
 
-# assumes all 3 components share same variance parameter
-
-# sim data zigzag analysis
+# sim data zigzag analysis under default settings
 sim_prefix <- "sim1"
 out_dir    <- paste0("../data/simulated_data/zigzag_output_", sim_prefix)
 simdat_fn  <- paste0("../data/simulated_data/", sim_prefix, ".tsv")
@@ -15,18 +13,25 @@ simdat     <- read.table(simdat_fn, header = T, row.names = 1)
 simgl      <- read.table(simgl_fn, header = T, row.names = 1)
 
 mm         <- zigzag$new(data = simdat, gene_length = simgl, output_directory = out_dir)
-mm$burnin(sample_frequency = 10, ngen=5000, write_to_files = T)
-mm$mcmc(sample_frequency = 10, ngen=10000, run_posterior_predictive = T, mcmcprefix = sim_prefix)
+mm$burnin(sample_frequency = 20, ngen=5000, write_to_files = T)
+mm$mcmc(sample_frequency = 20, ngen=20000, run_posterior_predictive = T, mcmcprefix = "sim1_run1")
+
+mm         <- zigzag$new(data = simdat, gene_length = simgl, output_directory = out_dir)
+mm$burnin(sample_frequency = 20, ngen=5000, write_to_files = T)
+mm$mcmc(sample_frequency = 20, ngen=20000, run_posterior_predictive = F, mcmcprefix = "sim1_run2")
 
 
-# lung data zigzag analysis
+# lung data zigzag analysis under default settings
 lungdat    <- read.table("../data/example_lung.tpm", header=TRUE, row.names=1)
 lunggl     <- read.table("../data/example_gene_length.txt", row.names = 1, header = TRUE)
 
 mm         <- zigzag$new(data = lungdat, gene_length = lunggl, output_directory = "../data/example_lung")
-mm$burnin(sample_frequency = 10, ngen=5000, progress_plot = T)
-mm$mcmc(sample_frequency = 10, ngen=10000, append = F,
-        run_posterior_predictive = T, mcmcprefix = "lung")
+mm$burnin(sample_frequency = 20, ngen=5000)
+mm$mcmc(sample_frequency = 20, ngen=20000, run_posterior_predictive = T, mcmcprefix = "lung_run1")
+
+mm         <- zigzag$new(data = lungdat, gene_length = lunggl, output_directory = "../data/example_lung")
+mm$burnin(sample_frequency = 20, ngen=5000)
+mm$mcmc(sample_frequency = 20, ngen=20000, run_posterior_predictive = F, mcmcprefix = "lung_run2")
 
 
 

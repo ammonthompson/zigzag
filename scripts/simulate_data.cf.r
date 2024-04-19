@@ -52,7 +52,7 @@ for(i in seq(params[17])){
 	if(is.na(params[13])) weight_active =  rbeta(1, 10, 10)
 
 	weight_within_active = params[14:15]
-	if(is.na(params[14]) | is.na(params[15])){weight_within_active[1] = rbeta(1, 5, 5); weight_within_active[2] = 1 - weight_within_active[1]}
+	if(is.na(params[14]) | is.na(params[15])){weight_within_active[1] = rbeta(1, 1, 1); weight_within_active[2] = 1 - weight_within_active[1]}
 
 	spike_prob =  params[16]
 	if(is.na(params[16])) spike_prob = rbeta(1, 2, 8)

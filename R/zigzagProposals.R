@@ -16,11 +16,9 @@ zigzag$methods(
 
     proposed_XgLikelihood <- .self$computeXgLikelihood(Xg[out_spike_idx,], Yg[out_spike_idx], variance_g_proposed, p_x[out_spike_idx,],
                                                        spike_allocation = inactive_spike_allocation[out_spike_idx], nd_spike = no_detect_spike[out_spike_idx])
-
     proposed_varianceGProbability <- .self$computeVarianceGPriorProbability(variance_g_proposed, Sg[out_spike_idx])
 
     Lp_pp = proposed_XgLikelihood + proposed_varianceGProbability
-
     Lc_pp = XgLikelihood[out_spike_idx] + variance_g_probability[out_spike_idx]
 
     R = temperature * (Lp_pp - Lc_pp) + HR
@@ -30,14 +28,11 @@ zigzag$methods(
     if(recover_x) recover()
 
     current_and_proposed <- cbind(variance_g[out_spike_idx], variance_g_proposed)
-
     current_and_proposed_likelihood <- cbind(XgLikelihood[out_spike_idx], proposed_XgLikelihood)
 
 
     num_choices <- length(out_spike_idx)
-
     choice_idx <- (log(runif(num_choices)) < R) + 1  # 1 means reject proposal, 2 means accept proposal.
-
     choice_matrix <- cbind(seq(num_choices), choice_idx) # row-column pairs for current_and_proposed_variance_g_probability with 1st column meaning reject proposal
 
     .self$variance_g[out_spike_idx] <- current_and_proposed[choice_matrix]
@@ -54,11 +49,8 @@ zigzag$methods(
       }
     }
 
-
     .self$XgLikelihood[out_spike_idx] <- current_and_proposed_likelihood[choice_matrix]
-
     current_and_proposed_variance_g_probability <- cbind(variance_g_probability[out_spike_idx], proposed_varianceGProbability)
-
     .self$variance_g_probability[out_spike_idx] <- current_and_proposed_variance_g_probability[choice_matrix]
 
   },
@@ -73,7 +65,6 @@ zigzag$methods(
     if( selection == 1){
 
       proposed_s0 <- s0 + rnorm(1, 0, tuningParam_s0)
-
       proposed_s1 <- s1
 
       if(tune) .self$s0_trace[[1]][[1]] <- c(s0_trace[[1]][[1]][-1], 0)
@@ -81,11 +72,8 @@ zigzag$methods(
     }else{
 
       proposed_s0 <- s0
-
       proposal <- .self$scale_move(s1, tuningParam_s1)
-
       proposed_s1 <- proposal[[1]]
-
       HR <- log(proposal[[2]])
 
       if(tune) .self$s1_trace[[1]][[1]] <- c(s1_trace[[1]][[1]][-1], 0)
@@ -93,15 +81,12 @@ zigzag$methods(
     }
 
     proposed_Sg <- .self$get_sigmax(ss0 = proposed_s0, ss1 = proposed_s1)
-
     proposed_variance_g_Likelihood <- .self$computeVarianceGPriorProbability(variance_g[out_spike_idx], proposed_Sg[out_spike_idx])
 
     Lp <- sum(proposed_variance_g_Likelihood)
-
     Lc <- sum(variance_g_probability[out_spike_idx])
 
     pp <- .self$computeS0PriorProbability(proposed_s0) + .self$computeS1PriorProbability(proposed_s1)
-
     pc <- .self$computeS0PriorProbability(s0) + .self$computeS1PriorProbability(s1)
 
     R <- temperature * (Lp - Lc + pp - pc) + HR
@@ -125,7 +110,6 @@ zigzag$methods(
       }
 
       .self$Sg <- proposed_Sg
-
       .self$variance_g_probability[out_spike_idx] <- proposed_variance_g_Likelihood
 
     }
@@ -172,9 +156,7 @@ zigzag$methods(
     HR = 0
 
     proposal <- .self$scale_move(tau, tuningParam_s0tau)
-
     proposed_s0 <- s0 - log(proposal[[2]])
-
     proposed_tau <- proposal[[1]]
 
     HR <- log(proposal[[2]])
@@ -182,15 +164,12 @@ zigzag$methods(
     if(tune) .self$s0tau_trace[[1]][[1]] <- c(s0tau_trace[[1]][[1]][-1], 0)
 
     proposed_Sg <- .self$get_sigmax(ss0 = proposed_s0, ss1 = s1)
-
     proposed_variance_g_Likelihood <- .self$computeVarianceGPriorProbability(variance_g[out_spike_idx], proposed_Sg[out_spike_idx], proposed_tau)
 
     Lp <- sum(proposed_variance_g_Likelihood)
-
     Lc <- sum(variance_g_probability[out_spike_idx])
 
     pp <- .self$computeS0PriorProbability(proposed_s0) + .self$computeTauPriorProbability(proposed_tau)
-
     pc <- .self$computeS0PriorProbability(s0) + .self$computeTauPriorProbability(tau)
 
     R <- temperature * (Lp - Lc + pp - pc) + HR
@@ -200,9 +179,7 @@ zigzag$methods(
     if(log(runif(1)) < R){
 
       .self$s0 <- proposed_s0
-
       .self$tau <- proposed_tau
-
       .self$Sg <- proposed_Sg
 
       if(tune) .self$s0tau_trace[[1]][[1]][100] <- 1
@@ -218,9 +195,7 @@ zigzag$methods(
     randlib=sample(num_libraries,1)
 
     proposed_alpha_r <- alpha_r
-
     proposal <- .self$scale_move(alpha_r[randlib], tuningParam_alpha_r[randlib])
-
     proposed_alpha_r[randlib] <- proposal[[1]]
 
     if(tune) .self$alpha_r_trace[[1]][[1]][randlib,] <- c(alpha_r_trace[[1]][[1]][randlib, -1], 0)
@@ -246,11 +221,9 @@ zigzag$methods(
     }
 
     Lp <- sum(proposed_xgLikelihood)
-
     Lc <- sum(XgLikelihood)
 
     pp <- .self$computeAlphaRPriorProbability(proposed_alpha_r)
-
     pc <- .self$computeAlphaRPriorProbability(alpha_r)
 
     R <- temperature * (Lp - Lc + pp - pc) + HR
@@ -259,7 +232,6 @@ zigzag$methods(
     if(log(runif(1)) < R & R != Inf){
 
       .self$alpha_r[randlib] <- proposed_alpha_r[randlib]
-
       .self$p_x[,randlib] <- proposed_p_x[,randlib]
 
       if(tune) .self$alpha_r_trace[[1]][[1]][randlib,100] <- 1

@@ -229,10 +229,10 @@ zigzag$methods(
       .self$proposal_probs <- c(4, 30, 5,                                      ### weights, alloc active_inactive, alloc within_active
                            6, 7 * (1 - shared_variance),                      ### i_mean, i_var
                            5,                                                  ### a_mean
-                           4 + 2 * (1 - shared_active_variance),                ### a_var
+                           5 + 2 * (1 - shared_active_variance),                ### a_var
                            2, 5,                                               ### spike prob, spike alloc
                            c(1, 1) + is2Libs + 1 * (num_transcripts < 15000),   ### Yg, sigm_g
-                           c(8, 10, 8),                                        ### tau, Sg, s0tau
+                           c(8,10,8),                                        ### tau, Sg, s0tau
                            num_libraries * 1.1                                  ### p_x
                           )
 
@@ -288,6 +288,8 @@ zigzag$methods(
     .self$active_means <- .self$calculate_active_means(active_means_dif, mt = multi_ta)
 
     # shared variances
+    .self$shared_variance_prior_min <- shared_variance_prior_min
+    .self$shared_variance_prior_max <- shared_variance_prior_max
     .self$shared_variance_prior_log_min <- log(shared_variance_prior_min, 10)
     .self$shared_variance_prior_log_max <- log(shared_variance_prior_max, 10)
 
@@ -504,17 +506,34 @@ zigzag$methods(
 
 
     ## write user specified prior parameter values to file
-    write.table(data.frame(cbind(c("s0_mu", "s0_sigma", "s1_shape", "s1_rate", "tau_rate", "tau_shape", "alpha_r_shape", "alpha_r_rate",
-               "weight_active_shape_1", "weight_active_shape_2", "weight_within_active_alpha", "spike_prior_shape_1", "spike_prior_shape_2",
-               "active_means_dif_prior_shape", "active_meaans_dif_prior_rate", "active_variances_prior_min", "active_variances_prior_max",
-               "inactive_means_prior_shape", "inactive_means_prior_rate", "inactive_variances_prior_min", "inactive_variances_prior_max",
-               "threshold_i", "threshold_a"),
-              c(.self$s0_mu, .self$s0_sigma, .self$s1_shape, .self$s1_rate, .self$tau_rate, .self$tau_shape,  .self$alpha_r_shape, .self$alpha_r_rate,
-                .self$weight_active_shape_1, .self$weight_active_shape_2, .self$weight_within_active_alpha[1], .self$spike_prior_shape_1, .self$spike_prior_shape_2,
-                .self$active_means_dif_prior_shape, round(.self$active_means_dif_prior_rate, digits = 3) , .self$active_variances_prior_min, .self$active_variances_prior_max,
-                .self$inactive_means_prior_shape, round(.self$inactive_means_prior_rate, digits = 3), .self$inactive_variances_prior_min, .self$inactive_variances_prior_max,
-                round(.self$threshold_i, digits = 2), paste(round(.self$threshold_a, digits = 2), collapse=", ")))),
-              file = paste0(output_directory, "/", "hyperparameter_settings.txt"), sep = "\t", row.names = F, quote = F, col.names = F)
+    if(shared_variance){
+      out_prior_settigs <- data.frame(cbind(c("s0_mu", "s0_sigma", "s1_shape", "s1_rate", "tau_rate", "tau_shape", "alpha_r_shape", "alpha_r_rate",
+                                             "weight_active_shape_1", "weight_active_shape_2", "weight_within_active_alpha", "spike_prior_shape_1", "spike_prior_shape_2",
+                                             "active_means_dif_prior_shape", "active_meaans_dif_prior_rate",
+                                             "inactive_means_prior_shape", "inactive_means_prior_rate", "shared_variance_prior_min", "shared_variance_prior_max",
+                                             "threshold_i", "threshold_a"),
+                                            c(.self$s0_mu, .self$s0_sigma, .self$s1_shape, .self$s1_rate, .self$tau_rate, .self$tau_shape,  .self$alpha_r_shape, .self$alpha_r_rate,
+                                              .self$weight_active_shape_1, .self$weight_active_shape_2, .self$weight_within_active_alpha[1], .self$spike_prior_shape_1, .self$spike_prior_shape_2,
+                                              .self$active_means_dif_prior_shape, round(.self$active_means_dif_prior_rate, digits = 3) ,
+                                              .self$inactive_means_prior_shape, round(.self$inactive_means_prior_rate, digits = 3), .self$shared_variance_prior_min, .self$shared_variance_prior_max,
+                                              round(.self$threshold_i, digits = 2), paste(round(.self$threshold_a, digits = 2), collapse=", "))))
+    }else{
+      out_prior_settigs <- data.frame(cbind(c("s0_mu", "s0_sigma", "s1_shape", "s1_rate", "tau_rate", "tau_shape", "alpha_r_shape", "alpha_r_rate",
+                                              "weight_active_shape_1", "weight_active_shape_2", "weight_within_active_alpha", "spike_prior_shape_1", "spike_prior_shape_2",
+                                              "active_means_dif_prior_shape", "active_meaans_dif_prior_rate", "active_variances_prior_min", "active_variances_prior_max",
+                                              "inactive_means_prior_shape", "inactive_means_prior_rate", "inactive_variances_prior_min", "inactive_variances_prior_max",
+                                              "threshold_i", "threshold_a"),
+                                            c(.self$s0_mu, .self$s0_sigma, .self$s1_shape, .self$s1_rate, .self$tau_rate, .self$tau_shape,  .self$alpha_r_shape, .self$alpha_r_rate,
+                                              .self$weight_active_shape_1, .self$weight_active_shape_2, .self$weight_within_active_alpha[1], .self$spike_prior_shape_1, .self$spike_prior_shape_2,
+                                              .self$active_means_dif_prior_shape, round(.self$active_means_dif_prior_rate, digits = 3) , .self$active_variances_prior_min, .self$active_variances_prior_max,
+                                              .self$inactive_means_prior_shape, round(.self$inactive_means_prior_rate, digits = 3), .self$inactive_variances_prior_min, .self$inactive_variances_prior_max,
+                                              round(.self$threshold_i, digits = 2), paste(round(.self$threshold_a, digits = 2), collapse=", "))))
+
+    }
+
+
+    write.table(out_prior_settigs, file = paste0(output_directory, "/", "hyperparameter_settings.txt"),
+                sep = "\t", row.names = F, quote = F, col.names = F)
 
 
     ###### YgLikelihood is not used ???? delete?
