@@ -1,2 +1,0 @@
-gen	lnl	s0	s1	tau	alpha_r_library_1	alpha_r_library_2	alpha_r_library_3	alpha_r_library_4	spike_probability	inactive_mean	inactive_variance	active_mean_component1	active_mean_component2	active_variance_component1	active_variance_component2	weight_active	weight_within_active_component_1	weight_within_active_component_2
-150	-25565.7721	0.2222	-0.1883	0.2154	0.4011	2.9856	2.7678	1.0512	0.0052	-0.9422	1.865	2.4457	7.0097	1.865	1.865	0.7732	0.9937	0.0063
