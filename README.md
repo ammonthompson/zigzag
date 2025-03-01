@@ -35,7 +35,7 @@ gene_length_data <- read.csv('/path/to/your/gene_length_data.csv', header = T, r
 # first running burnin until the chain is stationary,
 # then run mcmc to sample from the posterior distribution.
 my_zigzag <- zigzag$new(expression_data, 
-                        gene_lengths_data, 
+                        gene_length_data, 
                         output_dir = "my_output")
 my_zigzag$burnin()
 my_zigzag$mcmc()
